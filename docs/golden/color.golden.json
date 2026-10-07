@@ -1,0 +1,1011 @@
+{
+  "contrast": [
+    {
+      "fg": "#000000",
+      "bg": "#FFFFFF",
+      "ratio": 21.0,
+      "displayTruncated": "21.00",
+      "level": "aaa"
+    },
+    {
+      "fg": "#FFFFFF",
+      "bg": "#FFFFFF",
+      "ratio": 1.0,
+      "displayTruncated": "1.00",
+      "level": "fail"
+    },
+    {
+      "fg": "#777777",
+      "bg": "#FFFFFF",
+      "ratio": 4.4781,
+      "displayTruncated": "4.47",
+      "level": "large-ui"
+    },
+    {
+      "fg": "#767676",
+      "bg": "#FFFFFF",
+      "ratio": 4.5422,
+      "displayTruncated": "4.54",
+      "level": "aa"
+    },
+    {
+      "fg": "#0000FF",
+      "bg": "#FFFFFF",
+      "ratio": 8.5925,
+      "displayTruncated": "8.59",
+      "level": "aaa"
+    },
+    {
+      "fg": "#FF0000",
+      "bg": "#FFFFFF",
+      "ratio": 3.9985,
+      "displayTruncated": "3.99",
+      "level": "large-ui"
+    },
+    {
+      "fg": "#1F4BFF",
+      "bg": "#FFFFFF",
+      "ratio": 5.9851,
+      "displayTruncated": "5.98",
+      "level": "aa"
+    },
+    {
+      "fg": "#FFD60A",
+      "bg": "#000000",
+      "ratio": 14.875,
+      "displayTruncated": "14.87",
+      "level": "aaa"
+    },
+    {
+      "fg": "#595959",
+      "bg": "#FFFFFF",
+      "ratio": 7.0047,
+      "displayTruncated": "7.00",
+      "level": "aaa"
+    },
+    {
+      "fg": "#949494",
+      "bg": "#FFFFFF",
+      "ratio": 3.0335,
+      "displayTruncated": "3.03",
+      "level": "large-ui"
+    },
+    {
+      "fg": "#FFFFFF",
+      "bg": "#000000",
+      "ratio": 21.0,
+      "displayTruncated": "21.00",
+      "level": "aaa"
+    },
+    {
+      "fg": "#808080",
+      "bg": "#FFFFFF",
+      "ratio": 3.9494,
+      "displayTruncated": "3.94",
+      "level": "large-ui"
+    }
+  ],
+  "oklab": [
+    {
+      "hex": "#000000",
+      "oklab": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "oklch": [
+        0.0,
+        0.0,
+        null
+      ],
+      "roundtrip": "#000000"
+    },
+    {
+      "hex": "#FFFFFF",
+      "oklab": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "oklch": [
+        1.0,
+        0.0,
+        null
+      ],
+      "roundtrip": "#FFFFFF"
+    },
+    {
+      "hex": "#FF0000",
+      "oklab": [
+        0.628,
+        0.2249,
+        0.1258
+      ],
+      "oklch": [
+        0.628,
+        0.2577,
+        29.23
+      ],
+      "roundtrip": "#FF0000"
+    },
+    {
+      "hex": "#00FF00",
+      "oklab": [
+        0.8664,
+        -0.2339,
+        0.1795
+      ],
+      "oklch": [
+        0.8664,
+        0.2948,
+        142.5
+      ],
+      "roundtrip": "#00FF00"
+    },
+    {
+      "hex": "#0000FF",
+      "oklab": [
+        0.452,
+        -0.0325,
+        -0.3115
+      ],
+      "oklch": [
+        0.452,
+        0.3132,
+        264.05
+      ],
+      "roundtrip": "#0000FF"
+    },
+    {
+      "hex": "#1F4BFF",
+      "oklab": [
+        0.5217,
+        -0.0209,
+        -0.2657
+      ],
+      "oklch": [
+        0.5217,
+        0.2665,
+        265.49
+      ],
+      "roundtrip": "#1F4BFF"
+    },
+    {
+      "hex": "#808080",
+      "oklab": [
+        0.5999,
+        0.0,
+        0.0
+      ],
+      "oklch": [
+        0.5999,
+        0.0,
+        null
+      ],
+      "roundtrip": "#808080"
+    },
+    {
+      "hex": "#FFD60A",
+      "oklab": [
+        0.8849,
+        -0.0151,
+        0.1799
+      ],
+      "oklch": [
+        0.8849,
+        0.1805,
+        94.78
+      ],
+      "roundtrip": "#FFD60A"
+    }
+  ],
+  "deOk": [
+    {
+      "a": "#000000",
+      "b": "#FFFFFF",
+      "deOk": 1.0
+    },
+    {
+      "a": "#FF0000",
+      "b": "#FF0505",
+      "deOk": 0.0015
+    },
+    {
+      "a": "#1F4BFF",
+      "b": "#2050FF",
+      "deOk": 0.0096
+    },
+    {
+      "a": "#FF0000",
+      "b": "#00FF00",
+      "deOk": 0.5198
+    }
+  ],
+  "deltaE2000_sharma": [
+    {
+      "lab1": [
+        50.0,
+        2.6772,
+        -79.7751
+      ],
+      "lab2": [
+        50.0,
+        0.0,
+        -82.7485
+      ],
+      "expected": 2.0425,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        3.1571,
+        -77.2803
+      ],
+      "lab2": [
+        50.0,
+        0.0,
+        -82.7485
+      ],
+      "expected": 2.8615,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.8361,
+        -74.02
+      ],
+      "lab2": [
+        50.0,
+        0.0,
+        -82.7485
+      ],
+      "expected": 3.4412,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.5,
+        0.0
+      ],
+      "lab2": [
+        50.0,
+        0.0,
+        -2.5
+      ],
+      "expected": 4.3065,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.5,
+        0.0
+      ],
+      "lab2": [
+        73.0,
+        25.0,
+        -18.0
+      ],
+      "expected": 27.1492,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.5,
+        0.0
+      ],
+      "lab2": [
+        61.0,
+        -5.0,
+        29.0
+      ],
+      "expected": 22.8977,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.5,
+        0.0
+      ],
+      "lab2": [
+        56.0,
+        -27.0,
+        -3.0
+      ],
+      "expected": 31.903,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    },
+    {
+      "lab1": [
+        50.0,
+        2.5,
+        0.0
+      ],
+      "lab2": [
+        58.0,
+        24.0,
+        15.0
+      ],
+      "expected": 19.4535,
+      "source": "Sharma, Wu, Dalal 2005 (valeur publiée)"
+    }
+  ],
+  "homography": {
+    "srcUnitSquare": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "dstQuad": [
+      [
+        100,
+        50
+      ],
+      [
+        420,
+        80
+      ],
+      [
+        400,
+        300
+      ],
+      [
+        120,
+        260
+      ]
+    ],
+    "H_row_major": [
+      290.384615385,
+      36.538461538,
+      100.0,
+      24.358974359,
+      245.833333333,
+      50.0,
+      -0.070512821,
+      0.137820513,
+      1.0
+    ],
+    "checks": [
+      {
+        "uv": [
+          0,
+          0
+        ],
+        "xy": [
+          100.0,
+          50.0
+        ]
+      },
+      {
+        "uv": [
+          1,
+          0
+        ],
+        "xy": [
+          420.0,
+          80.0
+        ]
+      },
+      {
+        "uv": [
+          1,
+          1
+        ],
+        "xy": [
+          400.0,
+          300.0
+        ]
+      },
+      {
+        "uv": [
+          0,
+          1
+        ],
+        "xy": [
+          120.0,
+          260.0
+        ]
+      },
+      {
+        "uv": [
+          0.5,
+          0.5
+        ],
+        "xy": [
+          254.8837,
+          179.0698
+        ]
+      },
+      {
+        "uv": [
+          0.25,
+          0.75
+        ],
+        "xy": [
+          184.2066,
+          221.476
+        ]
+      }
+    ],
+    "H_inverse_checks": [
+      {
+        "xy": [
+          100,
+          50
+        ],
+        "uv": [
+          0,
+          0
+        ]
+      },
+      {
+        "xy": [
+          420,
+          80
+        ],
+        "uv": [
+          1,
+          0
+        ]
+      },
+      {
+        "xy": [
+          400,
+          300
+        ],
+        "uv": [
+          1,
+          1
+        ]
+      },
+      {
+        "xy": [
+          120,
+          260
+        ],
+        "uv": [
+          0,
+          1
+        ]
+      },
+      {
+        "xy": [
+          254.8837,
+          179.0698
+        ],
+        "uv": [
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "xy": [
+          184.2066,
+          221.476
+        ],
+        "uv": [
+          0.25,
+          0.75
+        ]
+      }
+    ]
+  },
+  "_meta": {
+    "generatedBy": "reference implementation independent from the TypeScript engine (Python, stdlib only)",
+    "date": "2026-10-07",
+    "tolerances": {
+      "contrastRatio": 0.001,
+      "oklab": 0.001,
+      "oklch_C_L": 0.001,
+      "oklch_hue_deg": 0.1,
+      "deltaE2000": 0.0001,
+      "deOk": 0.0005,
+      "homographyPx": 0.001,
+      "lab": 0.01,
+      "linear": 1e-06,
+      "gamutChroma": 0.0005,
+      "gamutHexPerChannel": 1,
+      "scaleHexPerChannel": 1
+    },
+    "notes": [
+      "Hue of achromatic colors (C < 0.0004) is undefined: do not assert it (null here).",
+      "deltaE2000_sharma pairs are published reference values (Sharma, Wu, Dalal 2005).",
+      "Contrast thresholds must be compared on the UNROUNDED ratio.",
+      "gamutMapping/scales/derivedColors sont les sorties d'une implémentation de référence de la SPÉCIFICATION (docs/05_ENGINES.md), pas des valeurs publiées : si le code et ce fichier divergent, le chef de projet arbitre.",
+      "Les comparaisons de hex acceptent ±1 sur chaque canal (arrondi aux frontières).",
+      "Non couverts ici : extraction de palette (cas générés dans les tests T-005), rasterisation, CMJN (spike T-010)."
+    ],
+    "version": 2,
+    "provenance": {
+      "published/external": [
+        "deltaE2000_sharma",
+        "lab_D65 (5 valeurs externes marquées externalReference)",
+        "contrast (valeurs WCAG de référence connues : 21, 4.48, 4.54)"
+      ],
+      "reference-implementation-of-05_ENGINES.md": [
+        "oklab",
+        "deOk",
+        "gamutMapping",
+        "scales",
+        "derivedColors",
+        "homography",
+        "formatRatio",
+        "srgbToLinear"
+      ]
+    }
+  },
+  "formatRatio": [
+    {
+      "input": 4.499,
+      "expected": "4.49"
+    },
+    {
+      "input": 4.5,
+      "expected": "4.50"
+    },
+    {
+      "input": 4.4999,
+      "expected": "4.49"
+    },
+    {
+      "input": 21,
+      "expected": "21.00"
+    },
+    {
+      "input": 1,
+      "expected": "1.00"
+    },
+    {
+      "input": 7.0047,
+      "expected": "7.00"
+    },
+    {
+      "input": 3.9985,
+      "expected": "3.99"
+    },
+    {
+      "input": 6.999,
+      "expected": "6.99"
+    }
+  ],
+  "srgbToLinear": [
+    {
+      "c8": 0,
+      "linear": 0.0
+    },
+    {
+      "c8": 1,
+      "linear": 0.000303527
+    },
+    {
+      "c8": 10,
+      "linear": 0.00303527
+    },
+    {
+      "c8": 11,
+      "linear": 0.003346536
+    },
+    {
+      "c8": 64,
+      "linear": 0.051269458
+    },
+    {
+      "c8": 128,
+      "linear": 0.2158605
+    },
+    {
+      "c8": 200,
+      "linear": 0.57758044
+    },
+    {
+      "c8": 255,
+      "linear": 1.0
+    }
+  ],
+  "lab_D65": [
+    {
+      "hex": "#FF0000",
+      "lab": [
+        53.2408,
+        80.0925,
+        67.2032
+      ],
+      "externalReference": [
+        53.2408,
+        80.0925,
+        67.2032
+      ]
+    },
+    {
+      "hex": "#00FF00",
+      "lab": [
+        87.7347,
+        -86.1827,
+        83.1793
+      ],
+      "externalReference": [
+        87.7347,
+        -86.1827,
+        83.1793
+      ]
+    },
+    {
+      "hex": "#0000FF",
+      "lab": [
+        32.297,
+        79.1875,
+        -107.8602
+      ],
+      "externalReference": [
+        32.297,
+        79.1875,
+        -107.8602
+      ]
+    },
+    {
+      "hex": "#FFFFFF",
+      "lab": [
+        100.0,
+        -0.0,
+        0.0
+      ],
+      "externalReference": [
+        100.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "hex": "#000000",
+      "lab": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "externalReference": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "hex": "#808080",
+      "lab": [
+        53.585,
+        -0.0,
+        0.0
+      ]
+    },
+    {
+      "hex": "#1F4BFF",
+      "lab": [
+        42.0629,
+        52.5978,
+        -91.6006
+      ]
+    },
+    {
+      "hex": "#FFD60A",
+      "lab": [
+        86.6914,
+        -1.3407,
+        86.1121
+      ]
+    },
+    {
+      "hex": "#767676",
+      "lab": [
+        49.637,
+        -0.0,
+        0.0
+      ]
+    }
+  ],
+  "gamutMapping": [
+    {
+      "input": [
+        0.7,
+        0.4,
+        150
+      ],
+      "inGamutBefore": false,
+      "mappedC": 0.1928,
+      "hex": "#00BE58"
+    },
+    {
+      "input": [
+        0.9,
+        0.3,
+        30
+      ],
+      "inGamutBefore": false,
+      "mappedC": 0.0523,
+      "hex": "#FFD2CA"
+    },
+    {
+      "input": [
+        0.3,
+        0.3,
+        265
+      ],
+      "inGamutBefore": false,
+      "mappedC": 0.2059,
+      "hex": "#040092"
+    },
+    {
+      "input": [
+        0.5,
+        0.1,
+        90
+      ],
+      "inGamutBefore": true,
+      "mappedC": 0.1,
+      "hex": "#796006"
+    },
+    {
+      "input": [
+        0.97,
+        0.25,
+        60
+      ],
+      "inGamutBefore": false,
+      "mappedC": 0.0185,
+      "hex": "#FFF3E9"
+    },
+    {
+      "input": [
+        0.2,
+        0.3,
+        330
+      ],
+      "inGamutBefore": false,
+      "mappedC": 0.0912,
+      "hex": "#2A0029"
+    }
+  ],
+  "scales": [
+    {
+      "base": "#1F4BFF",
+      "baseOklch": [
+        0.5217,
+        0.2665,
+        265.49
+      ],
+      "steps": [
+        {
+          "step": 50,
+          "L": 0.97,
+          "hex": "#F1F5FF"
+        },
+        {
+          "step": 100,
+          "L": 0.94,
+          "hex": "#E2EBFF"
+        },
+        {
+          "step": 200,
+          "L": 0.88,
+          "hex": "#C5D8FF"
+        },
+        {
+          "step": 300,
+          "L": 0.8,
+          "hex": "#9FBDFF"
+        },
+        {
+          "step": 400,
+          "L": 0.71,
+          "hex": "#749DFF"
+        },
+        {
+          "step": 500,
+          "L": 0.62,
+          "hex": "#4A7BFF"
+        },
+        {
+          "step": 600,
+          "L": 0.53,
+          "hex": "#2250FF"
+        },
+        {
+          "step": 700,
+          "L": 0.44,
+          "hex": "#1128E2"
+        },
+        {
+          "step": 800,
+          "L": 0.35,
+          "hex": "#0A00B4"
+        },
+        {
+          "step": 900,
+          "L": 0.26,
+          "hex": "#040078"
+        },
+        {
+          "step": 950,
+          "L": 0.19,
+          "hex": "#02004C"
+        }
+      ]
+    },
+    {
+      "base": "#FFD60A",
+      "baseOklch": [
+        0.8849,
+        0.1805,
+        94.78
+      ],
+      "steps": [
+        {
+          "step": 50,
+          "L": 0.97,
+          "hex": "#FFF5D4"
+        },
+        {
+          "step": 100,
+          "L": 0.94,
+          "hex": "#F8EBBB"
+        },
+        {
+          "step": 200,
+          "L": 0.88,
+          "hex": "#ECD789"
+        },
+        {
+          "step": 300,
+          "L": 0.8,
+          "hex": "#DCBC33"
+        },
+        {
+          "step": 400,
+          "L": 0.71,
+          "hex": "#BE9F00"
+        },
+        {
+          "step": 500,
+          "L": 0.62,
+          "hex": "#9F8400"
+        },
+        {
+          "step": 600,
+          "L": 0.53,
+          "hex": "#806A00"
+        },
+        {
+          "step": 700,
+          "L": 0.44,
+          "hex": "#625100"
+        },
+        {
+          "step": 800,
+          "L": 0.35,
+          "hex": "#463900"
+        },
+        {
+          "step": 900,
+          "L": 0.26,
+          "hex": "#2C2300"
+        },
+        {
+          "step": 950,
+          "L": 0.19,
+          "hex": "#191300"
+        }
+      ]
+    },
+    {
+      "base": "#808080",
+      "baseOklch": [
+        0.5999,
+        0.0,
+        0.0
+      ],
+      "steps": [
+        {
+          "step": 50,
+          "L": 0.97,
+          "hex": "#F5F5F5"
+        },
+        {
+          "step": 100,
+          "L": 0.94,
+          "hex": "#EBEBEB"
+        },
+        {
+          "step": 200,
+          "L": 0.88,
+          "hex": "#D7D7D7"
+        },
+        {
+          "step": 300,
+          "L": 0.8,
+          "hex": "#BEBEBE"
+        },
+        {
+          "step": 400,
+          "L": 0.71,
+          "hex": "#A1A1A1"
+        },
+        {
+          "step": 500,
+          "L": 0.62,
+          "hex": "#868686"
+        },
+        {
+          "step": 600,
+          "L": 0.53,
+          "hex": "#6C6C6C"
+        },
+        {
+          "step": 700,
+          "L": 0.44,
+          "hex": "#525252"
+        },
+        {
+          "step": 800,
+          "L": 0.35,
+          "hex": "#3A3A3A"
+        },
+        {
+          "step": 900,
+          "L": 0.26,
+          "hex": "#242424"
+        },
+        {
+          "step": 950,
+          "L": 0.19,
+          "hex": "#141414"
+        }
+      ]
+    }
+  ],
+  "derivedColors": [
+    {
+      "primary": "#1F4BFF",
+      "fallbackHue": 265.0,
+      "accent": "#DAA500",
+      "neutralLight": "#F2F5FC",
+      "neutralDark": "#12161F"
+    },
+    {
+      "primary": "#FFD60A",
+      "fallbackHue": 265.0,
+      "accent": "#5661D8",
+      "neutralLight": "#F7F5EE",
+      "neutralDark": "#19160B"
+    },
+    {
+      "primary": "#000000",
+      "fallbackHue": 265.0,
+      "accent": "#8FADEE",
+      "neutralLight": "#F5F5F5",
+      "neutralDark": "#161616"
+    },
+    {
+      "primary": "#B3261E",
+      "fallbackHue": 265.0,
+      "accent": "#00C4D9",
+      "neutralLight": "#FCF3F1",
+      "neutralDark": "#1E1311"
+    }
+  ]
+}
