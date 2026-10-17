@@ -250,13 +250,20 @@ importers:
         version: 5.0.3(vite@8.3.3)
 
   packages/color-engine:
+    dependencies:
+      '@app/kernel':
+        specifier: workspace:*
+        version: link:../kernel
     devDependencies:
+      fast-check:
+        specifier: 4.10.2
+        version: 4.10.2
       typescript:
         specifier: 6.0.3
         version: 6.0.3
       vitest:
         specifier: 5.0.3
-        version: 5.0.3(vite@8.3.3)
+        version: 5.0.3(@types/node@26.6.5)(vite@8.3.3(@types/node@26.6.5)(esbuild@0.28.2)(tsx@4.23.15))
 
   packages/contracts:
     dependencies:
