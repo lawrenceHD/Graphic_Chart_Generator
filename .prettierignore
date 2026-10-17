@@ -2,6 +2,8 @@
 pnpm-lock.yaml
 **/dist/
 **/.turbo/
+**/.next/
+**/next-env.d.ts
 **/node_modules/
 coverage/
 # Specifications and third-party agent material are edited by hand

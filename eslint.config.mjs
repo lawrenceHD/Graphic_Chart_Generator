@@ -41,7 +41,15 @@ const PURE_GLOBALS = [
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/.turbo/**', 'docs/**', 'coverage/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/.turbo/**',
+      '**/.next/**',
+      '**/next-env.d.ts',
+      'docs/**',
+      'coverage/**',
+    ],
   },
   ...tseslint.configs.strictTypeChecked,
   {
