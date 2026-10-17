@@ -1,7 +1,7 @@
 # 08 — Sécurité et confidentialité
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
-> Remplace : `SECURITY_COMPLIANCE.md`.
+> Statut : **validé** — Version 4.1 — 2026-10-17
+> Remplace : `SECURITY_COMPLIANCE.md`. Décisions : ADR-014, ADR-023, ADR-024, ADR-025.
 > Chaque contrôle porte un identifiant `SEC-xx` et est **vérifié par un test ou une revue** (`10_QUALITY.md`).
 
 ## 1. Actifs et menaces
@@ -10,7 +10,7 @@
 |---|---|---|
 | Comptes utilisateurs | Vol de session, force brute | SEC-01 à SEC-06 |
 | Logos et briefs (propriété intellectuelle) | Accès par un tiers (IDOR), fuite | SEC-07 à SEC-10 |
-| Serveur (exécution) | SVG/PDF/DOCX piégés, bombes de décompression | SEC-11 à SEC-17 |
+| Serveur (exécution) | SVG/PDF/DOCX piégés, bombes de décompression, rendus falsifiés par le navigateur | SEC-11 à SEC-17, SEC-26 |
 | Budget IA | Abus, scripts, boucle de coût | SEC-18 à SEC-20 |
 | Clé IA, secrets | Fuite dans le code ou les logs | SEC-21 à SEC-23 |
 | Disponibilité | Déni de service, file saturée | SEC-24, SEC-25 |
@@ -37,8 +37,9 @@
 - **SEC-13** Limites : tailles et dimensions du `01_PRODUCT_MVP.md` §3 ; `limitInputPixels` pour les rasters.
 - **SEC-14** SVG : assainissement par **liste blanche** et reconstruction de l'arbre (`05_ENGINES.md` §3). Aucun `DOCTYPE`, aucune entité, aucune référence externe.
 - **SEC-15** Rasterisation SVG dans un **processus isolé** (pas de réseau, mémoire et délai plafonnés).
-- **SEC-16** Service des assets : en `<img>` uniquement, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`, domaine ou chemin dédié sans cookies de session si possible. **Les originaux ne sont jamais servis.**
+- **SEC-16** Service des assets (ADR-023) : `GET /api/v1/assets/:id/content` vérifie la session puis `can(actor, 'asset:read', asset)` et répond `302` vers une **URL R2 présignée en lecture** (durée ≤ 5 min, `Content-Type` et `Content-Disposition: inline` imposés par la signature, `Cache-Control: private`). L'asset est donc servi depuis l'**origine R2, distincte et sans cookies** de l'application ; il n'y a pas de sous-domaine `assets.`. Affichage en `<img>` uniquement (un SVG en `<img>` n'exécute aucun script). Seuls les assets `clean` sont servis ; **les originaux ne sont jamais servis.**
 - **SEC-17** (*Could*, brief PDF/DOCX) Extraction dans un worker isolé : délai 20 s, plafond mémoire, limite de pages (40), plafond de ratio de décompression pour les archives (DOCX) ; aucun contenu actif exécuté.
+- **SEC-26** Tout rendu produit par le navigateur et téléversé (`mockup_render`) suit **SEC-11 à SEC-13** : URL présignée, quarantaine, job `asset.scan`, octets magiques PNG, dimensions attendues, normalisation raster. Il n'est intégré à aucun export tant qu'il n'est pas `clean` (`06_MOCKUP_ENGINE.md` §4.4).
 
 ### IA et budget
 - **SEC-18** Plafonds `AI_DAILY_BUDGET_EUR` et par utilisateur (`07_AI_COPILOT.md` §2) ; refus propre à l'atteinte.
@@ -56,7 +57,7 @@
 
 ## 3. En-têtes HTTP
 
-Appliqués par le middleware de l'application :
+Appliqués par le proxy de l'application (`proxy.ts`, nom du middleware depuis Next.js 16), sur **toutes** les pages (ADR-024) :
 
 ```
 Strict-Transport-Security: max-age=63072000; includeSubDomains
@@ -67,17 +68,20 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 Cross-Origin-Opener-Policy: same-origin
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self' 'nonce-<aléa par requête>' https://challenges.cloudflare.com;
-  style-src 'self' 'nonce-<aléa>';
-  img-src 'self' data: blob: <domaine R2>;
+  script-src 'self' 'nonce-<aléa par requête>' 'strict-dynamic' https://challenges.cloudflare.com;
+  style-src-elem 'self' 'nonce-<aléa par requête>';
+  style-src-attr 'unsafe-inline';
+  img-src 'self' data: blob: https://<compte>.r2.cloudflarestorage.com;
   font-src 'self';
-  connect-src 'self' <domaine R2>;
+  connect-src 'self' https://<compte>.r2.cloudflarestorage.com;
   frame-src https://challenges.cloudflare.com;
   object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ```
 
-- Pas de `'unsafe-eval'` ni de `'unsafe-inline'` en production. `X-XSS-Protection` n'est **pas** utilisé (obsolète).
-- Si un composant exige un assouplissement, il est consigné par un ADR avec sa justification.
+- **Rendu dynamique partout** (ADR-024) : une CSP à nonce impose un rendu par requête ; toutes les pages, landing comprise, sont rendues dynamiquement. Aucune page n'est pré-rendue sans nonce.
+- **Dérogation unique** : `style-src-attr 'unsafe-inline'` autorise les **attributs** `style` produits par React et Motion. Les éléments `<style>` et tous les scripts restent soumis au nonce. Aucun `'unsafe-inline'` dans `script-src` ni `style-src-elem`, aucun `'unsafe-eval'`. `X-XSS-Protection` n'est **pas** utilisé (obsolète).
+- L'endpoint R2 figure dans `img-src` (redirections de SEC-16) et `connect-src` (envois par URL présignée).
+- Tout autre assouplissement est consigné par un ADR avec sa justification.
 - La CSP est vérifiée en CI (test Playwright : aucune violation de CSP sur les parcours principaux).
 
 ## 4. La fonction `can()`
@@ -89,11 +93,30 @@ type Actor =
   | { kind: 'share'; projectId: string }      // lecture seule
   | { kind: 'system' };
 
-can(actor, 'project:read' | 'project:write' | 'project:delete'
-         | 'asset:read' | 'export:create' | 'export:read', resource): boolean
+type Action =
+  | 'project:create' | 'project:read' | 'project:write' | 'project:delete'
+  | 'asset:create' | 'asset:read'
+  | 'document:command' | 'copilot:use'
+  | 'export:create' | 'export:read'
+  | 'share:create' | 'share:revoke' | 'share:read'
+  | 'account:delete' | 'guest:claim';
+
+can(actor: Actor, action: Action, resource): boolean
 ```
 
-Règles : propriétaire (ou membre `editor`) du workspace → lecture/écriture ; `viewer` et `share` → lecture ; session invitée → son seul projet ; `system` → worker uniquement. Toute action non listée est **refusée par défaut**. Le code appelant ne contient **aucune** logique d'autorisation propre.
+Matrice (ADR-025) — toute combinaison absente est **refusée par défaut** :
+
+| Acteur | Actions autorisées |
+|---|---|
+| Utilisateur propriétaire ou membre `editor` du workspace | Toutes les actions de projet : `project:*`, `asset:*`, `document:command`, `copilot:use`, `export:*`, `share:*` |
+| Membre `viewer` | `project:read`, `asset:read`, `export:read` |
+| Lien de partage (`share`) | `project:read`, `asset:read`, `share:read` — sur **son seul** projet |
+| Session invitée (`guest`) | Sur **son seul** projet : `project:read`, `project:write`, `asset:create`, `asset:read`, `document:command`. Pas de `copilot:use`, `export:create` ni `share:create` (compte à e-mail vérifié requis, SEC-03) |
+| Utilisateur authentifié (hors projet) | `project:create`, `account:delete`, `guest:claim` |
+| Session invitée (hors projet) | `project:create` dans la limite d'un projet (`01_PRODUCT_MVP.md` §3) |
+| `system` (worker uniquement) | `project:read`, `project:write`, `asset:create`, `asset:read`, `export:create`, `export:read` |
+
+`export:create` et `share:create` exigent en plus un e-mail vérifié (SEC-03). Le code appelant ne contient **aucune** logique d'autorisation propre.
 
 ## 5. Confidentialité et RGPD
 

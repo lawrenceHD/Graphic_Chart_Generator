@@ -1,3 +1,31 @@
+// Allowed internal dependencies per package (ADR-017). Each package may also import itself.
+const ALLOWED = {
+  kernel: [],
+  contracts: ['kernel'],
+  'color-engine': ['kernel'],
+  document: ['kernel', 'contracts', 'color-engine'],
+  'svg-engine': ['kernel', 'contracts'],
+  'logo-kit': ['kernel', 'contracts', 'svg-engine', 'color-engine'],
+  'mockup-engine': ['kernel', 'contracts'],
+  db: ['kernel', 'contracts'],
+  ai: ['kernel', 'contracts', 'document'],
+};
+
+const PURE_PACKAGES = ['kernel', 'color-engine', 'document', 'logo-kit', 'svg-engine'];
+
+function packageRule(name, allowed) {
+  const ok = [name, ...allowed].join('|');
+  return {
+    name: `${name}-restricted-deps`,
+    severity: 'error',
+    comment: allowed.length
+      ? `${name} can only depend on ${allowed.join(', ')} (ADR-017)`
+      : `${name} must have no internal dependencies (ADR-017)`,
+    from: { path: `^packages/${name}/` },
+    to: { path: `^(packages/(?!(${ok})/)|apps/)|^@app/(?!(${ok})$)` },
+  };
+}
+
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
   forbidden: [
@@ -6,117 +34,44 @@ module.exports = {
       severity: 'error',
       comment: 'Circular dependencies are strictly forbidden',
       from: {},
-      to: {
-        circular: true,
-      },
+      to: { circular: true },
     },
     {
       name: 'packages-cannot-import-apps',
       severity: 'error',
       comment: 'Packages must never import from apps',
-      from: {
-        path: '^packages/',
-      },
-      to: {
-        path: '^apps/|^@app/(web|worker)',
-      },
+      from: { path: '^packages/' },
+      to: { path: '^apps/|^@app/(web|worker)' },
     },
     {
-      name: 'contracts-no-internal-deps',
+      name: 'apps-cannot-import-each-other',
       severity: 'error',
-      comment: 'contracts must have no internal dependencies',
+      comment: 'web and worker share code through packages only',
+      from: { path: '^apps/(web|worker)/' },
+      to: { path: '^apps/(?!$1/)' },
+    },
+    ...Object.entries(ALLOWED).map(([name, allowed]) => packageRule(name, allowed)),
+    {
+      name: 'pure-packages-no-node-builtins',
+      severity: 'error',
+      comment: 'Pure packages never touch Node.js (ADR-016); only svg-engine/src/raster may',
       from: {
-        path: '^packages/contracts/',
+        path: `^packages/(${PURE_PACKAGES.join('|')})/`,
+        pathNot: '^packages/svg-engine/src/raster/',
       },
-      to: {
-        path: '^(packages/(?!contracts/)|apps/)|^@app/(?!contracts$)',
-      },
+      to: { dependencyTypes: ['core'] },
     },
     {
-      name: 'color-engine-no-internal-deps',
+      name: 'mockup-engine-browser-only',
       severity: 'error',
-      comment: 'color-engine must have no internal dependencies',
-      from: {
-        path: '^packages/color-engine/',
-      },
-      to: {
-        path: '^(packages/(?!color-engine/)|apps/)|^@app/(?!color-engine$)',
-      },
-    },
-    {
-      name: 'document-restricted-deps',
-      severity: 'error',
-      comment: 'document can only depend on contracts and color-engine',
-      from: {
-        path: '^packages/document/',
-      },
-      to: {
-        path: '^(packages/(?!(document|contracts|color-engine)/)|apps/)|^@app/(?!(document|contracts|color-engine)$)',
-      },
-    },
-    {
-      name: 'svg-engine-restricted-deps',
-      severity: 'error',
-      comment: 'svg-engine can only depend on contracts',
-      from: {
-        path: '^packages/svg-engine/',
-      },
-      to: {
-        path: '^(packages/(?!(svg-engine|contracts)/)|apps/)|^@app/(?!(svg-engine|contracts)$)',
-      },
-    },
-    {
-      name: 'logo-kit-restricted-deps',
-      severity: 'error',
-      comment: 'logo-kit can only depend on svg-engine, color-engine, contracts',
-      from: {
-        path: '^packages/logo-kit/',
-      },
-      to: {
-        path: '^(packages/(?!(logo-kit|svg-engine|color-engine|contracts)/)|apps/)|^@app/(?!(logo-kit|svg-engine|color-engine|contracts)$)',
-      },
-    },
-    {
-      name: 'mockup-engine-restricted-deps',
-      severity: 'error',
-      comment: 'mockup-engine can only depend on contracts',
-      from: {
-        path: '^packages/mockup-engine/',
-      },
-      to: {
-        path: '^(packages/(?!(mockup-engine|contracts)/)|apps/)|^@app/(?!(mockup-engine|contracts)$)',
-      },
-    },
-    {
-      name: 'db-restricted-deps',
-      severity: 'error',
-      comment: 'db can only depend on contracts',
-      from: {
-        path: '^packages/db/',
-      },
-      to: {
-        path: '^(packages/(?!(db|contracts)/)|apps/)|^@app/(?!(db|contracts)$)',
-      },
-    },
-    {
-      name: 'ai-restricted-deps',
-      severity: 'error',
-      comment: 'ai can only depend on contracts and document',
-      from: {
-        path: '^packages/ai/',
-      },
-      to: {
-        path: '^(packages/(?!(ai|contracts|document)/)|apps/)|^@app/(?!(ai|contracts|document)$)',
-      },
+      comment: 'mockup-engine runs in the browser only (ADR-016)',
+      from: { path: '^packages/mockup-engine/' },
+      to: { dependencyTypes: ['core'] },
     },
   ],
   options: {
-    doNotFollow: {
-      path: 'node_modules',
-    },
-    tsConfig: {
-      fileName: 'tsconfig.base.json',
-    },
+    doNotFollow: { path: 'node_modules' },
+    tsConfig: { fileName: 'tsconfig.base.json' },
     enhancedResolveOptions: {
       exportsFields: ['exports'],
       conditionNames: ['import', 'require', 'node', 'default'],

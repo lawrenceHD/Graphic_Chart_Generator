@@ -1,7 +1,7 @@
 # 07 — IA : analyse structurée et copilote
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
-> Package : `ai`. Décisions : ADR-006, ADR-007.
+> Statut : **validé** — Version 4.1 — 2026-10-17
+> Package : `ai`. Décisions : ADR-006, ADR-007, ADR-018, ADR-020, ADR-022.
 > Remplace : parties IA de `ARCHITECTURE.md`, `STUDIO_WORKSPACE_ENGINE.md`, `BACKEND_AND_USER_MANAGEMENT.md`.
 
 ## 1. Rôle de l'IA (et limites)
@@ -64,6 +64,7 @@ type BrandAnalysis = {
 };
 ```
 
+- **Valeurs** (ADR-020) : `Value = { label: string ≤ 24, description: string ≤ 120 }`, exactement 4. C'est **la même forme** que `brand.values` du document de marque (`03_DATA_MODEL.md` §4) : la composition du document recopie les valeurs sans conversion.
 - **Archétypes** : `innocent`, `sage`, `explorer`, `outlaw`, `magician`, `hero`, `lover`, `jester`, `everyman`, `caregiver`, `ruler`, `creator`.
 - **Axes de ton** : 4 axes, valeur de 0 à 100 : `formel ↔ décontracté`, `sérieux ↔ espiègle`, `classique ↔ avant-gardiste`, `sobre ↔ expressif`.
 - Tous les textes sont rédigés dans `project.language`.
@@ -98,6 +99,8 @@ Les données utilisateur sont **échappées** avant insertion (balises neutralis
 4. Chaque appel d'outil est **validé par Zod** puis appliqué par `apply()` ; résultat renvoyé au modèle (`ok` ou erreur précise).
 5. Maximum **5 commandes** par tour ; maximum **3 tours d'outil**.
 6. Les commandes destructrices (`RemovePage`) ne sont **pas appliquées** : l'événement `confirm.required` est envoyé et l'interface demande confirmation.
+7. **Concurrence (ADR-022)** : chaque commande du copilote est appliquée avec le `seq` de tête connu du tour, par le même chemin que les commandes de l'interface. Si une révision de l'utilisateur est enregistrée pendant le tour, la commande suivante du copilote échoue (conflit de `seq`) : le tour s'arrête, l'événement `error { code: 'CONFLICT' }` est envoyé et **aucune autre commande n'est appliquée**. Les commandes déjà appliquées restent dans l'historique et sont annulables.
+8. **Annulation « en un clic »** (AC-11.5, ADR-018) : chaque événement `command.applied` porte le `seq` de sa révision ; le bouton d'annulation appelle `POST /projects/:id/revisions/:seq/undo`. L'inverse n'est appliqué que si les valeurs touchées n'ont pas changé depuis ; sinon la réponse est `409 UNDO_CONFLICT`, le document reste inchangé et l'interface l'explique.
 
 ### 4.2 Garde-fous
 - **Liste blanche stricte** : le copilote n'a accès qu'aux commandes. Aucun outil d'écriture libre, de lecture de fichiers, de réseau.
@@ -106,6 +109,8 @@ Les données utilisateur sont **échappées** avant insertion (balises neutralis
 - **Hors périmètre** (génération de logo, demandes non liées à la charte) : refus bref et courtois, aucune commande.
 - **Contenu** : refus des contenus illicites, haineux, trompeurs ou usurpant une marque connue.
 - **Traçabilité** : chaque révision porte `actor = 'ai'` et le `chat_messages.id` source.
+- **Pas d'écrasement silencieux** : le copilote ne relance jamais une commande refusée pour conflit dans le même tour ; l'utilisateur relance sa consigne sur l'état à jour (ADR-022).
+- **Accès** : réservé aux comptes (`copilot:use`, ADR-025) ; une session invitée n'y a pas accès.
 
 ### 4.3 Contexte et mémoire
 Pas de base vectorielle. Le contexte tient dans la fenêtre du modèle : document résumé (brand + tokens + titres de pages) + page ciblée complète + historique récent. Un brief long est résumé **une fois** (en `brief_summary`, au backlog) et réutilisé.

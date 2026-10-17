@@ -1,7 +1,7 @@
 # Atelier (nom de code provisoire) — Générateur de charte graphique
 
-> **Statut** : Phase 0 — Recentrage. Aucun moteur n'est encore implémenté.
-> **Version du corpus** : 4.0 — 2026-10-07
+> **Statut** : Phase 0 — T-001 (squelette et CI) implémenté ; aucun moteur n'est encore implémenté.
+> **Version du corpus** : 4.1 — 2026-10-17 (corrections ADR-016 à ADR-026)
 > **Gouvernance** : ce dépôt a un seul « chef » technique et produit (voir `docs/12_WORKFLOW_ROADMAP.md`).
 > Le nom définitif est en cours de choix (`docs/13_NAMING.md`). Le code n'en dépend pas (scope `@app/*`).
 
@@ -29,7 +29,8 @@ Le corpus v3 décrivait deux systèmes incompatibles (Spring Boot et Next.js/Nod
 
 | Fichier | Rôle |
 |---|---|
-| `AGENTS.md` | **Règles pour l'agent de code (Gemini).** À fournir à chaque session. |
+| `AGENTS.md` | **Règles pour l'agent de code (Claude Code, Gemini).** À fournir à chaque session. |
+| `CLAUDE.md`, `GEMINI.md` | Protocole de session propre à chaque outil ; `AGENTS.md` prime. |
 | `docs/00_CHARTER.md` | Vision, public, principes, non-objectifs, risques, indicateurs. |
 | `docs/01_PRODUCT_MVP.md` | Périmètre MVP, parcours, user stories et critères d'acceptation. |
 | `docs/02_ARCHITECTURE.md` | Stack, monorepo, règles de dépendances, flux, déploiement. |
@@ -48,10 +49,12 @@ Le corpus v3 décrivait deux systèmes incompatibles (Spring Boot et Next.js/Nod
 | `docs/PROGRESS_TRACKER.md` | Suivi honnête : spécifié / implémenté / vérifié. |
 | `docs/tickets/PHASE_0_1_TICKETS.md` | Premiers tickets exécutables. |
 | `docs/golden/color.golden.json` | Vecteurs de référence calculés indépendamment du code. |
+| `docs/proposals/` | Propositions **non validées** (P-0xx) : entretiens, recherche de marché, brief guidé. |
+| `tools/agent-hooks/` | Hooks de l'agent de code qui appliquent `AGENTS.md` (activation : voir son README). |
 
 ## 4. Anciens documents
 
-À déplacer dans `docs/_archive/` (ne plus les lire ni les modifier) :
+Archivés dans `docs/_archives/` (ne plus les lire ni les modifier) :
 
 | Ancien fichier | Remplacé par |
 |---|---|
@@ -66,7 +69,7 @@ Le corpus v3 décrivait deux systèmes incompatibles (Spring Boot et Next.js/Nod
 | `ACCEPTANCE_CRITERIA.md` | `01_PRODUCT_MVP.md`, `10_QUALITY.md` |
 | `PROGRESS_TRACKER.md` | `docs/PROGRESS_TRACKER.md` (repart de zéro) |
 
-Le code déjà écrit (landing, dashboard, Spring) est **gelé** : conservé comme référence visuelle, non maintenu. Voir `docs/12_WORKFLOW_ROADMAP.md` §7.
+Le code déjà écrit (landing, dashboard, Spring) est **gelé** et **hors de ce dépôt** : conservé comme référence visuelle, non maintenu. Voir `docs/12_WORKFLOW_ROADMAP.md` §7.
 
 ## 5. Comment on travaille
 
@@ -76,11 +79,12 @@ Le code déjà écrit (landing, dashboard, Spring) est **gelé** : conservé com
 4. Le chef de projet **relit** et rend un verdict : GO, corrections, ou NO-GO.
 5. Le suivi est mis à jour. Rien n'est « terminé » sans ces cinq étapes.
 
-## 6. Commandes (disponibles après le ticket T-001)
+## 6. Commandes
 
 ```bash
-pnpm install        # dépendances
-pnpm dev            # web + worker en développement
-pnpm verify         # lint + typecheck + tests + build + règles de dépendances
-pnpm db:migrate     # migrations
+pnpm install        # dépendances (Node 24, voir .nvmrc)
+pnpm verify         # contrôles qualité complets (voir le script dans package.json)
+pnpm test --filter <package>
 ```
+
+À venir : `pnpm dev` (web + worker, à partir de T-002) et `pnpm db:migrate` (migrations, à partir de T-014).

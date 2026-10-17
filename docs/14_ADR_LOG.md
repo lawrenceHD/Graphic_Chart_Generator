@@ -78,6 +78,84 @@
 ## ADR-015 — Méthode : tickets, agent de code, relais, revue
 **Décision** : le chef de projet écrit des tickets avec tests d'acceptation exécutables ; l'agent applique `AGENTS.md` ; le propriétaire relaie ; verdict du chef de projet obligatoire avant fusion ; suivi honnête en trois statuts (spécifié, implémenté, vérifié).
 **Conséquences** : discipline de découpage (tickets S/M) ; une session d'agent par ticket.
+**Statut** : partiellement remplacé par ADR-026 (règle de session).
+
+---
+
+> ADR-016 à ADR-026 : date 2026-10-17, statut **Accepté**. Issus de l'audit complet du corpus v4 et de T-001 ; ils corrigent des contradictions de la spécification.
+
+## ADR-016 — Pureté des packages et rasterisation isolée
+**Contexte** : `AGENTS.md` déclarait `svg-engine` pur alors que T-008 lui fait lancer resvg dans un processus enfant ; `logo-kit`, déclaré pur, devait rasteriser « via T-008 » ; `mockup-engine` (navigateur) n'avait aucune interdiction des modules Node.
+**Décision** : packages purs = `kernel`, `color-engine`, `document`, `logo-kit`, `svg-engine` **sauf** `src/raster/**`. Le port `Rasterizer` est un type de `contracts`. Son implémentation Node (processus enfant, resvg, sharp) vit dans `packages/svg-engine/src/raster/`, exportée sous le sous-chemin `@app/svg-engine/raster`, importée seulement par `apps/worker` (et les tests). `logo-kit` reçoit un `Rasterizer` en paramètre. `mockup-engine` est navigateur uniquement : aucun module Node.
+**Conséquences** : les fonctions de `logo-kit` (dont `fidelityScore`) se testent avec un faux rasteriseur ; les règles de lint de pureté couvrent `svg-engine` hors `src/raster/` et interdisent les modules Node dans `mockup-engine`.
+**Alternatives rejetées** : package `svg-raster` séparé (un package de plus pour un seul module) ; tolérer les effets de bord dans `logo-kit` (perte de testabilité).
+
+## ADR-017 — Package `@app/kernel`
+**Contexte** : `color-engine` ne dépend de rien et ne peut donc pas importer le type `Result` de `contracts` ; chaque package allait réinventer le sien.
+**Décision** : nouveau package `packages/kernel`, pur, **zéro dépendance** : `Result<T, E>`, `ok`, `err`, `isOk`, `isErr`. Graphe : `kernel` → rien ; `contracts` → kernel ; `color-engine` → kernel ; `document` → kernel, contracts, color-engine ; `svg-engine` → kernel, contracts ; `logo-kit` → kernel, contracts, svg-engine, color-engine ; `mockup-engine` → kernel, contracts ; `db` → kernel, contracts ; `ai` → kernel, contracts, document ; `apps/*` → tous les packages.
+**Conséquences** : un seul type d'erreur-valeur dans tout le dépôt ; dependency-cruiser applique ce graphe.
+**Alternatives rejetées** : `Result` dans `contracts` (ferait dépendre `color-engine` de Zod) ; copie par package (dérive).
+
+## ADR-018 — Annulation et rétablissement côté serveur
+**Contexte** : « `/undo` applique l'inverse de la dernière révision utilisateur » faisait s'annuler deux annulations successives ; annuler une commande du copilote qui n'est pas la dernière appliquait un inverse périmé ; la pile de rétablissement côté client était perdue au rechargement.
+**Décision** : toute commande accepte un champ facultatif `expect` (valeur attendue avant application ; sinon erreur `EXPECTATION_FAILED`, document inchangé). Les inverses calculées par `apply()` incluent **toujours** `expect`. La table `revisions` gagne `undo_of` et `redo_of` (`bigint`, nuls par défaut). `POST /undo` cible la dernière révision ni annulée ni elle-même une annulation ; `POST /redo` réapplique la commande d'origine de la dernière annulation non rétablie, et devient invalide dès qu'une révision normale l'a suivie ; `POST /revisions/:seq/undo` annule une révision précise (bouton du copilote). Échec d'attente → `409 UNDO_CONFLICT`, aucune modification. Historique persistant, au moins 50 niveaux.
+**Conséquences** : annulation hors ordre sûre ; l'historique survit au rechargement ; les commandes et leurs schémas portent `expect`.
+**Alternatives rejetées** : pile client (perdue au rechargement) ; transformation opérationnelle (complexité injustifiée pour un seul éditeur).
+
+## ADR-019 — Ajout et suppression de pages
+**Contexte** : l'inverse de `RemovePage` (« `AddPage` + données ») n'était pas exprimable, et `AddPage` aurait dû générer un identifiant dans une fonction pure.
+**Décision** : `AddPage = { type, pageId, afterPageId, position?, title?, data?, overrides? }`. Le serveur fournit `pageId` (UUID v7) avant `apply()`, qui ne génère jamais d'identifiant. L'inverse de `RemovePage` est un `AddPage` portant le contenu et la position complets de la page supprimée.
+**Conséquences** : `apply()` reste pur et déterministe ; la propriété aller-retour de T-003 couvre l'ajout et la suppression.
+**Alternatives rejetées** : générateur d'identifiants injecté dans `apply()` (inverse non reproductible) ; commande `RestorePage` dédiée (doublon de `AddPage`).
+
+## ADR-020 — Forme des valeurs de marque
+**Contexte** : `BrandAnalysis.values` = 4 × `{ label, description }` mais `BrandDocument.brand.values` = 4 chaînes.
+**Décision** : `brand.values` = 4 × `{ label ≤ 24, description ≤ 120 }`, même forme que `BrandAnalysis`.
+**Conséquences** : la composition du document recopie l'analyse sans perte ; `SetBrandField` valide cette forme.
+**Alternatives rejetées** : réduire l'analyse à 4 chaînes (perte de la description).
+
+## ADR-021 — Règles de palette, d'échelles et de logo
+**Contexte** : contradictions entre `05_ENGINES.md`, les tickets T-005, T-006, T-012 et les vecteurs de référence.
+**Décision** :
+- rôles **exclusifs**, attribués dans l'ordre `primary`, `accent`, `neutralDark`, `neutralLight`, `extra` (une grappe n'a qu'un rôle) ;
+- étape 7 de l'extraction : les grappes sous `minShare` et le surplus au-delà de `maxClusters` sont **fusionnés** dans la grappe restante la plus proche ; les parts somment à 1 ;
+- la propriété « toute couleur est à ΔE_OK < 0,04 du centre de sa grappe » se vérifie **avant** l'étape 7 ;
+- teinte d'une couleur achromatique = `null` (forme des vecteurs de référence) ;
+- la constance de teinte des échelles (±1°) se vérifie sur les valeurs OKLCH **avant** l'arrondi 8 bits ;
+- recoloration du Do & Don't : teinte `(hp + 90 + 30k) mod 360` pour k = 0, 1, …, la première à ≥ 60° de toutes les teintes chromatiques de la palette, sinon celle qui maximise la distance minimale ;
+- favicon : avertissement `FAVICON_EXTREME_ASPECT` si `W/H > 2` ou `W/H < 0,5`.
+**Conséquences** : T-005, T-006 et T-012 deviennent exécutables sans BLOCKER ; les vecteurs de référence restent inchangés.
+**Alternatives rejetées** : modifier les vecteurs de référence (interdit) ; complémentaire de l'accent pour la recoloration (retombe sur la teinte du `primary`).
+
+## ADR-022 — Copilote et modifications concurrentes
+**Contexte** : la gestion de `baseSeq` pendant un tour du copilote (jusqu'à 5 commandes) n'était pas spécifiée.
+**Décision** : une révision utilisateur pendant un tour fait échouer la commande suivante du copilote (conflit de `seq`) ; le tour s'arrête avec l'événement `error { code: 'CONFLICT' }` ; les commandes déjà appliquées restent annulables.
+**Conséquences** : aucune donnée de l'utilisateur n'est écrasée ; pas de verrou à gérer.
+**Alternatives rejetées** : verrou du document pendant le tour (bloque l'utilisateur) ; rebasage automatique (complexité).
+
+## ADR-023 — Service des assets et rendus de mockups
+**Contexte** : trois façons de servir les assets étaient décrites (route applicative, sous-domaine `assets.`, domaine R2 dans la CSP) ; les rendus `mockup_render` téléversés par le navigateur n'étaient pas scannés.
+**Décision** : `GET /api/v1/assets/:id/content` vérifie `can()` puis répond `302` vers une URL R2 présignée en lecture (≤ 5 min, `Content-Type` et `Content-Disposition` fixés à la signature). L'origine R2 est distincte et sans cookies. Le sous-domaine `assets.<domaine>` est supprimé. Les rendus `mockup_render` suivent le même flux d'envoi que les logos (URL présignée, quarantaine, `asset.scan` avec `normalizeRaster`, PNG aux dimensions attendues) avant tout usage.
+**Conséquences** : la CSP liste le domaine R2 dans `img-src` ; aucun asset ne transite par l'application ; aucun rendu non vérifié n'atteint un PDF.
+**Alternatives rejetées** : bucket public derrière un domaine personnalisé (pas d'autorisation par requête) ; proxy applicatif des octets (charge serveur).
+
+## ADR-024 — CSP avec Next.js 16
+**Contexte** : une CSP à nonce impose le rendu dynamique ; `style-src` sans `'unsafe-inline'` bloque les attributs `style` produits par React et Motion ; Next.js 16 renomme le middleware en `proxy.ts`.
+**Décision** : toutes les pages, landing comprise, sont rendues dynamiquement avec un nonce par requête. `script-src 'self' 'nonce-…' 'strict-dynamic' https://challenges.cloudflare.com` ; `style-src-elem 'self' 'nonce-…'` ; **dérogation** `style-src-attr 'unsafe-inline'` (attributs `style` uniquement). Les en-têtes sont posés par `proxy.ts`.
+**Conséquences** : pas de pré-rendu statique de la landing (coût acceptable sur VPS) ; la dérogation est limitée aux attributs, pas aux balises `<style>` ni aux scripts.
+**Alternatives rejetées** : CSP par hash sur pages statiques (deux régimes à maintenir) ; `style-src 'unsafe-inline'` global.
+
+## ADR-025 — Actions de `can()`
+**Contexte** : la liste d'actions de `08_SECURITY_PRIVACY.md` §4 omettait la création de projet, le partage, le copilote et la suppression de compte ; avec le refus par défaut, ces routes auraient été bloquées.
+**Décision** : actions = `project:create`, `project:read`, `project:write`, `project:delete`, `asset:create`, `asset:read`, `document:command`, `copilot:use`, `export:create`, `export:read`, `share:create`, `share:revoke`, `share:read`, `account:delete`, `guest:claim`. Règles par acteur dans `08_SECURITY_PRIVACY.md` §4 ; toute action non listée est refusée. Code de refus : **404** (jamais 403) quand l'acteur n'a pas le droit de lire la ressource, pour ne pas révéler son existence (SEC-08) ; **403** seulement quand l'acteur peut déjà lire la ressource mais pas exécuter l'action (par exemple une session invitée sur le copilote, l'export ou le partage, ou un lien de partage sur une route d'écriture). `10_QUALITY.md` §7 applique cette règle.
+**Conséquences** : la table de routes (SEC-08) référence ces actions ; ajouter une capacité exige d'ajouter une action.
+**Alternatives rejetées** : actions génériques `read`/`write` (trop larges pour le partage et le copilote).
+
+## ADR-026 — Méthode de session et outillage de l'agent
+**Contexte** : `CLAUDE.md` imposait une session continue et l'interdiction de toucher au lockfile, en contradiction avec ADR-015 et `AGENTS.md` ; `turbo` réécrit `AGENTS.md` quand il détecte un agent ; `.nvmrc` pointait Node 22 (LTS de maintenance).
+**Décision** (remplace la règle de session d'ADR-015) : une session par ticket est recommandée ; une session continue est tolérée avec le protocole de transition de `CLAUDE.md`. La lecture des documents suit `AGENTS.md` §2. `pnpm-lock.yaml` n'est jamais édité à la main ; pnpm ne le modifie que pour une dépendance autorisée par le ticket. Node 24 (LTS active) dans `.nvmrc` ; `"agentGuidance": false` dans `turbo.json` ; hooks d'agent dans `tools/agent-hooks/`.
+**Conséquences** : une seule règle de session ; `AGENTS.md` n'est plus modifié par l'outillage ; les violations d'`AGENTS.md` sont refusées dès l'écriture une fois les hooks activés.
+**Alternatives rejetées** : imposer strictement une session par ticket (contraire à l'usage du propriétaire) ; installer ECC complet (coût en contexte, hooks inadaptés à Windows).
 
 ---
 
@@ -92,3 +170,6 @@
 | O-5 | Modèle de tarification et fournisseur de paiement (dépend du pays d'établissement) | P5 |
 | O-6 | Auto-hébergement d'un PaaS (Coolify/Dokploy) ou script de déploiement | Fin de P2 |
 | O-7 | Thème clair | Après la bêta |
+| O-8 | Positionnement et marché africain (promesse « fichiers propres », kit WhatsApp/Facebook, paiement mobile money) — `docs/proposals/P-001b_RECHERCHE_DOCUMENTAIRE.md` | Avant la fin de la tranche 1 |
+| O-9 | Brief guidé à la place du brief libre — `docs/proposals/P-002_BRIEF_GUIDE.md` | Avant T-014 |
+| O-10 | Propositions d'architecture non tranchées : mockups rendus dans le worker ; aperçu local à la place du mode invité ; extraction des couleurs depuis le SVG ; ancrage de la couleur de base dans les échelles (exige des vecteurs de référence v3) | Avant P2 |

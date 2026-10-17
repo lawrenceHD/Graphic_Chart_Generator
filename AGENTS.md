@@ -34,7 +34,7 @@ Les versions exactes sont dans `pnpm-lock.yaml` et `docs/14_ADR_LOG.md`.
 - Tout ce qui traverse une frontière (HTTP, base, fichier, IA, variable d'environnement) est **validé par Zod**.
 - **Aucune dépendance nouvelle** sans autorisation écrite dans le ticket. Si tu en as besoin, arrête-toi et demande.
 - **Aucun fichier hors du périmètre du ticket.** Si une modification ailleurs est nécessaire, signale-la, ne la fais pas.
-- Fonctions pures et immuables dans les packages `color-engine`, `document`, `svg-engine`, `logo-kit`. Pas d'accès à `process`, au disque, au réseau ni à l'horloge dans ces packages (injecte-les).
+- Fonctions pures et immuables dans les packages `kernel`, `color-engine`, `document`, `logo-kit` et `svg-engine` (sauf `svg-engine/src/raster/**`, rasterisation isolée, ADR-016). Pas d'accès à `process`, au disque, au réseau, à l'horloge ni à l'aléa dans ces packages (injecte-les ; la rasterisation est injectée via le port `Rasterizer`). `mockup-engine` est navigateur uniquement : aucun module Node.
 - Pas de `console.log` : utilise le logger. Pas de code mort, pas de `TODO` ni de placeholder, pas de données factices dans le code livré.
 - Fichiers de moins de 300 lignes. Noms explicites en anglais. Commentaires : pourquoi, jamais quoi.
 - Les erreurs prévisibles sont des **valeurs** (`Result`), pas des exceptions. Les exceptions sont réservées aux erreurs de programmation.
@@ -63,18 +63,21 @@ Les versions exactes sont dans `pnpm-lock.yaml` et `docs/14_ADR_LOG.md`.
 
 ```
 apps/web        → packages/*
-apps/worker     → packages/*
-packages/contracts       (Zod, types partagés)             → rien
-packages/color-engine    (pur)                             → rien
-packages/document        (AST + commandes, pur)            → contracts, color-engine
-packages/svg-engine      (pur sauf rasterisation isolée)   → contracts
-packages/logo-kit        (pur)                             → svg-engine, color-engine
-packages/mockup-engine   (navigateur uniquement)           → contracts
-packages/ai              (port + adaptateur)               → contracts, document
-packages/db              (Drizzle)                         → contracts
+apps/worker     → packages/*   (seul consommateur de @app/svg-engine/raster)
+packages/kernel          (Result, pur, zéro dépendance)    → rien
+packages/contracts       (Zod, types partagés)             → kernel
+packages/color-engine    (pur)                             → kernel
+packages/document        (AST + commandes, pur)            → kernel, contracts, color-engine
+packages/svg-engine      (pur sauf src/raster/)            → kernel, contracts
+packages/logo-kit        (pur)                             → kernel, contracts, svg-engine, color-engine
+packages/mockup-engine   (navigateur uniquement)           → kernel, contracts
+packages/ai              (port + adaptateur)               → kernel, contracts, document
+packages/db              (Drizzle)                         → kernel, contracts
 ```
 
-Un package **ne dépend jamais** d'un package situé au-dessus de lui. Les règles sont vérifiées par `pnpm verify` (dependency-cruiser) ; une violation fait échouer le ticket.
+Un package **ne dépend jamais** d'un package situé au-dessus de lui. Les règles sont vérifiées par `pnpm verify` (dependency-cruiser) ; une violation fait échouer le ticket. Décisions : ADR-016, ADR-017.
+
+Les hooks de `tools/agent-hooks/` (une fois activés, voir son README) refusent automatiquement à l'écriture les violations de ce fichier : `console.*`, `@ts-ignore`, `any`, impuretés dans les packages purs, écriture dans `docs/golden/` ou `pnpm-lock.yaml`.
 
 ## 6. Commandes
 

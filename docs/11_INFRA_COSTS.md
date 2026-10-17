@@ -1,6 +1,6 @@
 # 11 — Infrastructure, exploitation et budget
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (§2 : ADR-023)
 > Remplace : `FREE_STACK_AND_ARCHITECTURE.md` §1.6 et le « 0 € » de l'ancien CDC.
 > Les prix et quotas des fournisseurs changent : **tout chiffre ci-dessous est un ordre de grandeur à vérifier à la date d'achat.**
 
@@ -28,7 +28,7 @@ flowchart LR
 
 - Un seul VPS au départ, trois conteneurs applicatifs (`web`, `worker`, `postgres`) et `caddy`, orchestrés par Docker Compose.
 - Domaine géré chez le registrar de ton choix, DNS chez Cloudflare (proxy activé, mode SSL strict).
-- Un sous-domaine séparé (`assets.<domaine>`) sert les assets utilisateur sans cookies de session.
+- Les assets utilisateur sont servis **directement par R2** : la route `GET /api/v1/assets/:id/content` vérifie l'autorisation puis redirige (302) vers une URL présignée de lecture de courte durée. L'origine R2 est distincte de l'application et ne reçoit aucun cookie de session (ADR-023). Pas de sous-domaine d'assets.
 
 ## 3. Dimensionnement de départ
 

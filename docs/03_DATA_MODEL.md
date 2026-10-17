@@ -1,6 +1,6 @@
 # 03 — Modèle de données
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (4.0 du 2026-10-07 ; 4.1 : annulation serveur ADR-018, valeurs de marque ADR-020, rendus de mockup scannés ADR-023)
 > Remplace : schéma de `CAHIER_DES_CHARGES.md` §4 et `STUDIO_WORKSPACE_ENGINE.md` §3.
 
 ## 1. Règles générales
@@ -31,7 +31,7 @@ erDiagram
 
 ## 3. Tables
 
-Les types sont indicatifs ; l'implémentation Drizzle fait foi une fois le ticket T-004 livré et revu.
+Les types sont indicatifs ; l'implémentation Drizzle fait foi une fois le ticket T-014 livré et revu.
 
 ```sql
 -- Gérées par la bibliothèque d'authentification : user, session, account, verification.
@@ -94,10 +94,13 @@ CREATE TABLE revisions (
   seq         bigint NOT NULL,
   actor       actor_kind NOT NULL,
   command     jsonb NOT NULL,                 -- commande appliquée (Zod)
-  inverse     jsonb NOT NULL,                 -- commande inverse
+  inverse     jsonb NOT NULL,                 -- commande inverse, porte toujours `expect` (ADR-018)
+  undo_of     bigint,                         -- seq de la révision annulée par celle-ci (ADR-018)
+  redo_of     bigint,                         -- seq de l'annulation rétablie par celle-ci (ADR-018)
   snapshot    jsonb,                          -- document complet toutes les 25 révisions
   created_at  timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (project_id, seq)
+  UNIQUE (project_id, seq),
+  CHECK (undo_of IS NULL OR redo_of IS NULL)
 );
 
 CREATE TYPE asset_kind AS ENUM
@@ -120,6 +123,9 @@ CREATE TABLE assets (
   deleted_at    timestamptz
 );
 CREATE INDEX assets_project_kind ON assets (project_id, kind);
+-- Tout asset téléversé par le navigateur, y compris `mockup_render`, suit le même flux :
+-- `pending` → `quarantined` → job `asset.scan` → `clean` | `rejected` (ADR-023).
+-- Un `mockup_render` n'est `clean` que s'il est un PNG valide aux dimensions attendues (3840 × 2160).
 
 CREATE TABLE chat_messages (
   id             uuid PRIMARY KEY,
@@ -182,6 +188,8 @@ La file de tâches est gérée par **pg-boss** dans son propre schéma ; on n'y 
 
 Un projet a **un seul document JSON** (`documents.body`). Il contient les tokens globaux et les pages. Avantage : une commande = une transaction = un seul numéro de version ; l'annulation est simple.
 
+Le document ne stocke que des **choix** (tokens, textes, sélections). Les valeurs calculables (échelles de teintes, matrice de contraste, `bestText`) sont recalculées par les fonctions pures de `color-engine` à chaque rendu et ne sont jamais persistées.
+
 ```ts
 // packages/document — référence de forme (le code Zod fait foi)
 type BrandDocument = {
@@ -190,7 +198,7 @@ type BrandDocument = {
     name: string;
     mission: string;
     vision: string;
-    values: [string, string, string, string];
+    values: [BrandValue, BrandValue, BrandValue, BrandValue]; // ADR-020
     archetype: Archetype;                       // 12 archétypes, voir 07_AI_COPILOT.md
     tone: { axes: ToneAxis[]; examples: string[] };
   };
@@ -206,6 +214,11 @@ type BrandDocument = {
   assets: { logoSanitizedId: string; variants: VariantRef[] };
   pages: Page[];
 };
+
+type BrandValue = {
+  label: string;                                // ≤ 24 caractères
+  description: string;                          // ≤ 120 caractères
+};                                              // même forme que BrandAnalysis.values (07_AI_COPILOT.md)
 
 type ColorToken = {
   hex: string;                                  // '#RRGGBB' majuscules
@@ -230,11 +243,17 @@ Règles :
 
 ## 5. Révisions et Time-Machine
 
+Décision : ADR-018. L'historique est **entièrement côté serveur** et persistant.
+
 - Chaque commande appliquée crée une révision (`seq` croissant sans trou par projet).
-- `inverse` est calculée **au moment de l'application** par la fonction pure `apply(doc, command) → { doc, inverse }`.
-- **Annuler** applique `inverse` comme **nouvelle révision** (historique linéaire). **Rétablir** est géré par une pile côté client, valable pendant la session.
+- `inverse` est calculée **au moment de l'application** par la fonction pure `apply(doc, command) → { doc, inverse }`. L'inverse porte toujours un champ `expect` : la valeur que la commande d'origine a écrite.
+- **Précondition `expect`** : toute commande peut porter `expect` (valeur attendue à l'emplacement visé). Si la valeur courante diffère, `apply` échoue avec `EXPECTATION_FAILED` et le document n'est pas modifié. Les commandes de l'interface et du copilote peuvent l'omettre ; les inverses le portent toujours.
+- **Annuler** (`POST /undo`) : cible la révision la plus récente qui n'est pas elle-même une annulation (`undo_of` nul ; une révision ordinaire ou un rétablissement) et qui n'a pas déjà été annulée. Son `inverse` est appliqué comme **nouvelle révision** avec `undo_of = seq ciblé`. Deux annulations successives annulent donc deux révisions distinctes.
+- **Rétablir** (`POST /redo`) : cible la dernière annulation non encore rétablie et postérieure à la dernière révision ordinaire ; ré-applique la commande d'origine (avec `expect` = valeur restaurée par l'annulation) comme nouvelle révision avec `redo_of = seq de l'annulation`. Toute nouvelle révision ordinaire vide la possibilité de rétablir.
+- **Annulation ciblée** (`POST /revisions/:seq/undo`) : applique l'inverse d'une révision précise, même ancienne (cas du copilote). Grâce à `expect`, si la valeur a été modifiée depuis, la requête échoue en `409 UNDO_CONFLICT`, sans modification.
+- Au moins 50 niveaux d'annulation sont garantis ; l'historique survit au rechargement et aux changements d'appareil.
 - Un `snapshot` est enregistré toutes les 25 révisions pour limiter le rejeu.
-- Rétention : 500 révisions par projet ; les plus anciennes sont compactées en snapshot.
+- Rétention : 500 révisions par projet ; les plus anciennes sont compactées en snapshot et ne sont plus annulables.
 
 ## 6. Cycle de vie des données (RGPD)
 

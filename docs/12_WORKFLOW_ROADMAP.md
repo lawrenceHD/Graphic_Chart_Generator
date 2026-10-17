@@ -1,6 +1,6 @@
 # 12 — Méthode de travail et feuille de route
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (§3 : ADR-026)
 
 ## 1. Rôles et circulation de l'information
 
@@ -39,7 +39,7 @@ termine par le rapport au format imposé, avec la sortie réelle de `pnpm verify
 [coller le ticket ici]
 ```
 
-Règle d'hygiène : **une session = un ticket.** Pas de long fil qui dérive ; une session neuve limite les oublis et les « souvenirs » faux.
+Règle d'hygiène (ADR-026) : **une session par ticket est recommandée** ; une session neuve limite les oublis et les « souvenirs » faux. Une session continue sur plusieurs tickets est tolérée à condition d'appliquer le protocole de transition de `CLAUDE.md` §2B (ticket précédent scellé, compactage proposé tous les 2 à 3 tickets).
 
 ## 4. Gabarit de ticket
 

@@ -1,6 +1,6 @@
 # Suivi d'avancement
 
-> Dernière mise à jour : 2026-10-07 — Phase 0.
+> Dernière mise à jour : 2026-10-17 — Phase 0.
 > **Trois statuts, et seulement trois** :
 > - **Spécifié** : décrit dans `docs/`, aucun code.
 > - **Implémenté** : code écrit, `pnpm verify` vert.
@@ -23,6 +23,8 @@
 
 | Module | Package / zone | Spécifié | Implémenté | Vérifié | Remarque |
 |---|---|---|---|---|---|
+| Squelette du monorepo et CI (T-001) | racine, `packages/*`, `apps/*` | ✅ | ✅ | ❌ | `pnpm verify` vert le 2026-10-17. Non vérifié : rapport de sabotage T-001 absent ; exécution de la CI sur GitHub à confirmer par le propriétaire ; durcissement du 2026-10-17 à relire. |
+| Noyau `Result` | `kernel` | ✅ | — | ❌ | ADR-017 |
 | Conversions et WCAG | `color-engine` | ✅ | ❌ | ❌ | Vecteurs de référence prêts |
 | Extraction de palette | `color-engine` | ✅ | ❌ | ❌ | Corpus de 20 logos à constituer |
 | Échelles et matrice de contraste | `color-engine` | ✅ | ❌ | ❌ | |
@@ -64,15 +66,29 @@
 |---|---|
 | Backend Spring Boot | Archivé (ADR-001) |
 | Landing, dashboard, studio statique | Gelés : référence visuelle, réintégration par tickets |
-| Anciens documents v3 | À déplacer dans `docs/_archive/` |
+| Anciens documents v3 | Archivés dans `docs/_archives/` |
 
 ## 5. Journal
+
+### 2026-10-17 — Durcissement et corrections de spécification (ADR-016 à ADR-026)
+- Audit complet du corpus et de T-001 : contradictions de spécification corrigées par ADR-016 à ADR-026 (pureté et rasterisation, package `kernel`, annulation côté serveur, pages, valeurs de marque, palette, copilote, service des assets, CSP Next.js 16, actions de `can()`, méthode de session).
+- Outillage : hooks d'agent (`tools/agent-hooks/`, activation manuelle), skills élagués et complétés (`.claude/skills/SOURCES.md`), doublon `.agents/` retiré, `.mcp.json` épinglé (serveur postgres obsolète retiré).
+- Statut honnête de T-001 : **implémenté**, pas encore **vérifié** au sens de l'en-tête de ce document (pas de rapport de sabotage, pas de verdict GO consigné).
+- Propositions non validées : `docs/proposals/` (P-001 entretiens, P-001b recherche documentaire Afrique francophone, P-002 brief guidé) ; décisions ouvertes O-8 à O-10.
+
+### 2026-10-17 — Validation Ticket T-001 & Outillage Multi-Agents
+- Ticket T-001 (Squelette du monorepo et CI) exécuté et vérifié : `pnpm verify` vert sur l'ensemble du monorepo (lint, 10 packages typecheck, 6 tests d'acceptation HexColor passés, builds `tsc -b`, dependency-cruiser 0 violation).
+- Installation des skills et agents de revue ECC (.agents/ et .claude/) : TDD, accessibilité, sécurité, revues TypeScript.
+- Mise en place du protocole de session continue (`CLAUDE.md`, `GEMINI.md`) et des filtres d'économie de tokens (`.claudeignore`, `.geminiignore`).
+- Nettoyage des fichiers orphelins dupliqués dans `docs/`.
+- Prêt pour le lancement du ticket T-002 (Application web minimale, configuration validée, santé).
 
 ### 2026-10-07 — Recentrage (v4.0)
 - Analyse complète du corpus v3 et du cahier des charges ; contradictions, risques et hypothèses fausses relevés.
 - Décisions fondatrices : ADR-001 à ADR-015.
 - Production du corpus v4 (20 fichiers), des vecteurs de référence indépendants (`docs/golden/color.golden.json`) et des tickets de démarrage (`docs/tickets/PHASE_0_1_TICKETS.md`).
 - Aucune ligne de code de production écrite dans cette étape.
+
 
 ## 6. Risques actifs (extrait)
 

@@ -1,0 +1,26 @@
+# Build & dependencies
+node_modules/
+.turbo/
+.next/
+dist/
+coverage/
+.pnpm-store/
+
+# Large lockfile (do not ingest into context)
+pnpm-lock.yaml
+
+# Obsolete documentation (see README.md §4)
+docs/_archive/
+docs/_archives/
+
+# Heavy 3D & binary assets
+*.blend
+*.blend1
+*.gltf
+*.glb
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.ico
+*.pdf
