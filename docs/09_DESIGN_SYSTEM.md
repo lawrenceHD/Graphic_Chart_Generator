@@ -1,6 +1,6 @@
 # 09 — Design system, accessibilité et performance UI
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17
 > Remplace : `UI_UX_DESIGN_SYSTEM.md`. Conserve la direction artistique, corrige les objectifs irréalistes.
 
 ## 1. Direction artistique
@@ -26,7 +26,7 @@ Aucune couleur hexadécimale, aucun espacement arbitraire, aucun rayon arbitrair
   --bg-elevated:      oklch(0.22 0.015 260);
   --bg-preview:       oklch(0.30 0 0);          /* fond NEUTRE des aperçus */
   --border-subtle:    oklch(0.30 0.015 260 / 0.6);
-  --border-strong:    oklch(0.45 0.02 260);
+  --border-strong:    oklch(0.55 0.02 260);     /* ≥ 3:1 sur canvas 4,10, surface 3,88, elevated 3,57 (WCAG 1.4.11) */
 
   /* Texte (ratios vérifiés avec color-engine en CI) */
   --text-primary:     oklch(0.97 0 0);
@@ -35,7 +35,7 @@ Aucune couleur hexadécimale, aucun espacement arbitraire, aucun rayon arbitrair
 
   /* Accent de l'interface (≠ couleurs de marque de l'utilisateur) */
   --accent:           oklch(0.68 0.19 268);
-  --accent-contrast:  oklch(0.16 0.02 268);
+  --accent-contrast:  oklch(0.16 0.02 268);     /* SEUL texte autorisé sur --accent (6,36:1) */
   --focus-ring:       oklch(0.80 0.15 268);
 
   /* États (toujours avec icône + texte) */
@@ -52,6 +52,11 @@ Aucune couleur hexadécimale, aucun espacement arbitraire, aucun rayon arbitrair
 ```
 
 **Règle de vérification** : un test de CI calcule, avec `color-engine`, les ratios de contraste des paires `texte/fond` déclarées dans un tableau de référence (`design-tokens.contrast.ts`) et échoue sous 4,5 (texte) ou 3 (composants).
+
+**Règles d'usage** (ratios calculés avec les formules de `05_ENGINES.md`) :
+- Texte posé sur `--accent` : **uniquement** `--accent-contrast` (6,36:1). Le blanc (`--text-primary`) sur `--accent` donne 2,8:1 : **interdit**.
+- Bordures porteuses d'information (champs de formulaire, contrôles) : `--border-strong` (≥ 3:1 sur les trois fonds, WCAG 1.4.11). `--border-subtle` est réservé aux séparateurs décoratifs.
+- Le tableau `design-tokens.contrast.ts` contient au minimum : `--text-*` sur les trois fonds, `--accent-contrast` sur `--accent`, `--border-strong` et `--focus-ring` sur les trois fonds, et les trois états sur `--bg-surface`.
 
 ## 3. Typographie de l'interface
 
@@ -103,7 +108,7 @@ Budgets : `02_ARCHITECTURE.md` §8. Règles :
 ### Pages (MVP)
 | Page | Contenu |
 |---|---|
-| `/` | Landing **statique**, sobre (gel du travail visuel existant) |
+| `/` | Landing sobre, **rendu dynamique** (CSP à nonce, ADR-024) ; gel du travail visuel existant |
 | `/connexion`, `/inscription`, `/mot-de-passe` | Authentification |
 | `/studio` | Liste des projets |
 | `/studio/[id]` | Éditeur : volet de gauche (copilote et inspecteur), centre (charte paginée), barre supérieure (annuler/rétablir, exports) |

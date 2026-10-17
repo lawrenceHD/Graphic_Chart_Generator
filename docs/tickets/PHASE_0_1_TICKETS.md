@@ -1,6 +1,6 @@
 # Tickets — Phases 0 et 1
 
-> Statut : **prêts à lancer dans l'ordre** — Version 4.0 — 2026-10-07
+> Statut : **prêts à lancer dans l'ordre** — Version 4.1 — 2026-10-17 (4.0 du 2026-10-07 ; 4.1 : alignement sur les ADR-016 à ADR-025 ; le package `@app/kernel` (type `Result`, ADR-017) existe avant T-002)
 > Chaque ticket suit le gabarit de `docs/12_WORKFLOW_ROADMAP.md` §4 et la Definition of Done de `docs/10_QUALITY.md` §4.
 > L'agent lit `AGENTS.md` **avant** chaque ticket. Une session = un ticket.
 
@@ -68,15 +68,15 @@ Une app Next.js qui **refuse de démarrer** si sa configuration est invalide, ex
 
 ## Périmètre
 **Autorisés** : `apps/web/**`, `packages/db/**` (connexion seulement, pas de schéma métier), `infra/docker-compose.dev.yml`, `.env.example`, `packages/contracts/src/env.ts` et `error.ts`.
-**Dépendances autorisées** : `next`, `react`, `react-dom`, `zod`, `pino`, `pg`, `drizzle-orm`, `drizzle-kit`, types associés, `@playwright/test` (dev), `testcontainers` ou équivalent **uniquement** si le ticket l'exige (sinon docker compose de test).
+**Dépendances autorisées** : `@app/kernel` (workspace), `next`, `react`, `react-dom`, `zod`, `pino`, `pg`, `drizzle-orm`, `drizzle-kit`, types associés, `@playwright/test` (dev), `testcontainers` ou équivalent **uniquement** si le ticket l'exige (sinon docker compose de test).
 
 ## Spécification
-1. `apps/web` : page d'accueil minimale (texte seul, sans style), route `GET /api/health`.
-2. `contracts` : schéma Zod `Env` (variables du §6 de l'architecture ; en développement, valeurs de substitution explicites **uniquement** dans `.env.example`) ; fonction `loadEnv(source)` pure retournant `Result`. Le démarrage de l'app échoue avec un message listant les variables invalides, **sans afficher leurs valeurs**.
+1. `apps/web` : page d'accueil minimale (texte seul, sans style), route `GET /api/health`. **Exception i18n** : ce texte technique est temporaire et peut être écrit en dur ; l'i18n arrive en T-020, qui le remplace. C'est la **seule** exception tolérée à la règle « textes d'interface via i18n » d'`AGENTS.md` §4.
+2. `contracts` : schéma Zod `Env` (variables du §6 de l'architecture ; en développement, valeurs de substitution explicites **uniquement** dans `.env.example`) ; fonction `loadEnv(source)` pure retournant `Result` (type de `@app/kernel`, ADR-017). Le démarrage de l'app échoue avec un message listant les variables invalides, **sans afficher leurs valeurs**.
 3. `contracts` : type d'erreur RFC 9457 (`ProblemDetails`) et fabrique `problem(code, status, detail, hint?)`.
 4. Logger pino JSON avec `requestId` ; masquage des champs sensibles (`authorization`, `cookie`, `password`, `token`).
 5. `/api/health` : vérifie la base (`SELECT 1`). Réponse `200 { status: "ok" }` ou `503 { status: "degraded" }` **sans** détail interne.
-6. Middleware : en-têtes de `docs/08_SECURITY_PRIVACY.md` §3 avec **nonce** par requête.
+6. Proxy : en-têtes de `docs/08_SECURITY_PRIVACY.md` §3 avec **nonce** par requête. Depuis Next.js 16, le « middleware » s'appelle **Proxy** : fichier `proxy.ts` au même niveau que le dossier `app/` (racine de `apps/web` ou `apps/web/src`), fonction exportée `proxy` (https://nextjs.org/docs/app/getting-started/proxy). Vérifier la convention dans la version de `next` installée avant d'écrire le fichier ; ne pas créer de `middleware.ts`.
 7. `infra/docker-compose.dev.yml` : PostgreSQL local avec volume.
 
 ## Tests d'acceptation
@@ -99,20 +99,22 @@ Authentification, schéma métier, i18n, styles, composants.
 Le cœur de l'édition : un document de marque modifiable **uniquement** par des commandes pures réversibles.
 
 ## À lire
-`docs/03_DATA_MODEL.md` §4–§5 ; `docs/04_API_CONTRACTS.md` §4 ; `docs/14_ADR_LOG.md` ADR-007.
+`docs/03_DATA_MODEL.md` §4–§5 ; `docs/04_API_CONTRACTS.md` §4 ; `docs/14_ADR_LOG.md` ADR-007, ADR-017, ADR-018, ADR-019, ADR-020.
 
 ## Périmètre
 **Autorisés** : `packages/document/**`, `packages/contracts/src/**` (types partagés nécessaires).
-**Dépendances autorisées** : `zod`, `fractional-indexing` (**si absente à l'installation, écrire un BLOCKER**), `fast-check` (dev).
+**Dépendances autorisées** : `@app/kernel` (workspace, type `Result`), `zod`, `fractional-indexing` (**si absente à l'installation, écrire un BLOCKER**), `fast-check` (dev).
 
 ## Spécification
-1. Schémas Zod de `BrandDocument`, `Page`, `ColorToken`, `PageType` (liste de `docs/01_PRODUCT_MVP.md` §4), taille maximale du document 512 Ko.
-2. Commandes (union discriminée sur `type`) : `SetColorToken`, `SetTypographyPairing`, `SetBrandField`, `SetPageField`, `SetPageOverride`, `ClearPageOverride`, `SetLogoRules`, `ReorderPage`, `AddPage`, `RemovePage`, `SelectScene`.
-3. `apply(doc, command): Result<{ doc, inverse }, CommandError>` **pure** : ne mute jamais `doc` (copie structurelle).
-4. Erreurs : `PAGE_NOT_FOUND`, `FIELD_NOT_ALLOWED`, `VALUE_OUT_OF_RANGE`, `INVALID_COMMAND`, `DOCUMENT_TOO_LARGE`.
-5. `ReorderPage` : clés `position` fractionnaires ; réordonner n'altère que la page déplacée.
-6. Chaînes normalisées NFC, bornées ; `hex` normalisé en majuscules ; `clearSpaceRatio` ∈ [0,10 ; 0,50].
-7. `migrate(doc)`: squelette `schemaVersion` → version courante (identité pour la version 1) avec test d'un document de version inconnue → erreur.
+1. Schémas Zod de `BrandDocument` (dont `brand.values` = 4 × `{ label ≤ 24, description ≤ 120 }`, ADR-020), `Page`, `ColorToken`, `PageType` (liste de `docs/01_PRODUCT_MVP.md` §4), taille maximale du document 512 Ko.
+2. Commandes (union discriminée sur `type`) : `SetColorToken`, `SetTypographyPairing`, `SetBrandField`, `SetPageField`, `SetPageOverride`, `ClearPageOverride`, `SetLogoRules`, `ReorderPage`, `AddPage`, `RemovePage`, `SelectScene`. Champs exacts : `docs/04_API_CONTRACTS.md` §4.
+3. `apply(doc, command): Result<{ doc, inverse }, CommandError>` **pure** (`Result` importé de `@app/kernel`) : ne mute jamais `doc` (copie structurelle), ne génère jamais d'identifiant ni d'aléa.
+4. Erreurs : `PAGE_NOT_FOUND`, `FIELD_NOT_ALLOWED`, `VALUE_OUT_OF_RANGE`, `INVALID_COMMAND`, `DOCUMENT_TOO_LARGE`, `EXPECTATION_FAILED`.
+5. **`expect` (ADR-018)** : toute commande accepte un champ facultatif `expect` ; si la valeur courante diffère, `EXPECTATION_FAILED` sans modification. Chaque inverse produit par `apply` porte **toujours** `expect` (la valeur que la commande vient d'écrire).
+6. **`AddPage` (ADR-019)** : `{ type, pageId, afterPageId, position?, title?, data?, overrides? }` ; `pageId` est **fourni par l'appelant** (généré par le serveur) ; un `pageId` déjà présent → `INVALID_COMMAND`. L'inverse de `RemovePage` est un `AddPage` **complet** qui restaure la page à l'identique (même `pageId`, `position`, `title`, `data`, `overrides`).
+7. `ReorderPage` : clés `position` fractionnaires ; réordonner n'altère que la page déplacée.
+8. Chaînes normalisées NFC, bornées ; `hex` normalisé en majuscules ; `clearSpaceRatio` ∈ [0,10 ; 0,50].
+9. `migrate(doc)`: squelette `schemaVersion` → version courante (identité pour la version 1) avec test d'un document de version inconnue → erreur.
 
 ## Tests d'acceptation
 1. **Propriété** (fast-check) : pour toute commande valide générée, `apply(apply(doc, c).doc, inverse).doc` est égal profondément à `doc`.
@@ -122,7 +124,10 @@ Le cœur de l'édition : un document de marque modifiable **uniquement** par des
 5. `SetLogoRules` hors [0,10 ; 0,50] → `VALUE_OUT_OF_RANGE`.
 6. 20 réordonnancements aléatoires consécutifs : l'ordre final correspond au modèle de référence (tableau) et les clés restent uniques.
 7. Document > 512 Ko après commande → `DOCUMENT_TOO_LARGE`.
-8. **Sabotage** : inverser l'inverse de `SetColorToken` → test 1 échoue.
+8. **`expect`** : `SetColorToken` avec un `expect` différent de la valeur courante → `EXPECTATION_FAILED`, document inchangé ; avec le bon `expect` → appliqué. Tout inverse produit contient `expect`.
+9. **Annulation hors ordre** : appliquer `c1` puis `c2` sur le même token, puis l'inverse de `c1` → `EXPECTATION_FAILED` (la valeur a changé depuis `c1`) ; sur deux tokens différents → succès.
+10. **`RemovePage` → `AddPage`** : supprimer une page puis appliquer l'inverse restaure une page profondément égale (même `pageId`, `position`, `title`, `data`, `overrides`) ; `AddPage` avec un `pageId` existant → `INVALID_COMMAND`.
+11. **Sabotage** : inverser l'inverse de `SetColorToken` → test 1 échoue ; retirer la vérification de `expect` → test 8 échoue.
 
 ## Hors périmètre
 Base de données, API HTTP, IA, interface.
@@ -136,13 +141,13 @@ Base de données, API HTTP, IA, interface.
 Les fondations mathématiques de la couleur, **exactes** et vérifiées par des valeurs externes.
 
 ## À lire
-`docs/05_ENGINES.md` §1, §2.1–§2.3, §2.11 ; `docs/golden/color.golden.json`.
+`docs/05_ENGINES.md` §1, §2.1–§2.3, §2.11 ; `docs/golden/color.golden.json` ; `docs/14_ADR_LOG.md` ADR-017.
 
 ## Périmètre
-**Autorisés** : `packages/color-engine/**`. **Dépendances** : aucune (dev : `vitest`, `fast-check`).
+**Autorisés** : `packages/color-engine/**`. **Dépendances** : `@app/kernel` (workspace, type `Result`) uniquement (dev : `vitest`, `fast-check`).
 
 ## Spécification
-Fonctions pures exportées (noms contractuels) :
+Fonctions pures exportées (noms contractuels) ; `Result` vient de `@app/kernel` :
 ```ts
 parseHex(input: string): Result<Rgb, 'INVALID_HEX'>   // '#RRGGBB' uniquement (majuscules ou minuscules)
 toHex(rgb: Rgb): string                               // '#RRGGBB' majuscules, arrondi au plus proche
@@ -152,7 +157,7 @@ contrastRatio(fg: string, bg: string): number         // symétrique, [1, 21]
 wcagLevel(ratio: number): 'fail' | 'large-ui' | 'aa' | 'aaa'
 formatRatio(ratio: number): string                    // TRONQUÉ à 2 décimales, ex. '4.49'
 hexToOklab(hex): Oklab; oklabToHex(lab): string       // sans mappage de gamut (borne [0,255])
-hexToOklch(hex): Oklch                                // teinte = 0 si C < 0.0004
+hexToOklch(hex): Oklch                                // { L, C, h: number | null } ; h = null si C < 0.0004
 hexToLab(hex): Lab                                    // CIELAB D65 (voir ci-dessous)
 deltaEOk(a: string, b: string): number
 deltaE2000(lab1: Lab, lab2: Lab): number
@@ -165,6 +170,7 @@ deltaE2000(lab1: Lab, lab2: Lab): number
 2. `wcagLevel(contrastRatio('#777777','#FFFFFF'))` = `'large-ui'` ; `'#767676'` → `'aa'` ; `'#595959'` → `'aaa'`.
 3. `formatRatio(4.499)` = `'4.49'` ; `formatRatio(21)` = `'21.00'` ; **jamais** d'arrondi vers le haut.
 4. **Propriétés** : `toHex(parseHex(h))` = `h` normalisé ; aller-retour OKLab ±1 par canal 8 bits ; `contrastRatio(a,b) = contrastRatio(b,a)` ; `1 ≤ ratio ≤ 21`.
+4 bis. `hexToOklch` : teinte `null` pour `#000000`, `#FFFFFF`, `#808080` (section `oklab` du fichier de référence, où `oklch[2]` vaut `null`) ; teinte numérique à ±0,1° pour les couleurs chromatiques.
 5. `parseHex` refuse `#fff`, `fff`, `#GGGGGG`, `''`, `#12345`, `#1234567`.
 6. **Sabotage** : changer le seuil `0.04045` en `0.04` → au moins un test golden échoue ou, à défaut, signaler que le test ne détecte pas cette erreur (et renforcer).
 
@@ -180,14 +186,14 @@ Extraction de palette, CMJN, échelles, interface.
 Extraire une palette **déterministe** d'une image décodée et attribuer les rôles.
 
 ## À lire
-`docs/05_ENGINES.md` §2.4–§2.6, §6.
+`docs/05_ENGINES.md` §2.4–§2.6, §6 ; `docs/14_ADR_LOG.md` ADR-021.
 
 ## Périmètre
-**Autorisés** : `packages/color-engine/src/extract/**`. **Dépendances** : aucune.
+**Autorisés** : `packages/color-engine/src/extract/**`. **Dépendances** : aucune nouvelle (`@app/kernel` déjà présent depuis T-004).
 
 ## Spécification
 - API : `extractPalette(image: { width, height, data: Uint8ClampedArray }, options?): Result<ExtractedPalette, 'EMPTY_IMAGE'>` ; `assignRoles(clusters, options): PaletteRoles`.
-- Algorithme **exactement** celui de §2.4 (étapes 1 à 8), rôles §2.5, dérivations §2.6.
+- Algorithme **exactement** celui de §2.4 (étapes 1 à 8, dont la définition du pourtour et la réduction de l'étape 7), rôles **exclusifs** §2.5, dérivations §2.6.
 - Aucun accès à `Math.random` ; tri stable avec départage par hexadécimal.
 - Les images de test sont **générées par le code de test** (tableaux de pixels), pas de fichiers binaires.
 
@@ -195,12 +201,12 @@ Extraire une palette **déterministe** d'une image décodée et attribuer les r�
 1. **Deux aplats** 60 % / 40 % (rouge et bleu) : `primary` = la plus grosse, `accent` = l'autre ; `source = 'extracted'`.
 2. **Fond blanc opaque** autour d'un logo bicolore : le blanc est exclu.
 3. **Disque anti-aliasé** sur fond transparent : les couleurs intermédiaires des bords n'apparaissent pas dans la palette.
-4. **Logo noir seul** : `primary` noir ; `accent`, `neutralLight`, `neutralDark` **dérivés** (`source = 'derived'`) et dans le gamut ; aucune erreur.
-5. **Dégradé** : au plus 8 grappes, triées par part décroissante.
+4. **Logo noir seul** : `primary` noir ; `accent`, `neutralLight`, `neutralDark` **dérivés** (`source = 'derived'`) et dans le gamut ; aucune erreur. (La grappe noire, déjà `primary`, n'est plus candidate à `neutralDark` : rôles exclusifs, ADR-021.)
+5. **Dégradé** : au plus 8 grappes, triées par part décroissante ; **la somme des parts vaut 1** (±1e-9).
 6. **Traits de 1 px** : l'exclusion des bords est désactivée (repli) et la palette est non vide.
 7. **Image entièrement transparente** → `EMPTY_IMAGE`.
 8. **Déterminisme** : mêmes pixels mélangés dans un autre ordre → résultat identique à l'octet près.
-9. **Propriété** : deux appels successifs identiques ; aucune grappe ne contient deux couleurs à ΔE_OK ≥ 0,04 de son centre.
+9. **Propriété** : deux appels successifs identiques ; **sur la sortie de l'étape 6 (avant la réduction de l'étape 7)**, aucune grappe ne contient de couleur à ΔE_OK ≥ 0,04 de son centre ; après l'étape 7, les parts somment à 1 et chaque rôle est attribué à une grappe distincte.
 10. **Couleurs dérivées** : pour chacun des 4 `primary` de la section `derivedColors` de `docs/golden/color.golden.json` (`#1F4BFF`, `#FFD60A`, `#000000`, `#B3261E`), les rôles `accent`, `neutralLight`, `neutralDark` dérivés égalent les valeurs du fichier (±1 par canal, `_meta.tolerances.gamutHexPerChannel`). Ces valeurs sont issues d'une implémentation de référence de la spécification, pas d'une norme publiée : en cas de divergence, **BLOCKER** plutôt que de modifier le fichier.
 11. **Sabotage** : changer `mergeThreshold` de `0.04` à `0.4` → au moins un test échoue.
 
@@ -220,7 +226,7 @@ Rasterisation SVG (T-008), échelles (T-006), interface.
 
 ## Tests d'acceptation
 1. `mapToGamut` : sortie toujours dans le gamut ; `L` et `h` inchangés ; chroma **maximale** (une chroma + 0,005 sort du gamut) sur 200 couleurs hors gamut.
-2. `buildScale` : lightness **strictement décroissante**, teinte constante à ±1°, 11 valeurs, toutes dans le gamut, pour 50 couleurs aléatoires et pour les cas limites (`#000000`, `#FFFFFF`, `#808080`, `#FF0000`, `#00FF00`, `#0000FF`).
+2. `buildScale` : lightness **strictement décroissante**, 11 valeurs, toutes dans le gamut, pour 50 couleurs aléatoires et pour les cas limites (`#000000`, `#FFFFFF`, `#808080`, `#FF0000`, `#00FF00`, `#0000FF`). Teinte constante à ±1° **mesurée sur les valeurs OKLCH avant l'arrondi 8 bits** (`05_ENGINES.md` §2.8) ; **non vérifiée** pour les jetons achromatiques (`#000000`, `#FFFFFF`, `#808080`). Pour mémoire : mesurée sur les hex arrondis, la teinte du pas 50 de `#1F4BFF` dérive d'environ 3° ; ce n'est pas une erreur.
 3. `buildContrastMatrix` d'une palette de `n` couleurs : `n·(n−1)` cellules, `ratio` identique à `contrastRatio`, niveaux conformes à `wcagLevel`.
 4. `bestTextFor('#1F4BFF', …)` choisit le candidat au ratio maximal ; à égalité, ordre stable.
 5. **Vecteurs de référence** : `mapToGamut` reproduit la section `gamutMapping` (chroma ±0,0005, hex ±1 par canal) et `buildScale` reproduit la section `scales` (`#1F4BFF`, `#FFD60A`, `#808080`, hex ±1 par canal). Mêmes règles de divergence que T-005 : **BLOCKER**, pas de modification du fichier.
@@ -266,11 +272,17 @@ Rasterisation, bbox (T-008), variantes de logo, upload.
 **Phase** P1 · **Taille** M · **Dépend de** T-007
 
 ## À lire
-`docs/05_ENGINES.md` §3.6–§3.7, §4 ; `docs/08_SECURITY_PRIVACY.md` SEC-12, SEC-13, SEC-15.
+`docs/05_ENGINES.md` §3.6–§3.7, §4 ; `docs/08_SECURITY_PRIVACY.md` SEC-12, SEC-13, SEC-15 ; `docs/14_ADR_LOG.md` ADR-016.
 
 ## Périmètre
-**Autorisés** : `packages/svg-engine/src/raster/**`, `packages/svg-engine/src/detect/**`.
+**Autorisés** : `packages/svg-engine/src/raster/**`, `packages/svg-engine/src/detect/**`, `packages/svg-engine/package.json` (champ `exports` : sous-chemin `./raster`), `packages/contracts/src/rasterizer.ts` (type du port).
 **Dépendances autorisées** : `@resvg/resvg-js`, `sharp`.
+
+## Architecture (ADR-016)
+- `src/raster/**` est la **seule** partie impure de `svg-engine` ; elle est exportée sous `@app/svg-engine/raster` et **jamais** depuis l'index principal du package.
+- Elle **implémente le port `Rasterizer`** défini dans `@app/contracts` (`rasterize(svg, width) → Promise<Result<{ png, width, height }, RasterError>>` et `bbox(svg) → Promise<Result<Rect, RasterError>>`).
+- Seuls `apps/worker` et les tests d'intégration l'importent ; `logo-kit` et le reste de `svg-engine` reçoivent un `Rasterizer` injecté.
+- `detectType` et `downscaleNearest` sont purs et restent hors de `src/raster/`.
 
 ## Spécification
 1. `detectType(bytes): 'png' | 'jpeg' | 'webp' | 'svg' | 'unknown'` — **par octets magiques**, sans dépendance, tolérant au BOM et aux espaces pour le SVG.
@@ -287,7 +299,8 @@ Rasterisation, bbox (T-008), variantes de logo, upload.
 5. `svgBBox` sur un SVG dont le contenu occupe la moitié du viewBox retourne cette moitié (±0,5).
 6. `normalizeRaster` : PNG 9000×100 refusé ; JPEG avec EXIF d'orientation 6 → sortie tournée, sans métadonnées ; PNG tronqué → `ASSET_DECODE_FAILED`.
 7. `downscaleNearest` n'introduit **aucune** couleur absente de l'image source (propriété).
-8. **Sabotage** : retirer la vérification du marqueur d'assainissement → test 3 échoue.
+8. L'index principal de `@app/svg-engine` n'exporte rien de `src/raster/` (test d'import) ; `pnpm verify` (lint de pureté, ADR-016) passe.
+9. **Sabotage** : retirer la vérification du marqueur d'assainissement → test 3 échoue.
 
 ## Hors périmètre
 Variantes de logo (T-009), vectorisation (T-011), stockage.
@@ -298,16 +311,21 @@ Variantes de logo (T-009), vectorisation (T-011), stockage.
 **Phase** P1 · **Taille** M · **Dépend de** T-008
 
 ## À lire
-`docs/05_ENGINES.md` §5.1–§5.3.
+`docs/05_ENGINES.md` §5.1–§5.3 ; `docs/14_ADR_LOG.md` ADR-016.
 
 ## Périmètre
-**Autorisés** : `packages/logo-kit/src/mono/**`. **Dépendances** : aucune nouvelle (utilise `svg-engine`, `color-engine`).
+**Autorisés** : `packages/logo-kit/src/mono/**`. **Dépendances** : aucune nouvelle (utilise `svg-engine` — index principal uniquement —, `color-engine`, `contracts`, `kernel`). `logo-kit` est **pur** : il n'importe **jamais** `@app/svg-engine/raster`.
 
 ## Spécification
-1. `monochromeSvg(svg: string, target: '#000000' | '#FFFFFF'): Result<{ svg; path: 'structural' | 'raster-fallback-needed'; warnings }, …>` — chemin **structurel** de §5.2 ; retourne `raster-fallback-needed` si le SVG contient `mask`, `filter` ou ressemble à du raster ; le chemin raster réel est branché par injection (`vectorizer` passé en paramètre, implémenté plus tard).
+1. `monochromeSvg(svg: string, target: '#000000' | '#FFFFFF'): Result<{ svg; path: 'structural' | 'raster-fallback-needed'; warnings }, …>` — chemin **structurel** de §5.2 ; retourne `raster-fallback-needed` si le SVG contient `mask`, `filter` ou ressemble à du raster ; le chemin raster réel est branché par injection (`rasterizer: Rasterizer` et `vectorizer: Vectorizer` passés en paramètre ; le vectoriseur est implémenté après T-011).
 2. Règle **encre / surface claire** de §5.1.
-3. `inkMask(rasterRgba): Uint8Array` et `iou(maskA, maskB): number` (§5.3).
-4. `fidelityScore(originalSvg, variantSvg): Promise<number>` : rasterise les deux à 1024 px (via T-008) et retourne l'IoU.
+3. `inkMask(rasterRgba): Uint8Array` et `iou(maskA, maskB): number` (§5.3), purs.
+4. `fidelityScore(originalSvg, variantSvg, rasterizer: Rasterizer): Promise<Result<number, RasterError>>` : rasterise les deux à 1024 px **avec le `Rasterizer` injecté** et retourne l'IoU.
+
+## Stratégie de test
+- Tests **unitaires** : `inkMask`, `iou`, chemin structurel — sans rasteriseur.
+- Tests d'**intégration** (`fidelityScore`, tests 1 à 3) : avec le **vrai** rasteriseur de `@app/svg-engine/raster` (T-008), importé **uniquement** dans les fichiers de test.
+- Un faux rasteriseur n'est autorisé que pour tester l'**orchestration** (propagation d'une erreur `RasterError`, appel à la bonne résolution), jamais pour remplacer le calcul de l'IoU (`AGENTS.md` §8).
 
 ## Tests d'acceptation
 1. Logo à une couleur → variante noire : IoU ≥ 0,99 ; toutes les formes sont noires.
@@ -317,7 +335,8 @@ Variantes de logo (T-009), vectorisation (T-011), stockage.
 5. Dégradé : remplacé par la couleur cible ; aucune référence `url(#…)` ne subsiste.
 6. SVG avec `mask` → `path = 'raster-fallback-needed'`.
 7. `iou` : deux masques identiques → 1 ; disjoints → 0 ; moitié recouverte → 1/3 (cas de référence).
-8. **Sabotage** : inverser le seuil 0,9 → test 3 ou 4 échoue.
+8. `fidelityScore` propage l'erreur d'un rasteriseur en échec (`Result` d'erreur, pas d'exception).
+9. **Sabotage** : inverser le seuil 0,9 → test 3 ou 4 échoue.
 
 ---
 
@@ -373,12 +392,12 @@ Pour chaque logo : retrait du fond, binarisation « encre », vectorisation, ras
 **Phase** P1 · **Taille** M · **Dépend de** T-009
 
 ## À lire
-`docs/05_ENGINES.md` §5.4–§5.6.
+`docs/05_ENGINES.md` §5.4–§5.6 ; `docs/14_ADR_LOG.md` ADR-016, ADR-021.
 
 ## Spécification
-1. `faviconSvg(svg, options): Result<{ svg; size }, …>` : `S = max(W, H) / 0.8`, logo centré, fond transparent ou uni à coins arrondis (rayon 18 % de `S`).
+1. `faviconSvg(svg, bbox, options): Result<{ svg; size; warnings }, …>` : `S = max(W, H) / 0.8`, logo centré, fond transparent ou uni à coins arrondis (rayon 18 % de `S`). La boîte englobante est **fournie** (calculée par le `Rasterizer` injecté, ADR-016). Avertissement `FAVICON_EXTREME_ASPECT` si `W / H > 2` ou `< 0,5` (ADR-021).
 2. `clearSpace(bbox, ratio)` → `{ x, zone }` ; `clearSpaceDiagramSvg(...)` (logo, rectangle pointillé, 4 carrés `X`).
-3. `dosAndDontsSvg(svg, palette)` → 4 panneaux (déformation ×1,4 ; rotation −15° ; couleur hors palette complémentaire de l'accent ; fond de contraste < 3 choisi par le moteur de couleur) avec icône croix et libellé texte.
+3. `dosAndDontsSvg(svg, palette)` → 4 panneaux (déformation ×1,4 ; rotation −15° ; couleur hors palette calculée selon `05_ENGINES.md` §5.6, ADR-021 ; fond de contraste < 3 choisi par le moteur de couleur) avec icône croix et libellé texte.
 4. Les SVG produits repassent par `sanitizeSvg` (propriété : sortie acceptée).
 
 ## Tests d'acceptation
@@ -386,7 +405,9 @@ Pour chaque logo : retrait du fond, binarisation « encre », vectorisation, ras
 2. Clear space : `X = ratio × H` ; zone = boîte élargie de `X` ; refus de `ratio` hors [0,10 ; 0,50].
 3. Panneau « fond inadapté » : le contraste calculé entre le fond choisi et la couleur principale du logo est **< 3** ; si aucune couleur de la palette ne convient, un gris est généré et le contraste vérifié.
 4. Tous les SVG générés sont acceptés par `sanitizeSvg`.
-5. **Sabotage** : changer `0.8` en `0.9` → test 1 échoue.
+5. **Recoloration** : pour une palette dont l'accent est dérivé (accent à `hp + 180°`), la teinte retenue est à ≥ 60° du `primary` **et** de l'accent ; pour une palette couvrant toutes les teintes à moins de 60°, la teinte retenue maximise l'écart minimal ; résultat identique à l'octet près sur deux appels.
+6. **Favicon allongé** : boîte 300 × 100 → avertissement `FAVICON_EXTREME_ASPECT` ; boîte 150 × 100 → aucun avertissement.
+7. **Sabotage** : changer `0.8` en `0.9` → test 1 échoue ; ramener la recoloration à « complémentaire de l'accent » → test 5 échoue.
 
 ---
 
@@ -397,7 +418,7 @@ Pour chaque logo : retrait du fond, binarisation « encre », vectorisation, ras
 | T-013 | **Spike auth** : bibliothèque retenue (e-mail, vérification, réinitialisation, Google, sessions en base, cookies) ; confirmer l'algorithme de hachage (SEC-01) | P2 |
 | T-014 | Schéma Drizzle complet (`03_DATA_MODEL.md`), migrations, tests d'intégration | P2 |
 | T-015 | `can()` + table de routes + tests d'accès générés | P2 |
-| T-016 | Dépôt et lecture de projets, `documents`, `revisions`, endpoint `commands` et `undo` | P2 |
+| T-016 | Dépôt et lecture de projets, `documents`, `revisions` (`undo_of`, `redo_of`), endpoints `commands`, `undo`, `redo` et `revisions/:seq/undo` (ADR-018, `UNDO_CONFLICT`) | P2 |
 | T-017 | Sessions invitées, rattachement, purge à 24 h | P2 |
 | T-018 | Upload par URL présignée, statut de quarantaine, job `asset.scan` | P2 |
 | T-019 | Job `project.analyze` (palette + variantes, sans IA) et flux d'événements SSE | P2 |

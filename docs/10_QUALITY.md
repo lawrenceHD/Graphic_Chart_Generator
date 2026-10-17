@@ -1,6 +1,6 @@
 # 10 — Qualité, tests et Definition of Done
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17
 > Remplace : `ACCEPTANCE_CRITERIA.md` §1 et §3, parties qualité de `PROGRESS_TRACKER.md`.
 
 ## 1. Principe
@@ -17,7 +17,7 @@
 | Intégration | Vitest + PostgreSQL de test (conteneur) | Routes, `can()`, files de tâches |
 | Composants | Testing Library | UI critique (dropzone, timeline, éditeur) |
 | E2E | Playwright | Parcours complets |
-| Visuel | Playwright (captures) + différence perceptuelle | Mockups, PDF, variantes de logo |
+| Visuel | Playwright (captures) + différence perceptuelle, **moteur fixe** (Chromium épinglé, rendu logiciel SwiftShader en CI ; références produites dans ce seul environnement, `06_MOCKUP_ENGINE.md` §7) | Mockups, PDF, variantes de logo |
 | Accessibilité | axe + checklist manuelle | Chaque page et jalon |
 | Performance | Lighthouse CI + budgets de bundle | Landing, studio |
 | Sécurité | Corpus d'attaque, tests d'accès par route, gitleaks, audit des dépendances | CI |
@@ -101,7 +101,19 @@ Corpus équivalent pour les rasters (bombes de décompression, dimensions extrê
 
 ## 7. Tests d'accès par route (SEC-08)
 
-Générés par table : pour chaque route et chaque méthode, on exécute la requête avec : (a) aucun acteur, (b) un autre utilisateur, (c) une session invitée étrangère, (d) un lien de partage (lecture seule) sur une route d'écriture. Résultat attendu : `401` ou `404`, **jamais** `200`. Une route sans entrée dans la table fait échouer la CI.
+Générés par table à partir de la matrice de `can()` (`08_SECURITY_PRIVACY.md` §4, ADR-025). Pour chaque route et chaque méthode, on exécute la requête avec :
+
+| Cas | Acteur | Résultat attendu |
+|---|---|---|
+| a | Aucun acteur | `401` |
+| b | Autre utilisateur (ressource d'autrui) | `404` (ne révèle pas l'existence) |
+| c | Session invitée étrangère | `404` |
+| d | Lien de partage sur une route d'écriture ou de création | `403` si la ressource est celle du lien, `404` sinon |
+| e | Session invitée **sur son propre projet**, routes `copilot`, `exports`, `share-links` | `403` avec un code invitant à créer un compte vérifié |
+| f | Membre `viewer` sur une route d'écriture | `403` |
+| g | Acteur autorisé par la matrice | `2xx` |
+
+Aucun cas a à f ne renvoie jamais `2xx`. Une route sans entrée dans la table fait échouer la CI. Les codes `403` ne sont renvoyés qu'à un acteur qui a déjà le droit de lire la ressource ; sinon `404`.
 
 ## 8. Intégration continue
 
@@ -109,7 +121,7 @@ Pipeline GitHub Actions, déclenché à chaque pull request :
 
 1. Installation (cache pnpm), vérification du fichier de verrouillage.
 2. `gitleaks` (secrets).
-3. Lint + typecheck + règles de dépendances.
+3. Formatage (`pnpm format:check`, Prettier en mode vérification) + lint + typecheck + règles de dépendances.
 4. Tests unitaires, propriétés, golden (packages purs).
 5. Tests d'intégration (PostgreSQL de test en conteneur).
 6. Build.
@@ -118,6 +130,8 @@ Pipeline GitHub Actions, déclenché à chaque pull request :
 9. Audit des dépendances (alerte sur vulnérabilité haute ou critique).
 
 Fusion interdite si une étape échoue. Les branches sont protégées. Les dépendances sont mises à jour par un outil automatique (revue mensuelle).
+
+Hygiène du workflow : permissions minimales (`permissions: contents: read` par défaut, élargies job par job si nécessaire) ; actions tierces épinglées par SHA de commit ; exécutions concurrentes d'une même branche annulées (`concurrency`).
 
 ## 9. Ordinateur de référence
 
@@ -131,3 +145,5 @@ Les mesures de performance (« 3 s », « 60 images/s ») sont définies **par r
 - **AC-T4** Aucune requête réseau vers un domaine tiers non listé dans la CSP.
 - **AC-T5** Les vecteurs de `docs/golden/` sont reproduits dans leurs tolérances.
 - **AC-T6** Le démarrage échoue si une variable d'environnement est absente ou invalide.
+- **AC-T7** Aucune commande du copilote n'est appliquée après un conflit de révision dans le même tour (ADR-022) ; test d'intégration avec une révision utilisateur concurrente.
+- **AC-T8** Aucun asset non `clean` (y compris `mockup_render`) n'est servi ni intégré à un export (ADR-023, SEC-26).

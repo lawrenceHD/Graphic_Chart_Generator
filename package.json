@@ -5,11 +5,12 @@
   "packageManager": "pnpm@12.6.0",
   "scripts": {
     "lint": "eslint .",
+    "format:check": "prettier --check .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "build": "turbo run build",
     "deps:check": "depcruise --config .dependency-cruiser.cjs apps packages",
-    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run deps:check"
+    "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run deps:check"
   },
   "devDependencies": {
     "dependency-cruiser": "18.5.0",

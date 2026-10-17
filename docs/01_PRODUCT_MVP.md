@@ -1,6 +1,6 @@
 # 01 — Produit : périmètre MVP et critères d'acceptation
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (4.0 du 2026-10-07 ; 4.1 : annulation serveur ADR-018, favicon ADR-021)
 > Remplace : `CAHIER_DES_CHARGES.md` §3 et `ACCEPTANCE_CRITERIA.md` §2.
 > Tous les critères sont **vérifiables par un test** ou une mesure. Un critère non testable est une erreur de spécification : à signaler.
 
@@ -96,6 +96,7 @@ Un visiteur **sans compte** peut aller jusqu'à l'aperçu et l'édition (session
 - **AC-06.3** Pour un SVG complexe ou un raster, la variante est produite par la chaîne de vectorisation et un **score de fidélité** (IoU du masque ≥ 0,97) est calculé ; en dessous, un avertissement clair est affiché et la variante est marquée « à vérifier ».
 - **AC-06.4** Aucune variante n'est silencieusement dégradée : tout échec est signalé avec la cause.
 - **AC-06.5** Export favicon : SVG, PNG 16, 32, 48, 180, 192, 512.
+- **AC-06.6** Si le logo est très allongé (rapport largeur/hauteur > 2 ou < 0,5), le favicon est quand même produit mais porte l'avertissement visible `FAVICON_EXTREME_ASPECT` (« logo trop allongé pour rester lisible en petite taille ») (`05_ENGINES.md` §5.4, ADR-021).
 
 ### US-07 — Clear space et règles d'usage
 - **AC-07.1** Zone d'exclusion : X = 25 % de la hauteur de la boîte englobante du logo par défaut, ajustable de 10 % à 50 %. Le calcul est affiché sur un schéma.
@@ -116,7 +117,7 @@ Un visiteur **sans compte** peut aller jusqu'à l'aperçu et l'édition (session
 
 ### US-10 — Édition manuelle
 - **AC-10.1** Chaque modification (couleur, couple de polices, texte, ordre des pages) passe par une **commande** (`04_API_CONTRACTS.md`).
-- **AC-10.2** Annuler/Rétablir : `Ctrl+Z` / `Ctrl+Maj+Z`, disponibles en bouton et au clavier ; au moins 50 niveaux.
+- **AC-10.2** Annuler/Rétablir : `Ctrl+Z` / `Ctrl+Maj+Z`, disponibles en bouton et au clavier ; au moins 50 niveaux. L'historique est **conservé côté serveur** (ADR-018) : il survit au rechargement de la page et à un changement d'appareil. Deux annulations successives annulent deux révisions distinctes, jamais l'annulation précédente.
 - **AC-10.3** Une modification de couleur globale se propage à toutes les pages ; une surcharge locale n'affecte que sa page et est signalée visuellement.
 - **AC-10.4** Si deux modifications se heurtent (conflit de révision), l'utilisateur est informé et aucune donnée n'est perdue.
 
@@ -125,7 +126,8 @@ Un visiteur **sans compte** peut aller jusqu'à l'aperçu et l'édition (session
 - **AC-11.2** Portée choisissable : page active ou globale.
 - **AC-11.3** Une consigne impossible ou hors périmètre est refusée avec une explication, sans modification du document.
 - **AC-11.4** Les actions destructrices (suppression de page) demandent une confirmation.
-- **AC-11.5** La réponse textuelle est diffusée en continu ; chaque commande appliquée est annulable en un clic.
+- **AC-11.5** La réponse textuelle est diffusée en continu ; chaque commande appliquée est annulable en un clic, **même si elle n'est pas la dernière** (`POST /projects/:id/revisions/:seq/undo`). Si la valeur a été modifiée depuis, l'annulation est refusée avec un message explicite (`UNDO_CONFLICT`) et le document n'est pas modifié (ADR-018).
+- **AC-11.7** Si l'utilisateur modifie le document pendant un tour du copilote, le tour s'arrête proprement (`CONFLICT`) ; les commandes déjà appliquées restent visibles et annulables (ADR-022).
 - **AC-11.6** Le copilote ne peut modifier **que** ce que les commandes autorisent (aucune écriture libre).
 
 ### US-12 — Exports

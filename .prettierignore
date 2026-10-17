@@ -1,0 +1,10 @@
+# Generated or vendored content: never reformatted
+pnpm-lock.yaml
+**/dist/
+**/.turbo/
+**/node_modules/
+coverage/
+# Specifications and third-party agent material are edited by hand
+docs/
+.claude/
+*.md

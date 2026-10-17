@@ -1,7 +1,7 @@
 # 06 — Moteur de mockups
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
-> Package : `mockup-engine` (**navigateur uniquement**). Décision : ADR-008.
+> Statut : **validé** — Version 4.1 — 2026-10-17
+> Package : `mockup-engine` (**navigateur uniquement**, ADR-016 : aucun module Node). Décisions : ADR-008, ADR-016, ADR-023.
 > Remplace : `ARCHITECTURE.md` §3.
 
 ## 1. Principe
@@ -115,13 +115,21 @@ out   = mixed · mix(1.0, S, 0.6)
 3. `foil = mix(foilDark, foilLight, smoothstep(0.15, 0.85, t))` avec `foilDark = (0.45, 0.33, 0.12)`, `foilLight = (1.0, 0.86, 0.5)` pour l'or ; `(0.55, 0.57, 0.6)` / `(0.95, 0.96, 0.98)` pour l'argent.
 4. `out = mix(B.rgb, foil, A) + P · A · 0.5`.
 
+**Bruit (`noise`)** — déterministe, sans texture ni aléa :
+```
+hash(p)  = fract(sin(dot(floor(p), vec2(12.9898, 78.233))) · 43758.5453)
+noise(p) = bruit de valeur 2D : interpolation des hash des 4 coins de la cellule floor(p),
+           pondérée par f = smoothstep(0, 1, fract(p)) sur chaque axe ; résultat dans [0, 1]
+```
+Ce bruit n'est déterministe qu'**à moteur de rendu identique** (la précision de `sin` varie selon les GPU) : les images de référence sont donc produites et comparées avec un moteur fixe (§7).
+
 Les constantes ci-dessus sont des **valeurs de départ** ; elles sont ajustées visuellement lors de la revue (§7) mais leur structure est contractuelle.
 
 ### 4.4 Sortie
 
 - Aperçu : 1280 px de large, rendu à chaque changement (cible < 100 ms).
 - Export : 3840 × 2160, rendu sur un `OffscreenCanvas` ; si la texture maximale du GPU est inférieure, **rendu par tuiles** de 2048 px assemblées. Format PNG (sRGB).
-- Le **hash de rendu** = SHA-256 de `sceneId + schemaVersion + finish + sha256(logoVariant) + couleurs d'encre + version du moteur`. Le résultat est téléversé comme asset `mockup_render` et réutilisé tant que le hash ne change pas.
+- Le **hash de rendu** = SHA-256 de `sceneId + schemaVersion + finish + sha256(logoVariant) + couleurs d'encre + version du moteur`. Le résultat est téléversé comme asset `mockup_render` **par le flux d'upload normal** (ADR-023, SEC-26) : URL présignée, statut `quarantined`, job `asset.scan` (octets magiques PNG, dimensions attendues 3840 × 2160 ou 1280 de large, normalisation raster). Il n'est utilisé (PDF, ZIP, aperçu) qu'une fois `clean`, puis réutilisé tant que le hash ne change pas. Un rendu venant du navigateur est une **entrée utilisateur** comme une autre.
 
 ## 5. API du package
 
@@ -174,8 +182,8 @@ Le shader est l'un des points faibles connus de l'agent de code. Protocole :
 
 1. Le chef de projet fournit les formules (§4) : l'agent les **traduit**, il ne les invente pas.
 2. Tests numériques automatiques : homographie (§4.1), coins projetés, bornes de sortie.
-3. Tests visuels automatiques : comparaison avec des images de référence (tolérance perceptuelle) pour 3 logos de test × 3 scènes × finitions.
-4. **Revue humaine** : le propriétaire fournit des captures d'écran des rendus ; le chef de projet valide ou ajuste les constantes.
+3. Tests visuels automatiques : comparaison avec des images de référence (tolérance perceptuelle) pour 3 logos de test × 3 scènes × finitions. **Moteur fixe** : références générées et comparées dans le même environnement que la CI (Chromium sans GPU, rendu logiciel SwiftShader, version épinglée). Les références ne sont jamais produites sur un poste de développement. Toute mise à jour de Chromium ou des constantes régénère les références, relues par le propriétaire.
+4. **Revue humaine sur GPU réel** : le propriétaire fournit des captures d'écran des rendus faits sur l'ordinateur de référence (`10_QUALITY.md` §9) ; le chef de projet valide ou ajuste les constantes. Les écarts GPU réel / SwiftShader sont acceptés s'ils restent invisibles à 100 %.
 
 ## 8. Critères d'acceptation
 
@@ -185,3 +193,5 @@ Le shader est l'un des points faibles connus de l'agent de code. Protocole :
 - **AC-M4** : export 3840 × 2160 en moins de 3 s sur l'ordinateur de référence.
 - **AC-M5** : sans WebGL2, l'application ne plante pas et explique la situation.
 - **AC-M6** : un SVG non assaini est refusé par `renderMockup`.
+- **AC-M7** : un `mockup_render` qui n'est pas `clean` (PNG invalide, dimensions inattendues, scan échoué) n'est jamais intégré au PDF ni au ZIP (ADR-023).
+- **AC-M8** : deux rendus de la même requête dans l'environnement de CI produisent des images identiques à la tolérance perceptuelle près (bruit déterministe, §4.3).

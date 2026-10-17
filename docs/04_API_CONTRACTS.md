@@ -1,6 +1,6 @@
 # 04 — Contrats d'API
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (4.0 du 2026-10-07 ; 4.1 : annulation serveur ADR-018, `AddPage` ADR-019, valeurs ADR-020, conflit copilote ADR-022, service des assets ADR-023, actions `can()` ADR-025)
 > Les schémas Zod de `packages/contracts` et `packages/document` font foi ; ce document fixe l'intention et les règles.
 
 ## 1. Conventions
@@ -40,6 +40,16 @@
 | `ASSET_DECODE_FAILED` | Image corrompue |
 | `ASSET_SCAN_TIMEOUT` | Délai de traitement dépassé |
 
+### Codes d'édition et d'historique
+
+| Code | Statut | Cause |
+|---|---|---|
+| `REVISION_CONFLICT` | 409 | `baseSeq` n'est pas la tête du document |
+| `EXPECTATION_FAILED` | 409 | La valeur courante diffère du champ `expect` de la commande (ADR-018) |
+| `UNDO_CONFLICT` | 409 | L'annulation demandée porte sur une valeur modifiée depuis ; aucune modification (ADR-018) |
+| `NOTHING_TO_UNDO` / `NOTHING_TO_REDO` | 409 | Pile d'annulation ou de rétablissement vide |
+| `CONFLICT` | — | Événement `error` du copilote : une révision utilisateur est survenue pendant le tour (ADR-022) |
+
 ## 3. Endpoints
 
 ### Session et compte
@@ -68,14 +78,18 @@ L'inscription, la connexion, la vérification d'e-mail et la réinitialisation d
 | `POST` | `/projects/:id/assets/uploads` | Déclare un fichier, reçoit `assetId` + URL présignée |
 | `POST` | `/assets/:id/complete` | Confirme l'envoi, déclenche le scan |
 | `GET` | `/assets/:id` | Statut et métadonnées |
-| `GET` | `/assets/:id/content` | Contenu (assaini uniquement), avec autorisation, en-têtes de sécurité (§6) |
+| `GET` | `/assets/:id/content` | `can()` puis redirection `302` vers une URL R2 présignée de courte durée (assaini uniquement, §6) |
 
 ### Document
 | Méthode | Route | Rôle |
 |---|---|---|
 | `POST` | `/projects/:id/commands` | Applique une commande (`baseSeq`, `command`) |
-| `POST` | `/projects/:id/undo` | Applique l'inverse de la dernière révision utilisateur |
-| `GET` | `/projects/:id/revisions` | Historique (curseur) |
+| `POST` | `/projects/:id/undo` | Annule la dernière révision non annulée (`03_DATA_MODEL.md` §5, ADR-018) |
+| `POST` | `/projects/:id/redo` | Rétablit la dernière annulation non rétablie |
+| `POST` | `/projects/:id/revisions/:seq/undo` | Annule une révision précise (commande du copilote, par exemple) ; `409 UNDO_CONFLICT` si la valeur a changé depuis |
+| `GET` | `/projects/:id/revisions` | Historique (curseur), avec `undoOf` / `redoOf` et l'état « annulée » de chaque révision |
+
+`undo`, `redo` et `revisions/:seq/undo` prennent `{ baseSeq }` comme `POST /commands` et répondent de la même façon (`200 { seq, document }`).
 
 ### Copilote
 | Méthode | Route | Rôle |
@@ -98,29 +112,35 @@ L'inscription, la connexion, la vérification d'e-mail et la réinitialisation d
 
 ## 4. Commandes (`packages/document`)
 
-Union discriminée sur `type`. Chaque commande est une fonction **pure** `apply(doc, cmd) → { doc, inverse }` avec un schéma Zod. Toute commande contient `baseSeq` au niveau de la requête, pas dans la commande.
+Union discriminée sur `type`. Chaque commande est une fonction **pure** `apply(doc, cmd) → Result<{ doc, inverse }, CommandError>` (type `Result` de `@app/kernel`, ADR-017) avec un schéma Zod. Toute commande contient `baseSeq` au niveau de la requête, pas dans la commande.
+
+**Champ `expect` (ADR-018)** : toute commande accepte un champ facultatif `expect`, la valeur attendue à l'emplacement visé avant application (pour `SetLogoRules`, l'objet des trois règles ; pour `ReorderPage`, l'`afterPageId` actuel ; pour `RemovePage`, la page complète). Si la valeur courante diffère, `apply` échoue avec `EXPECTATION_FAILED`, sans modification. Les inverses portent **toujours** `expect` (la valeur écrite par la commande d'origine), ce qui rend sûre l'annulation d'une révision ancienne.
 
 | Type | Champs | Effet | Inverse |
 |---|---|---|---|
-| `SetColorToken` | `token`, `hex` | Change un token global, `source: 'user'` | `SetColorToken` ancienne valeur |
-| `SetTypographyPairing` | `pairingId` (catalogue) | Change le couple de polices | idem |
-| `SetBrandField` | `field` (liste blanche), `value` | Nom, mission, vision, valeurs, archétype | idem |
-| `SetPageField` | `pageId`, `field`, `value` | Texte d'une page | idem |
-| `SetPageOverride` | `pageId`, `key`, `value` | Surcharge locale | `SetPageOverride` ou `ClearPageOverride` |
-| `ClearPageOverride` | `pageId`, `key` | Supprime la surcharge | `SetPageOverride` |
-| `SetLogoRules` | `clearSpaceRatio`, `minSizePx`, `minSizeMm` | Règles du logo (10–50 %) | idem |
-| `ReorderPage` | `pageId`, `afterPageId \| null` | Déplace une page | `ReorderPage` ancienne place |
-| `AddPage` | `type`, `afterPageId` | Ajoute une page d'un type autorisé | `RemovePage` |
-| `RemovePage` | `pageId` | Supprime (confirmation requise côté interface) | `AddPage` + données |
-| `SelectScene` | `pageId`, `sceneId`, `finish` | Scène et finition d'une page mockup | idem |
+| `SetColorToken` | `token`, `hex`, `expect?` | Change un token global, `source: 'user'` | `SetColorToken` ancienne valeur, `expect` = nouvelle |
+| `SetTypographyPairing` | `pairingId` (catalogue), `expect?` | Change le couple de polices | idem |
+| `SetBrandField` | `field` (liste blanche), `value`, `expect?` | Nom, mission, vision, valeurs (`[{ label, description }] × 4`, ADR-020), archétype | idem |
+| `SetPageField` | `pageId`, `field`, `value`, `expect?` | Texte d'une page | idem |
+| `SetPageOverride` | `pageId`, `key`, `value`, `expect?` | Surcharge locale | `SetPageOverride` ou `ClearPageOverride` |
+| `ClearPageOverride` | `pageId`, `key`, `expect?` | Supprime la surcharge | `SetPageOverride` |
+| `SetLogoRules` | `clearSpaceRatio`, `minSizePx`, `minSizeMm`, `expect?` | Règles du logo (10–50 %) | idem |
+| `ReorderPage` | `pageId`, `afterPageId \| null`, `expect?` | Déplace une page | `ReorderPage` ancienne place |
+| `AddPage` | `type`, `pageId`, `afterPageId \| null`, `position?`, `title?`, `data?`, `overrides?` | Ajoute une page d'un type autorisé (ADR-019) | `RemovePage` avec `expect` = page créée |
+| `RemovePage` | `pageId`, `expect?` | Supprime (confirmation requise côté interface) | `AddPage` **complet** : `pageId`, `type`, `position`, `title`, `data`, `overrides` de la page supprimée |
+| `SelectScene` | `pageId`, `sceneId`, `finish`, `expect?` | Scène et finition d'une page mockup | idem |
+
+**Identifiant de page (ADR-019)** : `pageId` est un UUID v7 généré par le **serveur** (ou le worker) avant l'appel à `apply`. `apply` ne génère jamais d'identifiant ni de valeur aléatoire ; un `AddPage` dont le `pageId` existe déjà échoue (`INVALID_COMMAND`). Le client et le copilote envoient `AddPage` sans `pageId` ; la route le complète avant validation finale.
 
 Règles :
-- Une commande invalide (schéma, cible inexistante, valeur hors limites) renvoie `422` **sans modification**.
+- Une commande invalide (schéma, cible inexistante, valeur hors limites) renvoie `422` **sans modification** ; un `expect` non vérifié renvoie `409 EXPECTATION_FAILED`.
 - Toutes les chaînes sont normalisées (Unicode NFC, longueur bornée, aucun HTML).
 - `hex` : `^#[0-9A-F]{6}$` (majuscules, normalisé à l'entrée).
 - Le copilote n'a accès **qu'à ces commandes**.
 
-Réponse de `POST /commands` : `200 { seq, document }` ; `409` si `baseSeq` n'est pas la tête (le client récupère l'état et relance).
+Réponse de `POST /commands` : `200 { seq, document }` ; `409 REVISION_CONFLICT` si `baseSeq` n'est pas la tête (le client récupère l'état et relance).
+
+Toutes les routes de cette section exigent l'action `document:command` de `can()` ; la liste complète des actions est fixée par l'ADR-025 (`08_SECURITY_PRIVACY.md` §4).
 
 ## 5. Flux SSE
 
@@ -145,13 +165,19 @@ Corps : `{ message, scope: 'global' | { pageId }, baseSeq }`. Le client lit le f
 | `command.applied` | `{ seq, command, summary }` |
 | `command.rejected` | `{ reason }` |
 | `confirm.required` | `{ command, reason }` (actions destructrices) |
-| `error` | `{ code }` |
+| `error` | `{ code }` — dont `CONFLICT` (ADR-022) |
 | `done` | `{ usage: { tokensIn, tokensOut } }` |
 
-## 6. En-têtes de service des assets
+**Concurrence (ADR-022)** : chaque commande du copilote est appliquée avec la tête courante comme `baseSeq`. Si une révision utilisateur est survenue depuis le début du tour, la commande suivante est refusée : le flux émet `error { code: 'CONFLICT' }` puis `done`, et le tour s'arrête. Les commandes déjà appliquées restent dans l'historique et sont annulables individuellement (`POST /revisions/:seq/undo`).
+
+## 6. Service des assets (ADR-023)
 
 `GET /assets/:id/content` :
-`Content-Type` fixé par le serveur selon le type vérifié ; `X-Content-Type-Options: nosniff` ; `Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'` ; `Cache-Control: private, max-age=3600` ; `Content-Disposition: inline` pour les images. Les SVG ne sont affichés **qu'en `<img>`**.
+1. Authentification puis `can(actor, 'asset:read', asset)` ; un asset non `clean` ou un original (`logo_original`) répond `404`.
+2. Réponse `302` vers une **URL R2 présignée en lecture** de durée ≤ 5 min, générée avec les paramètres `response-content-type` (type vérifié par le scan) et `response-content-disposition: inline` (images) ou `attachment` (exports).
+3. La réponse `302` porte `Cache-Control: no-store` et `X-Content-Type-Options: nosniff`.
+
+Le contenu est donc servi par le domaine R2, **sans aucun cookie de l'application**. Les SVG ne sont affichés **qu'en `<img>`** (aucun script n'y est exécuté). Le domaine R2 figure dans `img-src` et `connect-src` de la CSP (`08_SECURITY_PRIVACY.md` §3).
 
 ## 7. Limites de débit
 

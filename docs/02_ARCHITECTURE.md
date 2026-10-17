@@ -1,6 +1,6 @@
 # 02 — Architecture
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (ADR-016, ADR-017, ADR-023, ADR-024, ADR-026)
 > Remplace : `ARCHITECTURE.md`, `FREE_STACK_AND_ARCHITECTURE.md`, `BACKEND_AND_USER_MANAGEMENT.md`, `SCALABILITY_PERFORMANCE.md`.
 > Décisions justifiées dans `14_ADR_LOG.md`.
 
@@ -14,7 +14,7 @@
 
 ## 2. Stack
 
-Les versions sont celles des dernières versions stables **au moment de T-001**, épinglées exactement dans `pnpm-lock.yaml` et consignées dans l'ADR-002. Le framework web est la branche active de Next.js (au 2026-10-07 : Next.js 16 ; la branche 15 atteint sa fin de support le 2026-10-21).
+Les versions sont celles des dernières versions stables **au moment de T-001**, épinglées exactement dans `pnpm-lock.yaml` et consignées dans l'ADR-002. Le framework web est la branche active de Next.js (au 2026-10-07 : Next.js 16 ; la branche 15 atteint sa fin de support le 2026-10-21). Depuis Next.js 16, le middleware s'appelle **Proxy** (`proxy.ts`) : c'est lui qui pose les en-têtes de sécurité (ADR-024). Runtime : Node.js 24 (LTS active, `.nvmrc`, ADR-026).
 
 | Couche | Choix | Notes |
 |---|---|---|
@@ -29,7 +29,7 @@ Les versions sont celles des dernières versions stables **au moment de T-001**,
 | Auth | Bibliothèque TypeScript à cookies de session (candidat : Better Auth, validé en T-013) | Alternative : Auth.js |
 | File de tâches | pg-boss (dans PostgreSQL) | Pas de Redis |
 | Stockage | Cloudflare R2 (API S3) | URL présignées |
-| Image serveur | sharp (raster), resvg (rasterisation SVG, processus isolé) | |
+| Image serveur | sharp (raster), resvg (rasterisation SVG, processus isolé) | Dans `svg-engine/src/raster/`, exporté sous `@app/svg-engine/raster` (ADR-016) |
 | Vectorisation | vtracer (candidat, spike T-011) | |
 | CMJN | LittleCMS (WASM ou binaire, spike T-010) | |
 | PDF | Playwright + Chromium, dans le worker | Mêmes composants que l'éditeur |
@@ -47,10 +47,11 @@ Les versions sont celles des dernières versions stables **au moment de T-001**,
 │   ├── web/                    # Next.js : UI, routes API, SSE
 │   └── worker/                 # Node : scan, analyse, exports (pg-boss)
 ├── packages/
-│   ├── contracts/              # Schémas Zod, types, codes d'erreur
+│   ├── kernel/                 # PUR, zéro dépendance : Result, ok, err (ADR-017)
+│   ├── contracts/              # Schémas Zod, types, codes d'erreur, port Rasterizer
 │   ├── color-engine/           # PUR : conversions, WCAG, extraction, échelles
 │   ├── document/               # PUR : AST, commandes, inverses, migrations de schéma
-│   ├── svg-engine/             # Assainissement, bbox, rasterisation (isolée), monochrome
+│   ├── svg-engine/             # PUR : assainissement, bbox ; src/raster/ = rasterisation isolée (Node)
 │   ├── logo-kit/               # PUR : variantes, favicon, clear space, do/don't
 │   ├── mockup-engine/          # NAVIGATEUR : WebGL, homographie, finitions
 │   ├── ai/                     # Port + adaptateur Gemini + prompts + évaluation
@@ -60,7 +61,12 @@ Les versions sont celles des dernières versions stables **au moment de T-001**,
 │   ├── fonts/                  # Polices auto-hébergées (OFL), licences incluses
 │   └── icc/                    # Profils ICC (licences incluses)
 ├── docs/
+│   ├── golden/                 # Vecteurs de référence (immuables)
+│   ├── tickets/                # Tickets exécutables
+│   └── proposals/              # Propositions non validées (P-0xx)
 ├── infra/                      # Docker, Caddy, scripts de sauvegarde
+├── tools/
+│   └── agent-hooks/            # Hooks Claude Code appliquant AGENTS.md (ADR-026)
 ├── AGENTS.md
 └── README.md
 ```
@@ -68,17 +74,18 @@ Les versions sont celles des dernières versions stables **au moment de T-001**,
 ## 4. Règles de dépendances (appliquées par dependency-cruiser)
 
 ```
-contracts, color-engine           → (rien)
-document                          → contracts, color-engine
-svg-engine                        → contracts
-logo-kit                          → svg-engine, color-engine, contracts
-mockup-engine                     → contracts          (navigateur seulement)
-db                                → contracts
-ai                                → contracts, document
-apps/web, apps/worker             → tous les packages
+kernel                            → (rien)
+contracts, color-engine           → kernel
+document                          → kernel, contracts, color-engine
+svg-engine                        → kernel, contracts
+logo-kit                          → kernel, contracts, svg-engine, color-engine
+mockup-engine                     → kernel, contracts  (navigateur seulement)
+db                                → kernel, contracts
+ai                                → kernel, contracts, document
+apps/web, apps/worker             → tous les packages ; @app/svg-engine/raster réservé à apps/worker
 ```
 
-Interdits : cycles ; `apps/*` importé par un package ; accès à `process`, `fs`, `fetch`, `Date.now()` ou `Math.random()` non injectés dans `color-engine`, `document`, `logo-kit`.
+Interdits : cycles ; `apps/*` importé par un package ; accès à `process`, au disque, au réseau, à l'horloge (`Date`, `performance`) ou à l'aléa (`Math.random`, `crypto`) non injectés dans les packages purs : `kernel`, `color-engine`, `document`, `logo-kit`, `svg-engine` hors `src/raster/` (ADR-016). La rasterisation est injectée via le port `Rasterizer` défini dans `contracts`. `mockup-engine` n'importe aucun module Node.
 
 ## 5. Flux principaux
 
@@ -159,7 +166,7 @@ La route `/print/*` n'est accessible qu'avec un jeton interne à usage unique é
 
 ### 5.5 Mockups
 
-Le navigateur rend la scène (WebGL) à la résolution demandée. Le résultat final (3840 × 2160) est téléversé comme asset `mockup_render`, indexé par un **hash de contenu** (`scène + finition + variante de logo + couleurs utilisées`). Le PDF et le ZIP utilisent ces assets. Si un rendu manque, l'export le signale et l'utilisateur est invité à ouvrir la page mockups pour le produire. Le rendu serveur par Chromium est au backlog.
+Le navigateur rend la scène (WebGL) à la résolution demandée. Le résultat final (3840 × 2160) est téléversé comme asset `mockup_render`, indexé par un **hash de contenu** (`scène + finition + variante de logo + couleurs utilisées`). Ce rendu suit **le même flux que les logos** (ADR-023) : URL présignée, quarantaine, job `asset.scan` (`normalizeRaster`, PNG aux dimensions attendues) ; tant que son statut n'est pas `clean`, il n'est utilisé nulle part. Le PDF et le ZIP utilisent ces assets. Si un rendu manque, l'export le signale et l'utilisateur est invité à ouvrir la page mockups pour le produire. Le rendu serveur par Chromium est au backlog.
 
 ## 6. Configuration
 

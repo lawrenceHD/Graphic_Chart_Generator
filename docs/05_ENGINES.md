@@ -1,7 +1,8 @@
 # 05 — Moteurs déterministes
 
-> Statut : **validé** — Version 4.0 — 2026-10-07
+> Statut : **validé** — Version 4.1 — 2026-10-17 (4.0 du 2026-10-07 ; 4.1 : pureté et rasteriseur injecté ADR-016, `Result` de `@app/kernel` ADR-017, palette, échelles, favicon et recoloration ADR-021)
 > Packages concernés : `color-engine`, `svg-engine`, `logo-kit`.
+> Pureté (ADR-016) : `color-engine`, `logo-kit` et `svg-engine` (sauf `src/raster/**`) sont purs ; les erreurs prévisibles sont des valeurs `Result` de `@app/kernel` (ADR-017).
 > Cette spécification donne **les formules et les règles exactes**. L'agent de code ne les réinterprète pas (`AGENTS.md` §8).
 > Vecteurs de référence : `docs/golden/color.golden.json` (calculés indépendamment, en Python, et recoupés avec les valeurs publiées de Sharma et al. pour CIEDE2000).
 
@@ -48,7 +49,7 @@ G = −1.2684380046·l + 2.6097574011·m − 0.3413193965·s
 B = −0.0041960863·l − 0.7034186147·m + 1.7076147010·s
 ```
 
-**OKLCH** : `C = √(a² + b²)`, `h = atan2(b, a)` en degrés dans [0, 360). **La teinte d'une couleur achromatique (C < 0,0004) est indéfinie** : la retourner comme `0` et ne jamais l'utiliser en comparaison.
+**OKLCH** : `C = √(a² + b²)`, `h = atan2(b, a)` en degrés dans [0, 360). **La teinte d'une couleur achromatique (C < 0,0004) est indéfinie** : la retourner comme `null` (type `h: number | null`, conforme à `docs/golden/color.golden.json`) et ne jamais l'utiliser en comparaison. Tout calcul qui a besoin d'une teinte pour une couleur achromatique utilise explicitement `fallbackHue` (§2.6).
 
 **HSL** : formule standard, utilisée uniquement pour l'affichage.
 
@@ -79,19 +80,25 @@ Entrée : image décodée RGBA (largeur, hauteur, `Uint8ClampedArray`), **rédui
 Algorithme (chaque étape est déterministe) :
 
 1. **Pixels retenus** : `alpha ≥ 230`. Les pixels semi-transparents (bords) sont ignorés.
-2. **Fond opaque** : si ≥ 90 % des pixels du pourtour sont de la même couleur (ΔE_OK < 0,01) **et** que cette couleur couvre ≥ 30 % des pixels retenus, elle est exclue (logo sur fond uni).
+2. **Fond opaque** : le **pourtour** est l'ensemble des pixels de la première et de la dernière ligne et de la première et de la dernière colonne **retenus à l'étape 1** (ADR-021). Si le pourtour est vide, l'étape ne s'applique pas. Si ≥ 90 % des pixels du pourtour sont de la même couleur (ΔE_OK < 0,01 de la couleur la plus fréquente du pourtour) **et** que cette couleur couvre ≥ 30 % des pixels retenus, les pixels à ΔE_OK < 0,01 de cette couleur sont exclus (logo sur fond uni).
 3. **Bords anti-aliasés** : exclure les pixels dont au moins un voisin (haut, bas, gauche, droite) diffère de plus de 0,05 en ΔE_OK. **Repli** : si après cette exclusion il reste moins de 1 % des pixels retenus, on la désactive (traits très fins).
 4. **Histogramme exact** : comptage par couleur RGB distincte.
 5. **Tri** : population décroissante ; à égalité, hexadécimal croissant.
 6. **Fusion gloutonne** : pour chaque couleur dans l'ordre, si une grappe existante est à ΔE_OK < `mergeThreshold` de son **centre** (la couleur la plus lourde de la grappe, jamais une moyenne), on l'y ajoute ; sinon on crée une grappe.
-7. **Filtrage** : supprimer les grappes de part < `minShare` des pixels retenus, sauf s'il en reste moins de 2. Limiter à `maxClusters` en fusionnant les plus petites dans la plus proche.
-8. **Sortie** : liste triée par part décroissante : `{ hex, share, oklab, oklch }`.
+7. **Réduction** (ADR-021) : les parts sont toujours calculées par rapport aux **pixels retenus après l'étape 3** ; aucune population n'est perdue, donc la somme des parts vaut 1.
+   - a. Tant qu'une grappe a une part < `minShare` et qu'il reste au moins 3 grappes : fusionner la plus petite (à égalité : hexadécimal du centre décroissant) dans la grappe restante dont le **centre** est le plus proche en ΔE_OK.
+   - b. Tant qu'il y a plus de `maxClusters` grappes : même fusion de la plus petite dans la plus proche.
+   - Une fusion additionne les populations ; le **centre reste la couleur la plus lourde** de la grappe d'accueil (jamais une moyenne).
+   - La propriété « toute couleur est à ΔE_OK < `mergeThreshold` de son centre » est garantie et testée **sur la sortie de l'étape 6**, pas après la réduction.
+8. **Sortie** : liste triée par part décroissante (à égalité : hexadécimal croissant) : `{ hex, share, oklab, oklch }`.
 
 Cas particulier : aucune grappe (image vide ou entièrement transparente) → erreur de valeur `EMPTY_IMAGE`.
 
 ### 2.5 Attribution des rôles
 
 Une grappe est **chromatique** si `C ≥ chromaticThreshold`, sinon **neutre**.
+
+**Exclusivité (ADR-021)** : une grappe reçoit **au plus un rôle**. Les rôles sont attribués dans l'ordre `primary`, `accent`, `neutralDark`, `neutralLight`, `extra` ; chaque règle ne considère que les grappes encore sans rôle. Exemple : pour un logo noir seul, la grappe noire devient `primary` ; `neutralDark` n'a plus de candidate et est donc **dérivée**.
 
 | Rôle | Règle | Si impossible |
 |---|---|---|
@@ -124,7 +131,7 @@ Pour un jeton de couleur, produire 11 pas (`50, 100, 200, 300, 400, 500, 600, 70
 - Lightness fixe par pas : `[0.97, 0.94, 0.88, 0.80, 0.71, 0.62, 0.53, 0.44, 0.35, 0.26, 0.19]`.
 - Teinte : celle du jeton, constante.
 - Chroma de base : `Cbase` du jeton. Poids `w(L)` : `1` pour `0.35 ≤ L ≤ 0.75`, décroissance linéaire vers `0.25` à `L = 0.97` et vers `0.50` à `L = 0.19`. `C = Cbase · w(L)`, puis mappage de gamut.
-- Propriétés testées : lightness strictement décroissante, teinte constante à ±1°, toutes les valeurs dans le gamut.
+- Propriétés testées : lightness strictement décroissante, toutes les valeurs dans le gamut, teinte constante à ±1°. **La teinte est vérifiée sur les valeurs OKLCH calculées avant l'arrondi 8 bits** (l'arrondi d'un pas très clair peut déplacer la teinte de plusieurs degrés, ex. pas 50 de `#1F4BFF`), et **n'est pas vérifiée si le jeton est achromatique** (teinte `null`, ADR-021).
 
 ### 2.9 Matrice de contraste
 
@@ -215,8 +222,10 @@ Analysé avec un parseur CSS ; seuls les sélecteurs simples (élément, `.class
 - Les attributs `width` et `height` de la racine sont supprimés (le dimensionnement est géré par l'appelant).
 - Sortie encodée en UTF-8, sans déclaration de DOCTYPE.
 
-### 3.7 Rasterisation isolée
+### 3.7 Rasterisation isolée (ADR-016)
 
+- **Port** : le type `Rasterizer` est défini dans `@app/contracts`. Tout code pur qui a besoin de pixels (`logo-kit`, `svg-engine` hors `src/raster/`) le reçoit **en paramètre** ; il n'importe jamais l'implémentation.
+- **Implémentation** : `packages/svg-engine/src/raster/`, seule partie impure du package, exportée sous le sous-chemin `@app/svg-engine/raster`. Elle n'est importée que par `apps/worker` et par les tests d'intégration.
 - Réalisée par **resvg** dans un **processus séparé**, sans réseau, sans accès au système de fichiers hors répertoire temporaire, délai de 5 s, mémoire plafonnée (512 Mo).
 - Sert à : boîte englobante, aperçu raster, extraction de palette (512 px), variantes PNG, score de fidélité.
 - Seul un SVG déjà assaini peut être rasterisé.
@@ -245,6 +254,8 @@ Utilisée pour les variantes d'un logo raster. Candidat : vtracer ; **choix tran
 
 ## 5. `logo-kit`
 
+Package **pur** (ADR-016). Toute fonction qui a besoin de pixels (chemin raster, score de fidélité, boîte englobante) reçoit un `Rasterizer` injecté (§3.7) et, pour la vectorisation, un `Vectorizer` injecté (choisi par le spike T-011).
+
 ### 5.1 Encre et fond d'un logo
 
 Pour décider quoi remplir en monochrome :
@@ -252,7 +263,7 @@ Pour décider quoi remplir en monochrome :
 - **Surface claire** = luminance ≥ 0,9.
 - Si le logo contient au moins une surface encre, les surfaces claires sont traitées comme **évidements** (transparentes dans les variantes monochromes). Si le logo n'a **que** des surfaces claires (logo blanc), elles sont conservées.
 
-Cette règle est une heuristique : elle est documentée dans l'interface et soumise à validation visuelle (T-008).
+Cette règle est une heuristique : elle est documentée dans l'interface et soumise à validation visuelle (T-009).
 
 ### 5.2 Variantes monochromes
 
@@ -263,13 +274,13 @@ Cette règle est une heuristique : elle est documentée dans l'interface et soum
 4. Dégradés → remplacés par la cible ; `fill-opacity`/`opacity` conservés.
 5. Supprimer les définitions devenues inutilisées.
 
-**Chemin raster** (SVG complexe ou logo raster) : rasterisation à 2048 px sur fond transparent → surface encre binarisée (seuil 0,5) → vectorisation → assainissement.
+**Chemin raster** (SVG complexe ou logo raster) : rasterisation à 2048 px sur fond transparent (`Rasterizer` injecté) → surface encre binarisée (seuil 0,5) → vectorisation (`Vectorizer` injecté) → assainissement.
 
 Cible : `#000000` ou `#FFFFFF`.
 
 ### 5.3 Score de fidélité
 
-`IoU = |A ∩ B| / |A ∪ B|` entre le masque « encre » de l'original et celui de la variante, rasterisés à 1024 px.
+`IoU = |A ∩ B| / |A ∪ B|` entre le masque « encre » de l'original et celui de la variante, rasterisés à 1024 px par le `Rasterizer` injecté.
 - `≥ 0,97` : variante validée ; `< 0,97` : variante marquée « à vérifier » avec avertissement visible.
 - Le score est enregistré dans `assets.meta`.
 
@@ -279,6 +290,7 @@ Cible : `#000000` ou `#FFFFFF`.
 - Côté du carré : `S = max(W, H) / 0.8` (le logo occupe 80 % du plus grand côté, marge de sécurité de 10 % de chaque côté).
 - Logo centré dans le carré. Fond transparent par défaut ; option fond uni (couleur du jeton) avec coins arrondis (rayon 18 % de `S`).
 - Sorties : SVG, PNG 16, 32, 48, 180 (apple-touch), 192, 512.
+- **Logo très allongé** (ADR-021) : si `W / H > 2` ou `W / H < 0,5`, le favicon est produit avec la même règle mais porte l'avertissement `FAVICON_EXTREME_ASPECT` (enregistré dans `assets.meta` et affiché dans l'interface) : le logo risque d'être illisible en 16 et 32 px.
 
 ### 5.5 Zone d'exclusion (clear space)
 
@@ -294,7 +306,12 @@ Cible : `#000000` ou `#FFFFFF`.
 Quatre panneaux SVG générés avec le logo réel, chacun avec une icône de croix, un libellé texte et une couleur (jamais la couleur seule) :
 1. **Déformation** : mise à l'échelle horizontale ×1,4.
 2. **Rotation** : −15°.
-3. **Recoloration** : variante monochrome dans une couleur hors palette (complémentaire de l'accent).
+3. **Recoloration** (ADR-021) : variante monochrome dans une couleur **hors palette**, calculée ainsi :
+   - `hp` = teinte du `primary`, ou `fallbackHue` si le `primary` est achromatique ;
+   - candidates : `hk = (hp + 90 + 30·k) mod 360` pour `k = 0 … 11` ;
+   - retenir la **première** candidate dont l'écart angulaire est ≥ 60° avec **toutes** les teintes chromatiques de la palette ; si aucune ne convient, retenir celle qui **maximise l'écart minimal** (à égalité, la plus petite valeur de `k`) ;
+   - couleur = OKLCH `(L = 0,60, C = 0,15, h = hk)`, ramenée dans le gamut (§2.7) puis arrondie.
+   L'ancienne règle « complémentaire de l'accent » est abandonnée : un accent dérivé vaut déjà `hp + 180°`, sa complémentaire retombait sur la teinte du `primary`.
 4. **Fond inadapté** : fond choisi dans la palette (ou gris généré) dont le contraste avec la couleur principale du logo est **< 3**, calculé par le moteur.
 
 ---
