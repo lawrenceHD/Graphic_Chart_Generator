@@ -18,6 +18,7 @@ main (5d95f32, = origin/main)
             └─ fix/code-review-2026-10-18  9 défauts corrigés, bibliothèque de logos, LF   verify vert
                └─ ticket/T-005-palette-extraction  T-005 terminé, verify vert
                   └─ ticket/T-006-scales-contrast  T-006 terminé, verify vert
+                     └─ ticket/T-007-svg-sanitizer  T-007 terminé, verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -27,7 +28,8 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 
 ## Prochaines actions (ordre recommandé)
 1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
-2. T-007 (assainisseur SVG, dépendances `sax`, `css-tree` autorisées), puis T-008.
+2. T-008 (rasterisation isolée resvg/sharp, port `Rasterizer`, bbox → `viewBox` du cas 29), puis T-009.
+3. Chef de projet : reporter dans `docs/` les décisions T-005 et T-007 de `journal/OWNER_DECISIONS.md`.
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |
@@ -47,7 +49,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 - **T-004** : GO à reconfirmer (teinte `null` au lieu de `0`).
 - **T-002** : `'unsafe-eval'` en développement seulement — à valider.
 - **T-005** : image d'une seule couleur → `EMPTY_IMAGE` (étape 2 de la spec) — repli à décider (`sortie tikets/T-005.md`).
-- **T-007** : `viewBox` sans dimensions — le ticket (avertissement) contredit `10_QUALITY.md` cas 29 (calculé).
+- **T-007** : tranché (délégation) ; décisions à reporter dans `docs/` (`journal/OWNER_DECISIONS.md`).
 - **T-010** : profil FOGRA39 et `transicc` à fournir ; 21 couleurs listées pour 24 annoncées ; livrable dans `docs/spikes/`.
 - **Spécification** : longueur minimale de `AUTH_SECRET` / `INTERNAL_PRINT_SECRET` ; `requestId` dans `ProblemDetails` ; PostgreSQL dans la CI.
 

@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-007 — Assainisseur SVG** (2026-10-18) : liste blanche, arbre reconstruit, 30 cas d'attaque, corpus légitime,
+  propriétés ; 1 431 logos réels acceptés sur 1 432 ; 76 tests.
 - **T-006 — Échelles et contrastes** (2026-10-18) : `buildScale` (11 pas, §2.8), `buildContrastMatrix` et
   `bestTextFor` (§2.9) ; golden `scales` reproduit ; 14 tests.
 - **T-005 — Extraction de palette** (2026-10-18) : extraction déterministe §2.4 (fond uni, bords anti-aliasés, fusion
