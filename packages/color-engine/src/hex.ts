@@ -19,7 +19,11 @@ export function toHex(rgb: Rgb): string {
   return `#${channelHex(rgb.r)}${channelHex(rgb.g)}${channelHex(rgb.b)}`;
 }
 
+// Internal entry point of every hex-taking function: a malformed value is a programming error upstream.
 export function rgbFromValidatedHex(hex: string): Rgb {
+  if (!HEX_PATTERN.test(hex)) {
+    throw new RangeError('Expected a #RRGGBB hex color.');
+  }
   return {
     r: Number.parseInt(hex.slice(1, 3), 16),
     g: Number.parseInt(hex.slice(3, 5), 16),
