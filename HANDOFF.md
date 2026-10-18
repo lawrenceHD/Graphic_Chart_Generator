@@ -15,7 +15,8 @@ main (5d95f32, = origin/main)
    └─ ticket/T-003-document-commands   a2ddb84  T-003 v4.1   verify vert
       └─ ticket/T-004-color-engine-maths 96d68ef  T-004 v4.1 verify vert
          └─ chore/agent-relay-tooling   021bf26  relais, CHANGELOG, config Gemini
-            └─ fix/code-review-2026-10-18  69a694e  9 défauts corrigés, bibliothèque de logos, LF   verify vert
+            └─ fix/code-review-2026-10-18  9 défauts corrigés, bibliothèque de logos, LF   verify vert
+               └─ ticket/T-005-palette-extraction  T-005 terminé, verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002 → T-003 → T-004 → chore.
 
@@ -25,10 +26,8 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002
 3. Ensuite : commit de `chore/agent-relay-tooling`, puis `pnpm verify`.
 
 ## Prochaines actions (ordre recommandé)
-1. Propriétaire : lancer le script d'installation de l'outillage, puis redémarrer la session (hooks et MCP).
-2. Propriétaire : autoriser ou non le `git push` des 4 branches (nécessaire au relais entre PC).
-3. Corriger les 9 défauts de l'analyse du 2026-10-18 (tableau ci-dessous), tests d'abord, dans les branches concernées.
-4. T-005 dès que ses bloqueurs sont tranchés (T-006 en dépend).
+1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
+2. T-006 (échelles, matrice de contraste ;  déjà fait), puis T-007 (assainisseur SVG).
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |
@@ -47,7 +46,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002
 - **T-003** : ≈ 1 250 lignes hors tests (> 400) ; `AddPage.pageType` au lieu de `type` ; `RestoreMockup` interne ; formes de `expect` — à valider (`sortie tikets/T-003.md`).
 - **T-004** : GO à reconfirmer (teinte `null` au lieu de `0`).
 - **T-002** : `'unsafe-eval'` en développement seulement — à valider.
-- **T-005** : corpus de 20 logos ou images générées ? ré-export depuis `src/index.ts` autorisé ? (reco : images générées, ré-export minimal).
+- **T-005** : image d'une seule couleur →  (étape 2 de la spec) — repli à décider ().
 - **T-007** : `viewBox` sans dimensions — le ticket (avertissement) contredit `10_QUALITY.md` cas 29 (calculé).
 - **T-010** : profil FOGRA39 et `transicc` à fournir ; 21 couleurs listées pour 24 annoncées ; livrable dans `docs/spikes/`.
 - **Spécification** : longueur minimale de `AUTH_SECRET` / `INTERNAL_PRINT_SECRET` ; `requestId` dans `ProblemDetails` ; PostgreSQL dans la CI.

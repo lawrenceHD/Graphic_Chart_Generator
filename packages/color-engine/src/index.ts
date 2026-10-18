@@ -6,3 +6,23 @@ export { deltaEOk, hexToOklab, hexToOklch, oklabToHex } from './oklab.js';
 export { linearToSrgb, srgbToLinear } from './srgb.js';
 export type { Lab, Oklab, Oklch, Rgb } from './types.js';
 export type { WcagLevel } from './contrast.js';
+export {
+  isInGamut,
+  mapToGamut,
+  oklchToHexMapped,
+  oklchToOklab,
+  type MappedOklch,
+} from './gamut.js';
+export {
+  assignRoles,
+  DEFAULT_EXTRACT_OPTIONS,
+  DEFAULT_ROLE_OPTIONS,
+  extractPalette,
+  type DecodedImage,
+  type ExtractedPalette,
+  type ExtractOptions,
+  type PaletteCluster,
+  type PaletteRoles,
+  type RoleOptions,
+  type RoleToken,
+} from './extract/index.js';

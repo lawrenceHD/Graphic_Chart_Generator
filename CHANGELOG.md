@@ -7,6 +7,9 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-005 — Extraction de palette** (2026-10-18) : extraction déterministe §2.4 (fond uni, bords anti-aliasés, fusion
+  gloutonne, réduction), rôles exclusifs §2.5, couleurs dérivées §2.6, `mapToGamut` §2.7 ; 21 tests dont golden.
+- **Bibliothèque de logos** (2026-10-18) : `pnpm logos:fetch` (cache local ignoré, marques non redistribuées).
 - **Outillage multi-agents** (`chore/agent-relay-tooling`, 2026-10-18) : protocole de relais
   (`journal/PROTOCOL.md`, `HANDOFF.md`, journaux de session, `journal/OWNER_DECISIONS.md`), ce changelog,
   configuration Gemini (`.gemini/settings.json` : contexte `AGENTS.md`, MCP ; commandes `/reprendre` et `/relais`),
@@ -28,10 +31,11 @@ Modifications notables du projet, par ticket. Format inspiré de
 - T-002 à T-004 refaits sur la v4.1 (2026-10-18). Les versions v4.0 du 2026-10-12/13 restent sous les tags
   `backup/pre-v4.1/*`.
 
-### Connu, non corrigé
-- 9 défauts relevés le 2026-10-18 (pool PostgreSQL sans écouteur d'erreur, masquage des logs incomplet,
-  `RestoreMockup` accepté de l'extérieur, position de page incohérente, hex non validé, troncature de
-  `formatRatio`, NFC, identifiants vides, panne de base non journalisée) : voir `HANDOFF.md`.
+### Corrigé
+- 9 défauts de la revue du 2026-10-18 (`fix/code-review-2026-10-18`) : pool PostgreSQL sans écouteur d'erreur,
+  masquage des logs, `RestoreMockup` accepté de l'extérieur (`applyInverse` séparé), positions de page
+  incohérentes, hex non validé, troncature de `formatRatio`, NFC, identifiants vides, panne de base non journalisée.
+- Fins de ligne LF imposées (`.gitattributes`) ; `next-env.d.ts` (généré) n'est plus suivi.
 
 ## [T-001] — Squelette du monorepo et CI — 2026-10-07
 

@@ -2,7 +2,7 @@ import { rgbFromValidatedHex, toHex } from './hex.js';
 import { linearToSrgb, srgbToLinear } from './srgb.js';
 import type { Oklab, Oklch } from './types.js';
 
-interface LinearRgb {
+export interface LinearRgb {
   readonly r: number;
   readonly g: number;
   readonly b: number;
@@ -55,7 +55,7 @@ function linearRgbToOklab(red: number, green: number, blue: number): Oklab {
   };
 }
 
-function oklabToLinearRgb(lab: Oklab): LinearRgb {
+export function oklabToLinearRgb(lab: Oklab): LinearRgb {
   const l = (lab.L + 0.3963377774 * lab.a + 0.2158037573 * lab.b) ** 3;
   const m = (lab.L - 0.1055613458 * lab.a - 0.0638541728 * lab.b) ** 3;
   const s = (lab.L - 0.0894841775 * lab.a - 1.291485548 * lab.b) ** 3;
