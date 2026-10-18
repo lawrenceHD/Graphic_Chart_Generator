@@ -18,6 +18,22 @@ jobs:
   verify:
     name: Verify (gitleaks + pnpm verify)
     runs-on: ubuntu-latest
+    # Integration tests (schema, migrations, /api/health 200) need a real PostgreSQL: a throwaway container,
+    # reachable from the job only, with trust auth so no password appears anywhere. Image pinned by digest
+    # (postgres:16-alpine, 2026-10-18) so a moved tag changes nothing.
+    services:
+      postgres:
+        image: postgres@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: atelier_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/atelier_ci
     steps:
       # Actions are pinned by commit SHA (tag in the trailing comment) so a moved tag cannot change the pipeline.
       - name: Checkout code
