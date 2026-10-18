@@ -11,12 +11,17 @@ if (existsSync(rootEnvFile)) {
   loadEnvFile(rootEnvFile);
 }
 const databaseUrl = process.env.DATABASE_URL;
+// Idle-client errors cannot happen in these short-lived pools; the handler only satisfies the contract.
+const ignorePoolError = (): void => undefined;
 
 describe('GET /api/health against PostgreSQL', () => {
   // Port 1 is reserved and closed: the connection is refused immediately.
-  const unreachable = createDatabase({
-    DATABASE_URL: 'postgresql://health:check@127.0.0.1:1/none',
-  });
+  const unreachable = createDatabase(
+    {
+      DATABASE_URL: 'postgresql://health:check@127.0.0.1:1/none',
+    },
+    ignorePoolError,
+  );
   afterAll(() => unreachable.pool.end());
 
   it('answers 503 degraded when the database is unreachable', async () => {
@@ -29,7 +34,7 @@ describe('GET /api/health against PostgreSQL', () => {
   it.runIf(databaseUrl !== undefined && databaseUrl !== '')(
     'answers 200 ok when the database answers SELECT 1',
     async () => {
-      const reachable = createDatabase({ DATABASE_URL: databaseUrl ?? '' });
+      const reachable = createDatabase({ DATABASE_URL: databaseUrl ?? '' }, ignorePoolError);
       try {
         const response = await createHealthResponse(() => reachable.pool.query('SELECT 1'));
 

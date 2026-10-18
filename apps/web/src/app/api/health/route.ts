@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getDatabase } from '../../../lib/database';
+import { errorSummary } from '../../../lib/error-summary';
 import { createHealthResponse } from '../../../health-response';
 import { requestLogger } from '../../../logger';
 
@@ -9,7 +10,12 @@ export async function GET(request: Request): Promise<Response> {
   const headerValue = request.headers.get('x-request-id');
   const requestId = requestIdSchema.safeParse(headerValue);
   const logger = requestLogger(requestId.success ? requestId.data : 'unknown');
-  const response = await createHealthResponse(() => getDatabase().pool.query('SELECT 1'));
+  const response = await createHealthResponse(
+    () => getDatabase().pool.query('SELECT 1'),
+    (cause) => {
+      logger.warn({ event: 'health_check_failed', error: errorSummary(cause) });
+    },
+  );
 
   logger.info({ event: 'health_check', status: response.status === 200 ? 'ok' : 'degraded' });
   return response;

@@ -28,4 +28,26 @@ describe('request logger', () => {
     expect(output).not.toContain('password-sentinel');
     expect(output).not.toContain('token-sentinel');
   });
+
+  it('redacts sensitive keys at any depth and in any case', () => {
+    const lines: string[] = [];
+    const destination = new Writable({
+      write(chunk: Buffer, _encoding, callback) {
+        lines.push(chunk.toString());
+        callback();
+      },
+    });
+
+    createLogger(destination).info({
+      headers: { Authorization: 'leak-a', 'Set-Cookie': 'leak-b' },
+      err: { config: { headers: { authorization: 'leak-c' } } },
+      items: [{ apiKey: 'leak-d' }, { client_secret: 'leak-e' }],
+      refreshToken: 'leak-f',
+      safe: 'kept',
+    });
+
+    const output = lines.join('');
+    expect(output.match(/leak-[a-f]/g)).toBeNull();
+    expect(output).toContain('"safe":"kept"');
+  });
 });

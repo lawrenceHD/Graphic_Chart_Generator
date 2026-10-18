@@ -17,4 +17,16 @@ describe('createHealthResponse', () => {
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({ status: 'degraded' });
   });
+
+  it('reports the failure cause to the caller without exposing it in the response', async () => {
+    const causes: unknown[] = [];
+    const failure = new Error('database-internal-sentinel');
+    const response = await createHealthResponse(
+      () => Promise.reject(failure),
+      (cause) => causes.push(cause),
+    );
+
+    expect(causes).toEqual([failure]);
+    expect(await response.text()).not.toContain('sentinel');
+  });
 });
