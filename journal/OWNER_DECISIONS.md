@@ -121,3 +121,18 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - Le propriétaire dépose dans `corpus-reel/` (ignoré par Git, seul le README est suivi) des logos et chartes d'une
   page trouvés en ligne. Usage local : vérité terrain des codes couleur officiels et robustesse sur des fichiers
   réels. Il complète le corpus de 20 logos créés pour le projet, sans le remplacer ni devenir une fixture commitée.
+
+## Corpus de logos : mesures et constats (délégation, 2026-10-18) — à reporter dans `docs/05_ENGINES.md` §2.4 et §6
+- Tolérance du test du corpus (ΔE_OK entre couleur attendue et grappe la plus proche) : **0,01 pour un aplat**,
+  **0,10 pour un arrêt de dégradé** (un dégradé est découpé en tranches dont les centres approchent seulement ses
+  arrêts). Aucune grappe imprévue de part ≥ 2 % hors dégradés.
+- Les 14 SVG passent l'assainisseur sans avertissement ; variantes noire et blanche : fidélité 1,0 ; chemin
+  `raster-fallback-needed` pour les 2 logos à masque ou filtre.
+- **Constat JPEG** : les artefacts de compression autour des formes donnent une grappe quasi blanche `#FFFBFF`
+  (1,9 % et 3 %), non exclue par l'étape 2 (seuil ΔE_OK 0,01 du fond). Sans effet sur les rôles aujourd'hui (elle
+  deviendrait au plus `neutralLight`) ; à reconsidérer si les logos réels le confirment.
+- **Point ouvert (propriétaire)** : §2.4 7a, « le centre reste la couleur la plus lourde de la grappe d'accueil ».
+  Lecture appliquée : le centre de la grappe d'accueil ne change pas. Conséquence (g02-aurora) : le cœur uni
+  `#00C2FF`, 2e couleur la plus présente, fusionné dans une grappe plus grosse de centre `#159EEF`, disparaît de la
+  palette. Autre lecture possible : recalculer le centre comme la couleur la plus lourde après fusion (le cyan
+  resterait). Moteur inchangé en attendant la décision.

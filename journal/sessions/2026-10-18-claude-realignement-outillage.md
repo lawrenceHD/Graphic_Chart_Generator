@@ -47,3 +47,9 @@ Branche `chore/agent-relay-tooling` au-dessus de `ticket/T-004-color-engine-math
   (libre de droits, commitable) ; la bibliothèque `logo-design-skill` reste un contrôle de robustesse local.
   Le propriétaire valide visuellement les variantes. À faire avant T-011.
 - Avancement MVP estimé à ~30 % (pondéré par les durées de `12_WORKFLOW_ROADMAP.md` §9) ; aucune interface encore.
+- Corpus de 20 logos livré (`15f6f1b`, `c1ac1dd`) : extraction exacte sur les aplats (JPEG compris), dégradés
+  découpés en tranches ; constats JPEG et §2.4 7a consignés dans `journal/OWNER_DECISIONS.md`. Page de validation
+  visuelle publiée pour le propriétaire (artefact privé « Corpus de 20 logos »).
+- Le propriétaire déposera en vrac dans `corpus-reel/` (ignoré par Git) des logos et chartes réels : à trier et à
+  évaluer (exploitabilité, palette extraite contre codes officiels) ; utiles aussi pour les 10 PNG réels de T-011.
+- Piège : un `json.dump` Python sans `encoding='utf-8'` écrit en cp1252 sous Windows (manifeste corrompu, réparé).

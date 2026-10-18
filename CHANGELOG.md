@@ -16,6 +16,10 @@ Modifications notables du projet, par ticket. Format inspiré de
 - **web** (2026-10-18) : délai du test de démarrage élargi (instable sous `pnpm verify` parallèle).
 
 ### Ajouté
+- **Corpus de 20 logos (`05_ENGINES.md` §6)** (2026-10-18) : 14 SVG créés pour le projet (simples, dégradés,
+  masque et filtre, traits fins) et 6 rasters qui en sont tirés (`tools/corpus/render.mjs`), palettes écrites à la
+  main et fidélité de référence (`manifest.json`) ; test `logo-kit` (composition, acceptation, palette extraite,
+  variantes) ; 36 tests, 2 sabotages détectés. Dossier local `corpus-reel/` (ignoré par Git) pour des logos réels.
 - **Lettres mortes de `asset.scan`** (2026-10-18) : après 3 tentatives en échec, le job passe dans
   `asset.scan.failed` et le worker rejette l'asset encore en quarantaine avec `ASSET_SCAN_TIMEOUT` (jamais un asset
   déjà jugé) ; 2 tests, 2 sabotages détectés.
