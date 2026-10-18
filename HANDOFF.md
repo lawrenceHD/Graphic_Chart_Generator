@@ -21,6 +21,7 @@ main (5d95f32, = origin/main)
                      └─ ticket/T-007-svg-sanitizer  T-007 terminé, verify vert
                         └─ ticket/T-008-raster-isolation  T-008 terminé, verify vert
                            └─ ticket/T-009-logo-mono  T-009 terminé, verify vert
+                              └─ ticket/T-012-logo-rules  T-012 terminé, verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -30,7 +31,8 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 
 ## Prochaines actions (ordre recommandé)
 1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
-2. T-012 (favicon, clear space, Do/Don't, `logo-kit`), puis T-011 (spike vectorisation) et T-010 (spike ICC, bloqué).
+2. Phase 1 terminée sauf les spikes T-010 (ICC, bloqué : profil FOGRA39 à fournir) et T-011 (vectorisation).
+   Suite : T-011, puis phase 2 (T-013 spike auth, T-014 schéma Drizzle, T-015 `can()`…).
 3. Chef de projet : reporter dans `docs/` les décisions T-005 et T-007 de `journal/OWNER_DECISIONS.md`.
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui

@@ -58,7 +58,13 @@ function childContext(node: SvgElement, context: Context): Context {
   };
 }
 
+/** §5.2 black or white variant. */
 export function monochromeSvg(svg: string, target: MonoTarget): Result<MonoVariant, MonoError> {
+  return recolorSvg(svg, target);
+}
+
+/** Same structural recolouring in any #RRGGBB colour (Do & Don't recolour panel, §5.6). */
+export function recolorSvg(svg: string, target: string): Result<MonoVariant, MonoError> {
   const tree = sanitizeSvgTree(new TextEncoder().encode(svg));
   if (!tree.ok) return err({ code: 'INVALID_SVG', reason: tree.error.code });
   const root = tree.value.root;

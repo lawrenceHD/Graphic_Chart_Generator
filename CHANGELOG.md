@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-012 — Règles du logo** (2026-10-18) : favicon (80 %, fond arrondi, avertissement d'allongement), zone
+  d'exclusion et son schéma, 4 panneaux Do & Don't (teinte hors palette ADR-021, fond < 3:1) ; 14 tests.
 - **T-009 — Variantes monochromes** (2026-10-18) : chemin structurel avec évidements réels (masque de découpe),
   dégradés remplacés, repli raster signalé ; IoU et score de fidélité via le `Rasterizer` injecté ; 10 tests.
 - **T-008 — Rasterisation isolée** (2026-10-18) : port `Rasterizer`, enfant resvg confiné (permissions Node,

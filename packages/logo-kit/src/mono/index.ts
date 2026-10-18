@@ -1,5 +1,6 @@
 export {
   monochromeSvg,
+  recolorSvg,
   type MonoError,
   type MonoTarget,
   type MonoVariant,
