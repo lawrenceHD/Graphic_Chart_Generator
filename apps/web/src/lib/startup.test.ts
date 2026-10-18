@@ -38,7 +38,8 @@ describe('application startup', () => {
         },
       );
       let outputText = '';
-      const timeout = setTimeout(() => child.kill(), 20_000);
+      // Generous: under a parallel `pnpm verify`, Next.js alone can take 10 s to get ready.
+      const timeout = setTimeout(() => child.kill(), 45_000);
 
       child.stdout.on('data', (chunk: Buffer) => {
         outputText += chunk.toString();
@@ -61,5 +62,5 @@ describe('application startup', () => {
     });
 
     expect(output).toContain('Invalid environment variables: DATABASE_URL');
-  }, 25_000);
+  }, 50_000);
 });
