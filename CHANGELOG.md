@@ -1,0 +1,44 @@
+# Changelog
+
+Modifications notables du projet, par ticket. Format inspiré de
+[Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Mis à jour par l'agent à chaque ticket ou correctif livré
+(`journal/PROTOCOL.md`). Les dates sont celles des commits.
+
+## [Unreleased]
+
+### Ajouté
+- **Outillage multi-agents** (`chore/agent-relay-tooling`, 2026-10-18) : protocole de relais
+  (`journal/PROTOCOL.md`, `HANDOFF.md`, journaux de session, `journal/OWNER_DECISIONS.md`), ce changelog,
+  configuration Gemini (`.gemini/settings.json` : contexte `AGENTS.md`, MCP ; commandes `/reprendre` et `/relais`),
+  rapport historique `sortie tikets/T-001.md`. En attente d'installation par le propriétaire : skills et agents ECC
+  et `logo-design`, MCP Context7, GitHub et Cloudflare Docs, hooks de relais.
+- **T-004 — Moteur couleur** (`96d68ef`, 2026-10-18) : conversions sRGB, contraste et niveaux WCAG, affichage
+  tronqué, OKLab/OKLCH (teinte `null` pour les gris), CIELAB D65, ΔE_OK, CIEDE2000 ; 15 tests golden et de propriétés.
+- **T-003 — Document de marque** (`a2ddb84`, 2026-10-18) : schéma `BrandDocument`, 11 commandes pures réversibles
+  avec précondition `expect` et `EXPECTATION_FAILED` (ADR-018), identifiant de page fourni par l'appelant
+  (ADR-019), valeurs de marque `{ label, description }` (ADR-020), `migrate` ; 48 tests.
+- **T-002 — Application web** (`fff8bfc`, 2026-10-18) : configuration validée par Zod (refus de démarrer, noms sans
+  valeurs), `ProblemDetails` RFC 9457, logger pino masqué, `/api/health` (200 / 503), proxy Next.js 16 avec CSP à
+  nonce par requête (ADR-024), PostgreSQL local ; 14 tests.
+- **Outillage et spécification v4.1** (PR #1, `5d95f32`, 2026-10-17) : package `@app/kernel` (`Result`, ADR-017),
+  règles de pureté et graphe de dépendances vérifiés, ADR-016 à ADR-026, tickets v4.1, agents de revue, skills ECC,
+  hooks d'agent, `CLAUDE.md`, `GEMINI.md`.
+
+### Modifié
+- T-002 à T-004 refaits sur la v4.1 (2026-10-18). Les versions v4.0 du 2026-10-12/13 restent sous les tags
+  `backup/pre-v4.1/*`.
+
+### Connu, non corrigé
+- 9 défauts relevés le 2026-10-18 (pool PostgreSQL sans écouteur d'erreur, masquage des logs incomplet,
+  `RestoreMockup` accepté de l'extérieur, position de page incohérente, hex non validé, troncature de
+  `formatRatio`, NFC, identifiants vides, panne de base non journalisée) : voir `HANDOFF.md`.
+
+## [T-001] — Squelette du monorepo et CI — 2026-10-07
+
+### Ajouté
+- Monorepo pnpm + Turborepo, TypeScript strict, ESLint 9 `strictTypeChecked`, Prettier, dependency-cruiser,
+  CI GitHub (Gitleaks puis `pnpm verify`), contrat `HexColor` et ses 6 tests.
+
+### Vérifié
+- Corrections C1–C9 et 10 sabotages d'architecture le 2026-10-08 (rapport `sortie tikets/T-001.md`, état v4.0).
+  Le statut « vérifié » au sens de `docs/PROGRESS_TRACKER.md` attend le verdict du chef de projet.

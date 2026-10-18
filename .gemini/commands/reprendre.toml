@@ -1,0 +1,9 @@
+description = "Reprendre le travail là où le dernier agent s'est arrêté (protocole de relais)."
+prompt = """
+Applique le §2.1 de journal/PROTOCOL.md :
+1. Lis HANDOFF.md, puis le fichier le plus récent de journal/sessions/, puis journal/OWNER_DECISIONS.md.
+2. Exécute `git status`, `git branch --show-current` et `git log --oneline -8`. Si HANDOFF.md contredit Git, Git fait foi : corrige HANDOFF.md d'abord.
+3. Inscris-toi comme agent actif dans HANDOFF.md (agent, poste, date, tâche) et crée journal/sessions/AAAA-MM-JJ-gemini-<sujet>.md.
+4. Résume en 5 lignes au plus : branche, dernière étape vérifiée, prochaine action, questions ouvertes. Puis attends la consigne ou exécute la prochaine action si elle a déjà été autorisée.
+Respecte AGENTS.md en toutes circonstances. {{args}}
+"""

@@ -1,0 +1,10 @@
+description = "Écrire un point de relais pour qu'un autre agent puisse reprendre (protocole de relais)."
+prompt = """
+Applique les §2.2 à §2.5 de journal/PROTOCOL.md :
+1. Mets à jour HANDOFF.md : étape en cours, dernier état vérifié (avec la commande et son résultat réel), prochaine action exacte, fichiers touchés, questions ouvertes.
+2. Ajoute une ligne datée au fichier de session courant dans journal/sessions/.
+3. Si le propriétaire a pris une décision, ajoute-la à journal/OWNER_DECISIONS.md.
+4. Si un livrable est terminé, ajoute l'entrée correspondante à CHANGELOG.md.
+5. Commite sur la branche courante : `wip(<ticket>): relais — <étape>` si le travail est inachevé. Ne pousse que si le propriétaire l'a autorisé.
+N'écris jamais de secret. Ne prétends jamais qu'un test passe sans sa sortie réelle. {{args}}
+"""
