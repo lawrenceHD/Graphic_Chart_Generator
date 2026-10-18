@@ -1,10 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import type { Actor } from '@app/contracts';
-import { eq, guestSessions, projects, user } from '@app/db';
+import { eq, projects, user } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { expireGuestProjects, guestActorFromCookie } from './guest-service';
+import { guestActorFromCookie } from './guest-service';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { createProject } from './project-service';
 import { createRateLimiter } from './rate-limiter';
@@ -15,7 +15,7 @@ const SECRET = 'test-only-secret-with-enough-entropy-0123456789';
 
 describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
   let test: TestDatabase;
-  let clock = new Date('2026-10-18T10:00:00Z');
+  const clock = new Date('2026-10-18T10:00:00Z');
   let turnstileAnswer = true;
   let signedIn: Actor | null = null;
   let routes: ReturnType<typeof guestHandlers>;
@@ -130,27 +130,5 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     expect([row?.guestSessionId, typeof row?.workspaceId]).toEqual([null, 'string']);
     const value = cookie.split('=').slice(1).join('=');
     expect(await guestActorFromCookie(test.database.orm, value, SECRET, clock)).toBeNull();
-  });
-
-  it('logically deletes the projects of expired, unclaimed sessions', async () => {
-    const { actor } = await newGuest();
-    if (actor?.kind !== 'guest') throw new Error('guest expected');
-    const project = await createProject(test.database.orm, actor, {
-      title: 'Forgotten',
-      language: 'fr',
-    });
-    clock = new Date(clock.getTime() + 25 * 3_600_000);
-
-    expect(await expireGuestProjects(test.database.orm, clock)).toBeGreaterThanOrEqual(1);
-    const [row] = await test.database.orm
-      .select()
-      .from(projects)
-      .where(eq(projects.id, project.id));
-    expect(row?.deletedAt).toEqual(clock);
-    const [session] = await test.database.orm
-      .select()
-      .from(guestSessions)
-      .where(eq(guestSessions.id, actor.guestSessionId));
-    expect(session?.claimedByUserId).toBeNull();
   });
 });

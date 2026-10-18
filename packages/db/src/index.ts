@@ -30,4 +30,4 @@ export function createDatabase(
 
 // Query operators from the same drizzle-orm instance as the schema: a second copy in a consumer
 // (pnpm peer variants) would make column types incompatible.
-export { and, eq, isNull, sql } from 'drizzle-orm';
+export { and, eq, isNotNull, isNull, lte, sql } from 'drizzle-orm';

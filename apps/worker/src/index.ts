@@ -4,6 +4,7 @@ import { startJobQueue } from '@app/db/queue';
 import { createR2Storage } from '@app/storage';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { createLogger, errorSummary } from './logger.js';
+import { purge } from './purge.js';
 import { scanAsset } from './scan.js';
 
 // Composition root of the worker process (02_ARCHITECTURE.md §2): real clock, network and child processes are
@@ -48,6 +49,15 @@ await queue.work('asset.scan', async ({ assetId }, attempt) => {
     throw error;
   }
 });
+await queue.work('maintenance.purge', async () => {
+  const report = await purge({
+    orm: database.orm,
+    storage: scanDeps.storage,
+    now: () => new Date(),
+  });
+  logger.info({ event: 'purge_done', ...report });
+});
+await queue.schedule('maintenance.purge', '0 * * * *', {});
 logger.info({ event: 'worker_started' });
 
 async function shutdown(): Promise<void> {

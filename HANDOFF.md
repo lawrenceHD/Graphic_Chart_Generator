@@ -45,9 +45,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    sans IA) et flux SSE `GET /projects/:id/events` (NOTIFY PostgreSQL), dont l'événement `asset.status` de T-018.
 2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
    d'upload et de session invitée sont faites.
-3. Worker :
-   - purge planifiée (sessions invitées expirées, `deleted_at` dépassé, objets R2) ;
-   - lettres mortes → `ASSET_SCAN_TIMEOUT`.
+3. Worker : lettres mortes → `ASSET_SCAN_TIMEOUT`. La purge horaire est faite.
 4. T-016, reste à faire :
    - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
    - variables Google.
@@ -70,6 +68,17 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 | 9 | Basse | `apps/web/src/health-response.ts:5` | Cause de la panne de base avalée sans log | T-002 |
 
 ## Questions ouvertes (BLOCKER)
+- **T-019** :
+  - BLOCKER — reprise SSE (`Last-Event-ID`, `04_API_CONTRACTS.md` §5) : NOTIFY ne garde rien, et le modèle de
+    données n'a pas de table d'événements.
+    Options : A) table `project_events` (id croissant, rétention courte) ; B) au connect, rejouer un état reconstruit
+    (statuts d'assets, étapes d'analyse) sans historique.
+    Recommandation : A, purgée par le job horaire.
+  - BLOCKER — où ranger palette et variantes d'une analyse sans IA ? Le `BrandDocument` exige les champs de marque
+    de l'IA.
+    Options : A) variantes = assets `logo_variant` et palette dans `meta` de `logo_sanitized`, document composé à
+    l'étape 4 ; B) document partiel (schéma à assouplir).
+    Recommandation : A.
 - **T-003** : ≈ 1 250 lignes hors tests (> 400) ; `AddPage.pageType` au lieu de `type` ; `RestoreMockup` interne ; formes de `expect` — à valider (`sortie tikets/T-003.md`).
 - **T-004** : GO à reconfirmer (teinte `null` au lieu de `0`).
 - **T-002** : `'unsafe-eval'` en développement seulement — à valider.

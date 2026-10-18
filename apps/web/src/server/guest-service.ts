@@ -67,21 +67,3 @@ export function claimGuestSession(
     return moved.length;
   });
 }
-
-/**
- * Logical deletion of the projects of expired, unclaimed guest sessions (the "purge at 24 h"); the scheduled
- * purge job then removes the rows and stored files. Returns the number of projects deleted.
- */
-export async function expireGuestProjects(orm: Orm, now: Date): Promise<number> {
-  const deleted = await orm
-    .update(projects)
-    .set({ deletedAt: now })
-    .where(
-      and(
-        isNull(projects.deletedAt),
-        sql`${projects.guestSessionId} IN (SELECT ${guestSessions.id} FROM ${guestSessions} WHERE ${guestSessions.expiresAt} <= ${now} AND ${guestSessions.claimedByUserId} IS NULL)`,
-      ),
-    )
-    .returning({ id: projects.id });
-  return deleted.length;
-}

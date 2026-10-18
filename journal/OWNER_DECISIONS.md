@@ -97,3 +97,11 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - Limites §7 : fenêtre **fixe**, clés `rate_limit` hachées (SHA-256) ; IP = première entrée de `X-Forwarded-For`
   (`clientIp`), à confirmer selon l'hébergeur (en-tête de confiance) ; sans IP, un compartiment commun `unknown`
   (refus plutôt que contournement). La limite par compte de SEC-05 garde son module (`login-throttle.ts`).
+
+## Purge (délégation, 2026-10-18) — à reporter dans `docs/03_DATA_MODEL.md` §6
+- Job `maintenance.purge` planifié **toutes les heures** par le worker (`0 * * * *`, UTC), 200 projets par passage.
+- Un projet supprimé (`deleted_at`) est purgé au passage suivant, **sans délai de grâce** (« ≤ 24 h »).
+- Ordre : fichiers R2 (clés des assets), puis lignes en une transaction (`share_links`, `exports`, `chat_messages`,
+  `revisions`, `documents`, `assets`, `projects`) ; une interruption est reprise au passage suivant.
+- Une session invitée expirée est supprimée quand aucun projet ni aucun `usage_events` (rétention 13 mois) ne la
+  référence. `expireGuestProjects` a quitté le web (rien ne l'y planifiait) pour le worker.

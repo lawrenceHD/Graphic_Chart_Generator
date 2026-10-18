@@ -18,6 +18,8 @@ export interface JobRunner extends JobQueue {
     name: N,
     handler: (payload: JobPayload<N>, attempt: number) => Promise<void>,
   ): Promise<void>;
+  /** Recurring job on a cron expression (UTC); scheduling again replaces the previous schedule. */
+  schedule<N extends JobName>(name: N, cron: string, payload: JobPayload<N>): Promise<void>;
   stop(): Promise<void>;
 }
 
@@ -57,6 +59,9 @@ export async function startJobQueue(
       await boss.work(name, { batchSize: 1 }, async (jobs) => {
         for (const job of jobs) await handler(parse(name, job.data), job.retryCount);
       });
+    },
+    async schedule(name, cron, payload) {
+      await boss.schedule(name, cron, parse(name, payload), { tz: 'UTC' });
     },
     stop: () => boss.stop({ graceful: true, close: true }),
   };

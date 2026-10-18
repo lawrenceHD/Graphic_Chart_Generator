@@ -6,7 +6,15 @@ Modifications notables du projet, par ticket. Format inspiré de
 
 ## [Unreleased]
 
+### Corrigé
+- **svg-engine** (2026-10-18) : `viewBox` imbriqué (`symbol`, `pattern`, `marker`) validé comme celui de la racine
+  (valeur libre conservée auparavant, trouvée par un test de propriété).
+- **web** (2026-10-18) : délai du test de démarrage élargi (instable sous `pnpm verify` parallèle).
+
 ### Ajouté
+- **Purge horaire (AC-01.2, `03_DATA_MODEL.md` §6)** (2026-10-18) : job `maintenance.purge` du worker (cron UTC) :
+  expiration des projets invités à 24 h, suppression des fichiers R2 puis des lignes des projets supprimés, des
+  sessions invitées expirées sans référence ; 2 tests.
 - **SEC-24 — Limites de débit** (2026-10-18) : limiteur à fenêtre fixe sur `rate_limit` (clés hachées), appliqué à
   la déclaration d'upload (15/min par identité, 30/min par IP) et à la création de session invitée (5/h par IP) ;
   6 tests.
