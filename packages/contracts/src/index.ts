@@ -5,3 +5,4 @@ export * from './document-types.js';
 export * from './asset-errors.js';
 export * from './rasterizer.js';
 export * from './access.js';
+export * from './user-text.js';

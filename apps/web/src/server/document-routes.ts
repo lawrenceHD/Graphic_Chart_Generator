@@ -1,4 +1,3 @@
-import { authorize, type Actor } from '@app/contracts';
 import type { createDatabase } from '@app/db';
 import { z } from 'zod';
 import {
@@ -9,21 +8,13 @@ import {
   type DocumentServiceError,
   type DocumentState,
 } from './document-service';
-import { authorizationResponse, checkOrigin, problemResponse, readJson } from './http';
-import { projectResource } from './project-access';
+import { problemResponse, readJson } from './http';
+import { guardProject, type RouteDeps, type RouteParams } from './route-guard';
 
 // Route handlers of 04_API_CONTRACTS.md §3 "Document". Order: authentication, Origin (SEC-06),
 // authorisation through can() (SEC-07), body validation, then the service.
 type Orm = ReturnType<typeof createDatabase>['orm'];
 
-export interface RouteDeps {
-  readonly orm: Orm;
-  readonly appUrl: string;
-  readonly resolveActor: (request: Request) => Promise<Actor | null>;
-}
-export type RouteParams = Promise<Record<string, string | string[] | undefined>>;
-
-const Params = z.object({ id: z.uuid(), seq: z.coerce.number().int().positive().optional() });
 const BaseBody = z.object({ baseSeq: z.number().int().nonnegative() }).strict();
 const CommandBody = z
   .object({ baseSeq: z.number().int().nonnegative(), command: z.unknown() })
@@ -33,6 +24,7 @@ const STATUS: Readonly<Record<DocumentServiceError['code'], number>> = {
   PROJECT_NOT_FOUND: 404,
   REVISION_NOT_FOUND: 404,
   REVISION_CONFLICT: 409,
+  DOCUMENT_NOT_READY: 409,
   EXPECTATION_FAILED: 409,
   UNDO_CONFLICT: 409,
   NOTHING_TO_UNDO: 409,
@@ -65,23 +57,17 @@ type Operation = (
 
 function handler(deps: RouteDeps, schema: z.ZodType<{ baseSeq: number }>, operation: Operation) {
   return async (request: Request, context: { params: RouteParams }): Promise<Response> => {
-    const actor = await deps.resolveActor(request);
-    if (actor === null) return problemResponse(request, 401, 'UNAUTHENTICATED', 'sign in required');
-    const rejectedOrigin = checkOrigin(request, deps.appUrl);
-    if (rejectedOrigin) return rejectedOrigin;
-    const params = Params.safeParse(await context.params);
-    if (!params.success) return problemResponse(request, 404, 'NOT_FOUND', 'no such resource');
-    const resource = await projectResource(deps.orm, params.data.id, actor);
-    const denied = authorizationResponse(request, authorize(actor, 'document:command', resource));
-    if (denied) return denied;
+    const guard = await guardProject(deps, request, context.params, 'document:command');
+    if (!guard.ok) return guard.error;
+    const { actor, params } = guard.value;
     const body = await readJson(request, schema);
     if (!body.ok) return body.error;
     const base = {
-      projectId: params.data.id,
+      projectId: params.id,
       baseSeq: body.value.baseSeq,
       actor: actor.kind === 'system' ? ('system' as const) : ('user' as const),
     };
-    return outcomeResponse(request, await operation(deps.orm, base, body.value, params.data.seq));
+    return outcomeResponse(request, await operation(deps.orm, base, body.value, params.seq));
   };
 }
 

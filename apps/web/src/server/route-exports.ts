@@ -1,3 +1,3 @@
 // Single import point for route files.
-export { getDocumentHandlers } from './context';
-export type { RouteParams } from './document-routes';
+export { getDocumentHandlers, getProjectHandlers } from './context';
+export type { RouteParams } from './route-guard';

@@ -7,6 +7,9 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-016 (en cours)** (2026-10-18) : service transactionnel du document (commandes, annuler, rétablir,
+  annulation ciblée), Better Auth configuré, routes `/api/v1/projects/:id/{commands,undo,redo,revisions/:seq/undo}`
+  derrière `can()`, table des routes et tests d'accès générés.
 - **T-014 — Base de données** (2026-10-18) : schéma Drizzle complet (tables métier et Better Auth), migration
   commitée, `uuidV7` pur, tests d'intégration sur base jetable ; PostgreSQL dans la CI.
 - **T-013 — Spike authentification** (2026-10-18) : Better Auth 1.7.7 confirmé ; Argon2id natif de Node 24

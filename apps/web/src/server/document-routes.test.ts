@@ -85,19 +85,18 @@ describe.runIf(adminUrl !== '')(
     const body = (route: string): unknown =>
       route.endsWith('/commands') ? { baseSeq: 0, command: colour } : { baseSeq: 0 };
 
-    it.each(ROUTES.map((route) => route.path))(
-      '%s: a 401, b 404, c 404, d 403, f 403 — never 2xx',
-      async (route) => {
-        expect((await call(route, 'nobody', body(route))).status).toBe(401);
-        expect((await call(route, 'stranger', body(route))).status).toBe(404);
-        expect((await call(route, 'guest', body(route))).status).toBe(404);
-        expect((await call(route, 'share', body(route))).status).toBe(403);
-        expect((await call(route, 'viewer', body(route))).status).toBe(403);
-        expect((await call(route, 'owner', body(route), '1', 'https://evil.example')).status).toBe(
-          403,
-        );
-      },
-    );
+    it.each(
+      ROUTES.filter((route) => route.action === 'document:command').map((route) => route.path),
+    )('%s: a 401, b 404, c 404, d 403, f 403 — never 2xx', async (route) => {
+      expect((await call(route, 'nobody', body(route))).status).toBe(401);
+      expect((await call(route, 'stranger', body(route))).status).toBe(404);
+      expect((await call(route, 'guest', body(route))).status).toBe(404);
+      expect((await call(route, 'share', body(route))).status).toBe(403);
+      expect((await call(route, 'viewer', body(route))).status).toBe(403);
+      expect((await call(route, 'owner', body(route), '1', 'https://evil.example')).status).toBe(
+        403,
+      );
+    });
 
     it('g. the owner edits, undoes a given revision, redoes and undoes again', async () => {
       const steps: [string, unknown, string][] = [

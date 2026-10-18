@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { and, documents, eq, revisions, type createDatabase } from '@app/db';
+import { and, documents, eq, projects, revisions, type createDatabase } from '@app/db';
 import {
   apply,
   applyInverse,
@@ -24,6 +24,7 @@ const SNAPSHOT_EVERY = 25;
 export type DocumentServiceError =
   | CommandError
   | { readonly code: 'PROJECT_NOT_FOUND' }
+  | { readonly code: 'DOCUMENT_NOT_READY' }
   | { readonly code: 'CORRUPTED_DOCUMENT' }
   | { readonly code: 'REVISION_CONFLICT'; readonly currentSeq: number }
   | { readonly code: 'UNDO_CONFLICT' }
@@ -54,7 +55,14 @@ async function lockDocument(
     .from(documents)
     .where(eq(documents.projectId, projectId))
     .for('update');
-  if (!row) return err({ code: 'PROJECT_NOT_FOUND' });
+  if (!row) {
+    // The document is created by the analysis (T-019): an existing project may not have one yet.
+    const [project] = await tx
+      .select({ id: projects.id })
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    return err({ code: project ? 'DOCUMENT_NOT_READY' : 'PROJECT_NOT_FOUND' });
+  }
   if (row.seq !== baseSeq) return err({ code: 'REVISION_CONFLICT', currentSeq: row.seq });
   // Every jsonb read is validated (03_DATA_MODEL.md §1).
   const document = migrate(row.body);
