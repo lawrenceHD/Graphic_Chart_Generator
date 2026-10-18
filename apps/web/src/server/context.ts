@@ -4,6 +4,7 @@ import { getRuntimeEnv } from '../lib/runtime-env';
 import { actorFromSession, createAuth, type Auth } from './auth';
 import { documentHandlers } from './document-routes';
 import { guestActorFromCookie } from './guest-service';
+import { createLoginThrottle, type LoginThrottle } from './login-throttle';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
@@ -60,4 +61,11 @@ export function getGuestHandlers(): ReturnType<typeof guestHandlers> {
     now: () => new Date(),
   });
   return guestRoutes;
+}
+
+let loginThrottle: LoginThrottle | undefined;
+
+export function getLoginThrottle(): LoginThrottle {
+  loginThrottle ??= createLoginThrottle(getDatabase().orm, () => new Date());
+  return loginThrottle;
 }
