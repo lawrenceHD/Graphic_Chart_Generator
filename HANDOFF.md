@@ -45,7 +45,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    sans IA) et flux SSE `GET /projects/:id/events` (NOTIFY PostgreSQL), dont l'événement `asset.status` de T-018.
 2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
    d'upload et de session invitée sont faites.
-3. Worker : lettres mortes → `ASSET_SCAN_TIMEOUT`. La purge horaire est faite.
+3. ~~Worker : lettres mortes → `ASSET_SCAN_TIMEOUT`~~ fait. Ensuite : corpus de 20 logos créés pour le projet (accord du propriétaire, 2026-10-18), avant T-011.
 4. T-016, reste à faire :
    - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
    - variables Google.
