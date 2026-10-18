@@ -136,3 +136,12 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   `#00C2FF`, 2e couleur la plus présente, fusionné dans une grappe plus grosse de centre `#159EEF`, disparaît de la
   palette. Autre lecture possible : recalculer le centre comme la couleur la plus lourde après fusion (le cyan
   resterait). Moteur inchangé en attendant la décision.
+
+## Corpus privé (propriétaire, 2026-10-18)
+- Le dépôt du projet est **public** : les fichiers réels (Pinterest, chartes PDF) et la bibliothèque de 1 432 SVG n'y
+  sont jamais poussés. Ils vivent dans le dépôt **privé** `lawrenceHD/Graph_Charta`, récupéré par
+  `pnpm corpus:fetch` dans `.cache/corpus-private/` (ignoré). Lots d'origine intacts sous `raw/`.
+- Mandat du propriétaire : exploiter à fond ce corpus et ses chartes PDF (documentation du métier, banc d'essai
+  sur fichiers réels, robustesse des algorithmes), décisions A, B, C du 2026-10-18 acceptées sur recommandation de
+  l'agent (tolérance JPEG du fond, couleur de fond vive proposée comme couleur de marque, centre recalculé après
+  fusion) ; à reporter dans `docs/05_ENGINES.md` §2.4–§2.5 lors de leur mise en œuvre.

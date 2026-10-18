@@ -4,6 +4,11 @@ Logos et chartes graphiques trouvés en ligne (Pinterest, Behance…), déposés
 produit sur de vrais fichiers. Ils appartiennent à leurs auteurs : ce dossier est **ignoré par Git** (seul ce README
 est suivi), comme la bibliothèque de `tools/logo-library/`.
 
+## Sauvegarde et partage
+Le dépôt public ne reçoit jamais ces fichiers. Ils sont rangés et versionnés dans le dépôt **privé**
+`lawrenceHD/Graph_Charta` (lots `raw/`, chartes PDF `charters/`, bibliothèque de 1 432 SVG `library/`), récupérable
+sur une autre machine par `pnpm corpus:fetch` (dans `.cache/corpus-private/`, accès SSH requis).
+
 ## Rôle
 - **Complément** du corpus de 20 logos de `packages/svg-engine/fixtures/` (`docs/05_ENGINES.md` §6), créé pour le
   projet et versionné. Le corpus réel ne le remplace pas et ne sert jamais de fixture de test commitée.
