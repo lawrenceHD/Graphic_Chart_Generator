@@ -1,6 +1,9 @@
 import type { Env } from '@app/contracts';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import * as schema from './schema/index.js';
+
+export * from './schema/index.js';
 
 // A health check must answer "degraded" quickly instead of hanging on an unreachable host.
 const CONNECTION_TIMEOUT_MS = 3_000;
@@ -20,7 +23,7 @@ export function createDatabase(
   pool.on('error', onPoolError);
 
   return {
-    orm: drizzle(pool),
+    orm: drizzle(pool, { schema }),
     pool,
   };
 }

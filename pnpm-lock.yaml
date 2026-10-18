@@ -286,6 +286,9 @@ importers:
       '@app/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@app/kernel':
+        specifier: workspace:*
+        version: link:../kernel
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
@@ -293,6 +296,9 @@ importers:
         specifier: 8.23.1
         version: 8.23.1
     devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
       '@types/pg':
         specifier: 8.23.1
         version: 8.23.1
