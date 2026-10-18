@@ -17,6 +17,7 @@ main (5d95f32, = origin/main)
          └─ chore/agent-relay-tooling   021bf26  relais, CHANGELOG, config Gemini
             └─ fix/code-review-2026-10-18  9 défauts corrigés, bibliothèque de logos, LF   verify vert
                └─ ticket/T-005-palette-extraction  T-005 terminé, verify vert
+                  └─ ticket/T-006-scales-contrast  T-006 terminé, verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -26,7 +27,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 
 ## Prochaines actions (ordre recommandé)
 1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
-2. T-006 (échelles, matrice de contraste ; `mapToGamut` déjà fait en T-005), puis T-007 (assainisseur SVG).
+2. T-007 (assainisseur SVG, dépendances `sax`, `css-tree` autorisées), puis T-008.
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |

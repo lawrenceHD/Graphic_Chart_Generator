@@ -26,3 +26,11 @@ export {
   type RoleOptions,
   type RoleToken,
 } from './extract/index.js';
+export { buildScale, type ScaleStep } from './scale.js';
+export {
+  bestTextFor,
+  buildContrastMatrix,
+  type BestText,
+  type ContrastCell,
+  type ContrastMatrix,
+} from './contrast-matrix.js';
