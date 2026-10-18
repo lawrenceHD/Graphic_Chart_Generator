@@ -163,8 +163,8 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   retenus) ; `brandClusters(palette)` le place en tête des grappes données à `assignRoles` quand il est vif
   (chroma OKLCH ≥ **0,10**, `VIVID_BACKGROUND_CHROMA`), parts recalculées pour sommer à 1. Il devient alors en
   général le `primary`. Blanc, gris et cartes pastel des planches de présentation ne sont pas proposés. Vérifié sur
-  les chartes réelles : BlaBlaCar → BlaBlaBlue (couleur principale de sa charte, fond du logo de référence) ;
-  logo négatif de Nevers → bleu de Nevers ; icônes pleines (npm, TypeScript) → leur couleur.
+  les chartes réelles du corpus privé (détail dans ses rapports) : logo montré sur son aplat de marque → la couleur
+  principale de la charte ; logo en négatif sur sa couleur → cette couleur ; icônes carrées pleines → leur couleur.
 - **Mise en œuvre de C** : §2.4 7a, après une fusion le centre devient la couleur la plus lourde de la grappe
   fusionnée (à égalité : hexadécimal croissant) ; c'est toujours une couleur réelle, jamais une moyenne. Ferme le
   point ouvert ci-dessus (g02-aurora : le cyan uni reste).
