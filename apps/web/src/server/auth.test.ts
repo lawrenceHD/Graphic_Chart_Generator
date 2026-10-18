@@ -65,17 +65,26 @@ describe.runIf(adminUrl !== '')('Better Auth integration (T-013 decision, T-016)
   });
 
   it('rejects a wrong password without revealing whether the account exists', async () => {
-    const wrong = auth.api.signInEmail({
-      body: { email: 'eve@example.invalid', password: 'not the password!' },
-    });
-    const unknown = auth.api.signInEmail({
-      body: { email: 'nobody@example.invalid', password: 'not the password!' },
-    });
-    const message = async (attempt: Promise<unknown>): Promise<string> =>
+    // Handlers attached at once: the unknown account can fail before the Argon2 check of the known one ends,
+    // and a rejection waiting unhandled meanwhile is reported by Vitest as an error.
+    const message = (attempt: Promise<unknown>): Promise<string> =>
       attempt.then(
         () => 'accepted',
         (error: unknown) => (error instanceof Error ? error.message : 'error'),
       );
-    expect(await message(wrong)).toBe(await message(unknown));
+    const [wrong, unknown] = await Promise.all([
+      message(
+        auth.api.signInEmail({
+          body: { email: 'eve@example.invalid', password: 'not the password!' },
+        }),
+      ),
+      message(
+        auth.api.signInEmail({
+          body: { email: 'nobody@example.invalid', password: 'not the password!' },
+        }),
+      ),
+    ]);
+    expect(wrong).toBe(unknown);
+    expect(wrong).not.toBe('accepted');
   });
 });

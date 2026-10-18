@@ -138,6 +138,8 @@ describe.runIf(adminUrl !== '')(
     });
 
     it('limits declarations to 15 per minute per identity (04_API_CONTRACTS.md §7)', async () => {
+      // Hits of the earlier tests carry the real time: after 12:00 UTC they would count in the fixed window below.
+      await test.database.pool.query('DELETE FROM rate_limit');
       const limiter = createRateLimiter(test.database.orm, () => new Date('2026-10-18T12:00:00Z'));
       const limited = assetHandlers({ ...deps, limiter });
       const body = { kind: 'logo_original', fileName: 'x.svg', bytes: 1 };
