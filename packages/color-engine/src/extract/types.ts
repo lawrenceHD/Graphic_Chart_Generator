@@ -22,6 +22,8 @@ export interface PaletteCluster {
 
 export interface ExtractedPalette {
   readonly clusters: readonly PaletteCluster[];
+  /** Uniform background removed at step 2, share of the retained pixels; null when none was removed. */
+  readonly background: PaletteCluster | null;
 }
 
 export interface RoleOptions {

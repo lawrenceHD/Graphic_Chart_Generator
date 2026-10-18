@@ -156,3 +156,20 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   logos parfaits 56 % → 96 %, `EMPTY_IMAGE` 57 → 0 ; JPEG sur blanc, part de grappes intruses 37 % → 7 %.
   À reporter dans `docs/05_ENGINES.md` §2.4 étape 2 (texte proposé : « Si ≥ 75 % des pixels du pourtour entier,
   transparents compris, sont à ΔE_OK < 0,03 de la couleur opaque la plus fréquente du pourtour… »).
+- **Halo JPEG (suite de A)** : le fond retiré s'étend, de proche en proche (4-connexité), aux pixels retenus à
+  ΔE_OK < **0,06** de sa couleur : teintes quasi blanches laissées par la compression autour des formes (jusqu'à
+  16 % des pixels d'un logo à traits fins). Un gris clair voulu (`#E0E0E0`, 0,093 du blanc) reste.
+- **Mise en œuvre de B** : `extractPalette` renvoie en plus `background` (couleur du fond retiré, part des pixels
+  retenus) ; `brandClusters(palette)` le place en tête des grappes données à `assignRoles` quand il est vif
+  (chroma OKLCH ≥ **0,10**, `VIVID_BACKGROUND_CHROMA`), parts recalculées pour sommer à 1. Il devient alors en
+  général le `primary`. Blanc, gris et cartes pastel des planches de présentation ne sont pas proposés. Vérifié sur
+  les chartes réelles : BlaBlaCar → BlaBlaBlue (couleur principale de sa charte, fond du logo de référence) ;
+  logo négatif de Nevers → bleu de Nevers ; icônes pleines (npm, TypeScript) → leur couleur.
+- **Mise en œuvre de C** : §2.4 7a, après une fusion le centre devient la couleur la plus lourde de la grappe
+  fusionnée (à égalité : hexadécimal croissant) ; c'est toujours une couleur réelle, jamais une moyenne. Ferme le
+  point ouvert ci-dessus (g02-aurora : le cyan uni reste).
+- **Mesures** (banc `tools/corpus/bench.mjs`, échantillon stratifié de 174 SVG, logos plats, part de logos
+  parfaits — toutes couleurs visibles trouvées et aucune grappe intruse — avant → après A, B, C, D et halo) :
+  PNG transparent 56 % → 98 % ; PNG sur blanc 71 % → 85 % ; JPEG sur blanc 20 % → 67 % ; JPEG sur planche de
+  présentation 13 % → 65 %. Limite connue : un logo recadré au ras qui touche plus d'un quart du pourtour garde son
+  fond blanc (grappe neutre claire, sans effet sur `primary`).

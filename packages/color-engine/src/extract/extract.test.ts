@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import vectors from '../../../../docs/golden/color.golden.json' with { type: 'json' };
 import { deltaEOk, hexToOklab, hexToOklch } from '../oklab.js';
 import { parseHex } from '../hex.js';
-import { assignRoles, DEFAULT_EXTRACT_OPTIONS, extractPalette } from './index.js';
+import { assignRoles, brandClusters, DEFAULT_EXTRACT_OPTIONS, extractPalette } from './index.js';
 import { clusterColors, histogram } from './cluster.js';
 import { makeImage, rgba, TRANSPARENT, type Rgba } from './test-images.js';
 import type { PaletteCluster } from './types.js';
@@ -78,6 +78,18 @@ describe('extractPalette (05_ENGINES.md §2.4)', () => {
     });
 
     expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#FF0000', '#0000FF']);
+  });
+
+  it('removes the JPEG halo connected to the background, keeps a light grey shape', () => {
+    // Red square ringed by a 3 px bluish-white halo (ΔE_OK 0.048 from white), and a #E0E0E0 bar (0.093).
+    const image = makeImage(100, 100, (x, y) => {
+      if (x >= 30 && x < 70 && y >= 30 && y < 70) return RED;
+      if (x >= 27 && x < 73 && y >= 27 && y < 73) return rgba('#EAF1FF');
+      if (x >= 10 && x < 90 && y >= 80 && y < 90) return rgba('#E0E0E0');
+      return WHITE;
+    });
+
+    expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#FF0000', '#E0E0E0']);
   });
 
   it('3. drops the blended edge pixels of an anti-aliased disk', () => {
@@ -198,6 +210,70 @@ describe('extractPalette (05_ENGINES.md §2.4)', () => {
       }),
       { numRuns: 60 },
     );
+  });
+});
+
+describe('cluster centre after a merge (decision C)', () => {
+  it('the centre becomes the heaviest colour of the merged cluster', () => {
+    // 100 columns: red 64 %, a blue pair #159EEF 11 % + #1A9AEA 10 % (one cluster), plain cyan #00C2FF 15 %.
+    const image = makeImage(100, 10, (x) =>
+      x < 64 ? RED : x < 75 ? rgba('#159EEF') : x < 85 ? rgba('#1A9AEA') : rgba('#00C2FF'),
+    );
+    const result = extractPalette(image, { maxClusters: 2 });
+    if (!result.ok) throw new Error(result.error);
+
+    // The cyan (15 %) is merged into the blue cluster, whose heaviest single colour it now is.
+    expect(result.value.clusters.map((cluster) => cluster.hex)).toEqual(['#FF0000', '#00C2FF']);
+    // Columns at a colour change are blended edges (step 3): 96 of the 100 columns are counted.
+    expect(result.value.clusters[1]?.share).toBeCloseTo(33 / 96, 9);
+  });
+});
+
+describe('removed background proposed as a brand colour (decision B)', () => {
+  // App-icon style: a white letter on a full-bleed brand-coloured square.
+  const tile = (square: Rgba) =>
+    makeImage(100, 100, (x, y) => (x >= 35 && x < 65 && y >= 20 && y < 80 ? WHITE : square));
+  function paletteOf(image: Parameters<typeof extractPalette>[0]) {
+    const result = extractPalette(image);
+    if (!result.ok) throw new Error(result.error);
+    return result.value;
+  }
+
+  it('reports the removed background with its share of the retained pixels', () => {
+    const palette = paletteOf(tile(RED));
+
+    expect(palette.clusters.map((cluster) => cluster.hex)).toEqual(['#FFFFFF']);
+    expect(palette.background?.hex).toBe('#FF0000');
+    expect(palette.background?.share).toBeCloseTo(0.82, 2);
+  });
+
+  it('a vivid background leads the brand clusters, so it becomes the primary', () => {
+    const roles = assignRoles(brandClusters(paletteOf(tile(RED))));
+
+    expect(roles.primary).toEqual({ hex: '#FF0000', source: 'extracted' });
+  });
+
+  it('a white or pastel background is not proposed', () => {
+    for (const square of [rgba('#FAF1E5'), rgba('#E8F0FF')]) {
+      const palette = paletteOf(
+        makeImage(100, 100, (x, y) => (x >= 35 && x < 65 && y >= 20 && y < 80 ? RED : square)),
+      );
+
+      expect(brandClusters(palette).map((cluster) => cluster.hex)).toEqual(['#FF0000']);
+    }
+  });
+
+  it('brand cluster shares still sum to 1', () => {
+    const shares = brandClusters(paletteOf(tile(BLUE))).map((cluster) => cluster.share);
+
+    expect(shares.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 9);
+  });
+
+  it('no background: brand clusters are the clusters', () => {
+    const palette = paletteOf(makeImage(100, 50, (x) => (x < 60 ? RED : BLUE)));
+
+    expect(palette.background).toBeNull();
+    expect(brandClusters(palette)).toEqual(palette.clusters);
   });
 });
 

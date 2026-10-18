@@ -15,6 +15,7 @@ export {
 } from './gamut.js';
 export {
   assignRoles,
+  brandClusters,
   DEFAULT_EXTRACT_OPTIONS,
   DEFAULT_ROLE_OPTIONS,
   extractPalette,
@@ -25,6 +26,7 @@ export {
   type PaletteRoles,
   type RoleOptions,
   type RoleToken,
+  VIVID_BACKGROUND_CHROMA,
 } from './extract/index.js';
 export { buildScale, type ScaleStep } from './scale.js';
 export {

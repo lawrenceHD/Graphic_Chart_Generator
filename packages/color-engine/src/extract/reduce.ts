@@ -5,8 +5,10 @@ import { distanceOk } from './lab-cache.js';
 import type { PaletteCluster } from './types.js';
 
 interface Working {
-  readonly center: string;
-  readonly centerLab: Oklab;
+  center: string;
+  centerLab: Oklab;
+  /** Pixels of the centre colour alone: the centre is the heaviest single colour of the cluster. */
+  centerCount: number;
   population: number;
 }
 
@@ -32,12 +34,22 @@ function nearest(clusters: readonly Working[], source: Working): Working | undef
     )[0]?.cluster;
 }
 
-// A merge adds populations; the host keeps its own centre, so no colour is ever averaged.
+// A merge adds populations. Decision C (journal/OWNER_DECISIONS.md): the centre is then the heaviest single
+// colour of the merged cluster (ties: ascending hex), so a flat colour merged into a cluster of many light
+// variations keeps its place. Still a real colour of the image, never an average.
 function mergeSmallest(clusters: Working[]): boolean {
   const source = smallest(clusters);
   const host = source ? nearest(clusters, source) : undefined;
   if (!source || !host) return false;
   host.population += source.population;
+  if (
+    source.centerCount > host.centerCount ||
+    (source.centerCount === host.centerCount && compareHex(source.center, host.center) < 0)
+  ) {
+    host.center = source.center;
+    host.centerLab = source.centerLab;
+    host.centerCount = source.centerCount;
+  }
   clusters.splice(clusters.indexOf(source), 1);
   return true;
 }
@@ -51,6 +63,7 @@ export function reduceClusters(
   const clusters: Working[] = raw.map((cluster) => ({
     center: cluster.center,
     centerLab: cluster.centerLab,
+    centerCount: cluster.members.find((member) => member.hex === cluster.center)?.count ?? 0,
     population: cluster.population,
   }));
   const total = clusters.reduce((sum, cluster) => sum + cluster.population, 0);
