@@ -1,0 +1,10 @@
+# One line-ending convention for every OS and agent (Windows checkouts default to CRLF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.glb binary
+*.blend binary
