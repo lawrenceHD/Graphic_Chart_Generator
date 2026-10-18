@@ -6,10 +6,13 @@ export interface RouteEntry {
   readonly method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   /** Path under /api/v1, Next.js dynamic segments in brackets. */
   readonly path: string;
-  readonly action: Action;
+  /** 'public' only for identity bootstrap (guest session creation), guarded by Origin and Turnstile. */
+  readonly action: Action | 'public';
 }
 
 export const ROUTES: readonly RouteEntry[] = [
+  { method: 'POST', path: '/guest-sessions', action: 'public' },
+  { method: 'POST', path: '/guest-sessions/claim', action: 'guest:claim' },
   { method: 'GET', path: '/projects', action: 'project:read' },
   { method: 'POST', path: '/projects', action: 'project:create' },
   { method: 'GET', path: '/projects/[id]', action: 'project:read' },

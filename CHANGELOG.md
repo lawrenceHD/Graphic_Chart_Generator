@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-017 — Sessions invitées** (2026-10-18) : cookie signé HMAC, jeton haché en base, Turnstile, rattachement au
+  compte, expiration à 24 h ; 9 tests.
 - **T-016 (en cours)** (2026-10-18) : service transactionnel du document (commandes, annuler, rétablir,
   annulation ciblée), Better Auth configuré, routes `/api/v1/projects/:id/{commands,undo,redo,revisions/:seq/undo}`
   derrière `can()`, table des routes et tests d'accès générés.

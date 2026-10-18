@@ -41,7 +41,7 @@ export async function countGuestProjects(orm: Orm, guestSessionId: string): Prom
 }
 
 /** MVP: one personal workspace per user, created with its owner membership on first use. */
-async function personalWorkspace(
+export async function personalWorkspace(
   tx: Parameters<Parameters<Orm['transaction']>[0]>[0],
   userId: string,
 ) {
