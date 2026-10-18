@@ -194,7 +194,7 @@ ce que `docs/01_PRODUCT_MVP.md` prévoit pour les pages de charte (T-022) et les
 | Codes incohérents (HEX ≠ RVB) | 3 chartes, 8 codes | — | Argument produit : une seule source, codes toujours cohérents ; test d'invariant à l'export |
 | Déclinaisons logo / fond autorisées | 4 | noir, blanc | Matrice « logo sur fond » calculée : chaque variante (couleur, noir, blanc) sur chaque couleur de la palette, autorisée si contraste ≥ 3 ; les combinaisons interdites montrées barrées |
 | Taille minimale | 8 (mm et px : 4) | valeurs par défaut, unité non dite | Toujours en mm (impression) **et** en px (écran) |
-| Zone de protection | 7 | 25 % de la hauteur | Inchangé (les chartes la rapportent à un élément du logo : non automatisable) |
+| Zone de protection | 8 | 25 % de la hauteur | Inchangé (les chartes la rapportent à un élément du logo : non automatisable) |
 | Interdits illustrés | 7 (médiane 10) | 4 règles | Banque de règles générées depuis le SVG : déformation, rotation, recoloration, fond nuisible, **ombre portée, opacité réduite, contour, éléments déplacés** ; 8 affichées |
 | Police de substitution (Office, Docs) | 5 | — | Chaque police du catalogue fermé porte une police système de repli, affichée sur la page Typographie |
 | Couleurs autorisées pour le texte selon le fond | 3 | matrice de contraste | Tirer de la matrice une ligne « texte sur ce fond : … » par couleur |
