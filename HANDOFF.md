@@ -24,6 +24,7 @@ main (5d95f32, = origin/main)
                               └─ ticket/T-012-logo-rules  T-012 terminé + correctifs CI
                                  └─ ticket/T-015-can  can()/authorize() (partie 1), CI verte
                                     └─ ticket/T-013-auth-spike  décision Better Auth + Argon2id
+                                       └─ ticket/T-014-db-schema  schéma, migration, PostgreSQL en CI
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -34,8 +35,12 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 ## Prochaines actions (ordre recommandé)
 1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
 2. Phase 1 terminée sauf les spikes T-010 (ICC, bloqué : profil FOGRA39 à fournir) et T-011 (vectorisation).
-   Suite : T-011, puis phase 2 (T-013 spike auth, T-014 schéma Drizzle, T-015 `can()`…).
-3. Chef de projet : reporter dans `docs/` les décisions T-005 et T-007 de `journal/OWNER_DECISIONS.md`.
+   Phase 2 : T-013 (décision), T-014 (schéma) et T-015 partie 1 (`can()`) faits. Suite : T-016 (installer
+   Better Auth selon `sortie tikets/T-013.md`, projets, documents, révisions, `commands`/`undo`/`redo`, table des
+   routes et tests d'accès générés = T-015 partie 2), puis T-017 (invités), T-018 (upload).
+3. Chef de projet : reporter dans `docs/` les décisions T-005, T-007, T-013, T-014 de `journal/OWNER_DECISIONS.md`
+   et des rapports.
+4. CI : chaque branche poussée est vérifiée ; diagnostic sans jeton via les annotations (voir `ci.yml`).
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |

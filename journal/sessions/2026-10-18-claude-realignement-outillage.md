@@ -29,3 +29,12 @@ Voir `journal/OWNER_DECISIONS.md`, section 2026-10-18.
 
 ## État en fin de session
 Branche `chore/agent-relay-tooling` au-dessus de `ticket/T-004-color-engine-maths` ; rien n'est poussé.
+
+## Suite de la session (délégation générale du propriétaire)
+- 9 défauts corrigés (`fix/code-review-2026-10-18`), bibliothèque de logos (`pnpm logos:fetch`), `.gitattributes` LF.
+- T-005, T-006, T-007, T-008, T-009, T-012 livrés, tests et sabotages à l'appui ; rapports dans `sortie tikets/`.
+- Assainisseur testé sur 1 432 vrais logos : 96,7 % puis 99,9 % acceptés après ajustement de deux limites (décisions consignées).
+- CI rouge depuis le 17/10 diagnostiquée (lint typé avant build sur machine propre, rapport SARIF) et réparée : **CI verte sur Linux** (`bba6f97`).
+- T-015 partie 1 (`can()`), T-013 (Better Auth confirmé, Argon2id natif), T-014 (schéma Drizzle, migration, PostgreSQL en CI).
+- Échecs instructifs : trois sabotages d'abord non détectés (T-005, T-007 ×2) → tests renforcés ; `sed` et backticks du shell ont plusieurs fois corrompu des fichiers → préférer l'outil d'édition ; resvg rend en alpha prémultiplié.
+- Toujours bloqué : l'installation de l'outillage `.claude/` (refus du classifieur, à lancer par le propriétaire).

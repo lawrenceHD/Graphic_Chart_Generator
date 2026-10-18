@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-014 — Base de données** (2026-10-18) : schéma Drizzle complet (tables métier et Better Auth), migration
+  commitée, `uuidV7` pur, tests d'intégration sur base jetable ; PostgreSQL dans la CI.
 - **T-013 — Spike authentification** (2026-10-18) : Better Auth 1.7.7 confirmé ; Argon2id natif de Node 24
   (`apps/web/src/lib/password.ts`, sans dépendance) ; réglages SEC-01 à SEC-06 consignés.
 - **T-015 (partie 1) — Autorisation centrale** (2026-10-18) : `can()` (matrice ADR-025, refus par défaut, e-mail
