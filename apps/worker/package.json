@@ -7,11 +7,21 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=../../.env.local dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "24.19.2",
     "typescript": "6.0.3",
     "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "@app/contracts": "workspace:*",
+    "@app/db": "workspace:*",
+    "@app/kernel": "workspace:*",
+    "@app/storage": "workspace:*",
+    "@app/svg-engine": "workspace:*",
+    "pino": "10.4.0"
   }
 }

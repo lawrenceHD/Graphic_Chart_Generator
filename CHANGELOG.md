@@ -7,9 +7,10 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
-- **T-018 (partie 1) — Upload d'assets** (2026-10-18) : port `ObjectStorage` et adaptateur R2 (`packages/storage`,
+- **T-018 — Upload et scan d'assets** (2026-10-18) : worker `asset.scan` (assainissement, normalisation raster,
+  copie `logo_sanitized`, rejet par code stable) ; port `ObjectStorage` et adaptateur R2 (`packages/storage`,
   URL présignées de 5 min, taille signée), file pg-boss (`@app/db/queue`), routes `assets/uploads`, `complete`,
-  `assets/:id`, `assets/:id/content` (302 présigné, originaux jamais servis) ; 13 tests.
+  `assets/:id`, `assets/:id/content` (302 présigné, originaux jamais servis) ; 18 tests.
 - **SEC-05 — Limite par compte** (2026-10-18) : 5 échecs de connexion en 15 min verrouillent le compte ; 3 tests.
 - **T-017 — Sessions invitées** (2026-10-18) : cookie signé HMAC, jeton haché en base, Turnstile, rattachement au
   compte, expiration à 24 h ; 9 tests.

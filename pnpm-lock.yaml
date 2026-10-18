@@ -244,13 +244,35 @@ importers:
         version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.3(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15))
 
   apps/worker:
+    dependencies:
+      '@app/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@app/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
+      '@app/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+      '@app/svg-engine':
+        specifier: workspace:*
+        version: link:../../packages/svg-engine
+      pino:
+        specifier: 10.4.0
+        version: 10.4.0
     devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
       typescript:
         specifier: 6.0.3
         version: 6.0.3
       vitest:
         specifier: 5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(vite@8.3.3(@types/node@26.6.5)(esbuild@0.28.2)(tsx@4.23.15))
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(vite@8.3.3(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15))
 
   packages/ai:
     devDependencies:

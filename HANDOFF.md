@@ -5,7 +5,7 @@
 
 ## Agent actif
 - **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-18
-- **Tâche** : correction et avancement du projet sous délégation du propriétaire (T-005 fait ; T-006 ensuite)
+- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 en cours : T-018 fait ; suite T-019.
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
 ## Branches (empilées, poussées sur origin le 2026-10-18)
@@ -26,22 +26,36 @@ main (5d95f32, = origin/main)
                                     └─ ticket/T-013-auth-spike  décision Better Auth + Argon2id
                                        └─ ticket/T-014-db-schema  schéma, migration, PostgreSQL en CI
                                           └─ ticket/T-016-projects-history  service, auth, routes document et projets
-                                             └─ ticket/T-017-guest-sessions  sessions invitées
+                                             └─ ticket/T-017-guest-sessions  sessions invitées + SEC-05, CI verte
+                                                └─ ticket/T-018-asset-upload  upload présigné, file pg-boss, worker asset.scan
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
 ## Étape en cours
-1. Fait : relais et config Gemini ; 9 défauts corrigés ; bibliothèque de logos (`pnpm logos:fetch`) ; T-005 (`sortie tikets/T-005.md`).
-2. **En attente du propriétaire** : le classifieur de sécurité de Claude Code refuse que l'agent écrive dans sa propre configuration (`.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `tools/agent-hooks/`), même lancé par script. Staging et script d'installation : voir le dernier message de l'agent ; à lancer par le propriétaire avec `! bash …`.
+1. Fait le 2026-10-18 :
+   - relais et configuration Gemini ;
+   - Phase 1 (hors T-010 et T-011) ;
+   - T-013 à T-017 et SEC-05 ;
+   - T-018 (`sortie tikets/T-018.md`).
+2. **En attente du propriétaire** : le script d'installation de l'outillage de l'agent (skills, agents, MCP, hooks).
+   Le classifieur de Claude Code refuse que l'agent écrive dans `.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`.
 
 ## Prochaines actions (ordre recommandé)
-1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
-2. Phase 1 terminée sauf les spikes T-010 (ICC, bloqué : profil FOGRA39 à fournir) et T-011 (vectorisation).
-   Phase 2 : T-013, T-014, T-015 faits ; T-016 (reste : e-mails, limite par compte) et T-017 faits.
-   Suite : T-018 (upload par URL présignée, quarantaine, `asset.scan`), T-019 (analyse sans IA, SSE).
-3. Chef de projet : reporter dans `docs/` les décisions T-005, T-007, T-013, T-014 de `journal/OWNER_DECISIONS.md`
-   et des rapports.
-4. CI : chaque branche poussée est vérifiée ; diagnostic sans jeton via les annotations (voir `ci.yml`).
+1. **T-019** : job `project.analyze` (palette `color-engine` + variantes `logo-kit` depuis `logo_sanitized`,
+   sans IA) et flux SSE `GET /projects/:id/events` (NOTIFY PostgreSQL), dont l'événement `asset.status` de T-018.
+2. Limiteur de débit générique sur `rate_limit` :
+   - limites du §7 de `04_API_CONTRACTS.md` (déclaration d'upload, analyse, sessions invitées) ;
+   - y reprendre `login-throttle.ts`.
+3. Worker :
+   - purge planifiée (sessions invitées expirées, `deleted_at` dépassé, objets R2) ;
+   - lettres mortes → `ASSET_SCAN_TIMEOUT`.
+4. T-016, reste à faire :
+   - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
+   - variables Google.
+5. T-020 : i18n. `next-intl` est cité comme candidat dans `02_ARCHITECTURE.md` ; dépendance à autoriser.
+6. Chef de projet : reporter dans `docs/` les décisions de `journal/OWNER_DECISIONS.md` (T-005, T-007, T-013, T-014,
+   T-018), dont `packages/storage` dans AGENTS.md §5.
+7. CI : chaque branche poussée est vérifiée ; diagnostic sans jeton via les annotations (voir `ci.yml`).
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |
