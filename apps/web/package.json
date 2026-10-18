@@ -22,6 +22,7 @@
     "@app/db": "workspace:*",
     "@app/document": "workspace:*",
     "@app/kernel": "workspace:*",
+    "@app/storage": "workspace:*",
     "better-auth": "1.7.7",
     "next": "16.4.0",
     "pino": "10.4.0",

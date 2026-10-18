@@ -1,6 +1,11 @@
-import type { Actor } from '@app/contracts';
+import type { Actor, JobQueue } from '@app/contracts';
+import { startJobQueue, type JobRunner } from '@app/db/queue';
+import { createR2Storage } from '@app/storage';
+import { errorSummary } from '../lib/error-summary';
+import { appLogger } from '../logger';
 import { getDatabase } from '../lib/database';
 import { getRuntimeEnv } from '../lib/runtime-env';
+import { assetHandlers } from './asset-routes';
 import { actorFromSession, createAuth, type Auth } from './auth';
 import { documentHandlers } from './document-routes';
 import { guestActorFromCookie } from './guest-service';
@@ -68,4 +73,36 @@ let loginThrottle: LoginThrottle | undefined;
 export function getLoginThrottle(): LoginThrottle {
   loginThrottle ??= createLoginThrottle(getDatabase().orm, () => new Date());
   return loginThrottle;
+}
+
+// The pg-boss producer starts on the first enqueue, not at import time (same reason as above).
+let queue: Promise<JobRunner> | undefined;
+const lazyQueue: JobQueue = {
+  async send(name, payload, singletonKey) {
+    queue ??= startJobQueue(getRuntimeEnv().DATABASE_URL, 'producer', (error) => {
+      appLogger().error({ event: 'job_queue_error', error: errorSummary(error) });
+    });
+    await (await queue).send(name, payload, singletonKey);
+  },
+};
+let assetRoutes: ReturnType<typeof assetHandlers> | undefined;
+
+export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
+  const env = getRuntimeEnv();
+  assetRoutes ??= assetHandlers({
+    orm: getDatabase().orm,
+    appUrl: env.APP_URL,
+    resolveActor,
+    storage: createR2Storage(
+      {
+        accountId: env.R2_ACCOUNT_ID,
+        accessKeyId: env.R2_ACCESS_KEY_ID,
+        secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+        bucket: env.R2_BUCKET,
+      },
+      () => new Date(),
+    ),
+    queue: lazyQueue,
+  });
+  return assetRoutes;
 }

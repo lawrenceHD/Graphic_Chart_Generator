@@ -12,6 +12,10 @@
       "types": "./dist/migrate.d.ts",
       "default": "./dist/migrate.js"
     },
+    "./queue": {
+      "types": "./dist/queue.d.ts",
+      "default": "./dist/queue.js"
+    },
     "./testing": {
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
@@ -34,6 +38,7 @@
     "@app/contracts": "workspace:*",
     "@app/kernel": "workspace:*",
     "drizzle-orm": "0.45.4",
+    "pg-boss": "12.36.0",
     "pg": "8.23.1"
   }
 }

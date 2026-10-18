@@ -23,4 +23,8 @@ export const ROUTES: readonly RouteEntry[] = [
   { method: 'POST', path: '/projects/[id]/undo', action: 'document:command' },
   { method: 'POST', path: '/projects/[id]/redo', action: 'document:command' },
   { method: 'POST', path: '/projects/[id]/revisions/[seq]/undo', action: 'document:command' },
+  { method: 'POST', path: '/projects/[id]/assets/uploads', action: 'asset:create' },
+  { method: 'POST', path: '/assets/[id]/complete', action: 'asset:create' },
+  { method: 'GET', path: '/assets/[id]', action: 'asset:read' },
+  { method: 'GET', path: '/assets/[id]/content', action: 'asset:read' },
 ];

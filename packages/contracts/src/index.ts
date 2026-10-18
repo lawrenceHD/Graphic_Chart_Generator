@@ -6,3 +6,5 @@ export * from './asset-errors.js';
 export * from './rasterizer.js';
 export * from './access.js';
 export * from './user-text.js';
+export * from './object-storage.js';
+export * from './jobs.js';

@@ -17,6 +17,8 @@ export function integrationDatabaseUrl(): string {
 
 export interface TestDatabase {
   readonly database: ReturnType<typeof createDatabase>;
+  /** Connection string of the throwaway database (for clients other than Drizzle, such as pg-boss). */
+  readonly url: string;
   /** Drops the throwaway database. */
   readonly dispose: () => Promise<void>;
 }
@@ -34,6 +36,7 @@ export async function createTestDatabase(adminUrl: string): Promise<TestDatabase
   await migrateDatabase(database.orm);
   return {
     database,
+    url: url.toString(),
     dispose: async () => {
       await database.pool.end();
       await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);

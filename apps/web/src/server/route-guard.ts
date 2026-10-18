@@ -3,6 +3,7 @@ import type { createDatabase } from '@app/db';
 import { err, ok, type Result } from '@app/kernel';
 import { z } from 'zod';
 import { authorizationResponse, checkOrigin, problemResponse } from './http';
+import { findAsset, type AssetRow } from './asset-service';
 import { projectResource } from './project-access';
 
 // The fixed preamble of every project route (SEC-07): authentication, Origin on mutations (SEC-06),
@@ -51,4 +52,24 @@ export async function guardProject(
   const resource = await projectResource(deps.orm, parsed.data.id, actor.value);
   const denied = authorizationResponse(request, authorize(actor.value, action, resource));
   return denied ? err(denied) : ok({ actor: actor.value, params: parsed.data });
+}
+
+const AssetParams = z.object({ id: z.uuid() });
+
+/** Actor allowed to perform `action` on the asset named by the path: assets inherit their project's access. */
+export async function guardAsset(
+  deps: RouteDeps,
+  request: Request,
+  params: RouteParams,
+  action: Action,
+): Promise<Result<{ actor: Actor; asset: AssetRow }, Response>> {
+  const actor = await authenticate(deps, request);
+  if (!actor.ok) return actor;
+  const parsed = AssetParams.safeParse(await params);
+  const asset = parsed.success ? await findAsset(deps.orm, parsed.data.id) : undefined;
+  // A missing asset answers exactly like a foreign one (SEC-08).
+  if (!asset) return err(problemResponse(request, 404, 'NOT_FOUND', 'no such resource'));
+  const resource = await projectResource(deps.orm, asset.projectId, actor.value);
+  const denied = authorizationResponse(request, authorize(actor.value, action, resource));
+  return denied ? err(denied) : ok({ actor: actor.value, asset });
 }

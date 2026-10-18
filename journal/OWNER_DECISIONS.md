@@ -79,3 +79,19 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   `operator`, `k1`–`k4`.
 - `data:` refusé comme schéma (début de valeur ou de `url()`), `javascript:` / `vbscript:` partout.
 - `xlink:href` normalisé en `href` ; `@import` / `url()` externes → `FORBIDDEN_CONTENT`.
+
+## T-018 partie 1 (délégation, 2026-10-18) — à reporter dans `docs/14_ADR_LOG.md` et `docs/04_API_CONTRACTS.md`
+- Dépendances : `aws4fetch` 1.0.20 (signature SigV4, zéro dépendance, recommandée par Cloudflare pour R2) plutôt
+  que le SDK AWS ; `pg-boss` 12.36.0 (ADR-005 ; version de plus de 2 semaines).
+- Nouveau package `packages/storage` (→ kernel, contracts) : adaptateur R2 partagé par web et worker ; port
+  `ObjectStorage` et contrats de jobs (`JOB_PAYLOADS`, `JobQueue`) dans `contracts` ; adaptateur pg-boss dans
+  `@app/db/queue` (pg-boss vit dans PostgreSQL).
+- File : politique `stately` + `singletonKey` = id de l'asset ; « 3 tentatives » = `retryLimit: 2`, recul
+  exponentiel à partir de 5 s ; expiration 300 s.
+- Taille limitée côté stockage (SEC-11) : `Content-Length` **signé** dans l'URL présignée PUT (R2 n'accepte pas les
+  politiques POST `content-length-range`).
+- `POST /projects/:id/assets/uploads` : corps `{ kind: 'logo_original', fileName, bytes }` ; le type annoncé n'est pas
+  demandé (SEC-12) ; plafond 10 Mo (raster), les 5 Mo du SVG sont appliqués par le scan.
+- `POST /assets/:id/complete` : `409 UPLOAD_MISSING` si l'objet n'existe pas, `409 UPLOAD_SIZE_MISMATCH` si la taille
+  diffère ; idempotent (`202`, renvoi du job tant que l'asset est `quarantined`).
+- Limite « déclaration d'upload 15/min » (§7) : non livrée dans cette partie, prévue avec un limiteur générique.

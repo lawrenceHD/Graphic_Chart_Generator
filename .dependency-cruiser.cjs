@@ -8,6 +8,7 @@ const ALLOWED = {
   'logo-kit': ['kernel', 'contracts', 'svg-engine', 'color-engine'],
   'mockup-engine': ['kernel', 'contracts'],
   db: ['kernel', 'contracts'],
+  storage: ['kernel', 'contracts'],
   ai: ['kernel', 'contracts', 'document'],
 };
 
