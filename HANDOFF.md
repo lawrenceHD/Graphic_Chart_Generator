@@ -28,6 +28,7 @@ main (5d95f32, = origin/main)
                                           └─ ticket/T-016-projects-history  service, auth, routes document et projets
                                              └─ ticket/T-017-guest-sessions  sessions invitées + SEC-05, CI verte
                                                 └─ ticket/T-018-asset-upload  upload présigné, file pg-boss, worker asset.scan
+                                                   └─ fix/robust-logo-analysis  banc du corpus, extraction et monochrome robustes (A–D), verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
