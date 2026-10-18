@@ -145,3 +145,14 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   sur fichiers réels, robustesse des algorithmes), décisions A, B, C du 2026-10-18 acceptées sur recommandation de
   l'agent (tolérance JPEG du fond, couleur de fond vive proposée comme couleur de marque, centre recalculé après
   fusion) ; à reporter dans `docs/05_ENGINES.md` §2.4–§2.5 lors de leur mise en œuvre.
+- **Décision D (2026-10-18, « fais au mieux » du propriétaire, sur recommandation de l'agent)** — §2.4 étape 2 :
+  la part « ≥ 90 % du pourtour » se calcule sur le **pourtour entier**, pixels transparents compris, et non plus sur
+  ses seuls pixels retenus. Motif (banc d'essai, échantillon de 174 SVG de la bibliothèque) : un logo transparent
+  dont le dessin touche les bords n'a que sa propre couleur parmi les pixels opaques du pourtour ; elle était prise
+  pour un fond et supprimée — **57 logos plats sur 128 (45 %) donnaient `EMPTY_IMAGE`**.
+- **Mise en œuvre de A et D** (`packages/color-engine/src/extract/pixels.ts`) : tolérance du fond ΔE_OK **0,03**
+  (au lieu de 0,01 : bruit JPEG) ; part du pourtour **0,75** (au lieu de 0,9 : un logo recadré serré touche deux
+  bords) ; condition « ≥ 30 % des pixels retenus » inchangée. Mesures avant / après (logos plats) : transparent,
+  logos parfaits 56 % → 96 %, `EMPTY_IMAGE` 57 → 0 ; JPEG sur blanc, part de grappes intruses 37 % → 7 %.
+  À reporter dans `docs/05_ENGINES.md` §2.4 étape 2 (texte proposé : « Si ≥ 75 % des pixels du pourtour entier,
+  transparents compris, sont à ΔE_OK < 0,03 de la couleur opaque la plus fréquente du pourtour… »).

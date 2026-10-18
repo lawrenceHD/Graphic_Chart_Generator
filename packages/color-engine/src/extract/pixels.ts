@@ -1,11 +1,15 @@
 import { colorKeyAt, distanceOk, type LabCache } from './lab-cache.js';
 import type { DecodedImage } from './types.js';
 
-// 05_ENGINES.md §2.4, steps 1 to 3.
+// 05_ENGINES.md §2.4, steps 1 to 3; step 2 as amended by decisions A and D (journal/OWNER_DECISIONS.md).
 const MIN_ALPHA = 230;
-const BACKGROUND_BORDER_SHARE = 0.9;
+// Share of the WHOLE border, transparent pixels included (D): a transparent logo touching the edges has
+// only logo colour among its opaque border pixels, which is not a background. 0.75 leaves room for a
+// tightly cropped logo touching two edges.
+const BACKGROUND_BORDER_SHARE = 0.75;
 const BACKGROUND_MIN_SHARE = 0.3;
-const BACKGROUND_DELTA = 0.01;
+// Tolerant enough for JPEG noise around a flat background (A), well under mergeThreshold.
+const BACKGROUND_DELTA = 0.03;
 const EDGE_DELTA = 0.05;
 const EDGE_FALLBACK_SHARE = 0.01;
 
@@ -13,7 +17,7 @@ export function isRetained(image: DecodedImage, pixel: number): boolean {
   return (image.data[pixel * 4 + 3] ?? 0) >= MIN_ALPHA;
 }
 
-function borderPixels(image: DecodedImage): number[] {
+function borderPixels(image: DecodedImage): Set<number> {
   const { width, height } = image;
   const border = new Set<number>();
   for (let x = 0; x < width; x += 1) {
@@ -24,7 +28,7 @@ function borderPixels(image: DecodedImage): number[] {
     border.add(y * width);
     border.add(y * width + width - 1);
   }
-  return [...border].filter((pixel) => isRetained(image, pixel));
+  return border;
 }
 
 // Step 2: a uniform opaque background is removed when it frames the logo and covers ≥ 30 % of it.
@@ -33,7 +37,8 @@ function backgroundPixels(
   retained: readonly number[],
   labs: LabCache,
 ): number[] {
-  const border = borderPixels(image);
+  const whole = borderPixels(image);
+  const border = [...whole].filter((pixel) => isRetained(image, pixel));
   if (border.length === 0) return [];
   const counts = new Map<number, number>();
   for (const pixel of border) {
@@ -52,7 +57,7 @@ function backgroundPixels(
   const reference = labs.lab(dominant);
   const near = (pixel: number): boolean =>
     distanceOk(labs.lab(colorKeyAt(image.data, pixel)), reference) < BACKGROUND_DELTA;
-  if (border.filter(near).length < BACKGROUND_BORDER_SHARE * border.length) return [];
+  if (border.filter(near).length < BACKGROUND_BORDER_SHARE * whole.size) return [];
   const background = retained.filter(near);
   return background.length >= BACKGROUND_MIN_SHARE * retained.length ? background : [];
 }

@@ -52,6 +52,34 @@ describe('extractPalette (05_ENGINES.md §2.4)', () => {
     expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#0000FF', '#FF0000']);
   });
 
+  it('keeps the colour of a transparent logo whose shapes touch the image edges', () => {
+    // Tight render of a one-colour mark: its opaque border pixels are all logo, none is a background.
+    const image = makeImage(100, 40, (x, y) =>
+      x < 10 || x >= 90 || (y >= 10 && y < 30) ? BLUE : TRANSPARENT,
+    );
+
+    expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#0000FF']);
+  });
+
+  it('excludes a white background with JPEG-like noise', () => {
+    const image = makeImage(100, 100, (x, y) => {
+      if (x >= 20 && x < 80 && y >= 20 && y < 80) return y < 50 ? RED : BLUE;
+      const noise = (k: number): number => 255 - ((x * 7 + y * 13 + k * 5) % 7);
+      return [noise(0), noise(1), noise(2), 255];
+    });
+
+    expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#0000FF', '#FF0000']);
+  });
+
+  it('excludes the white background of a tight crop where the logo touches two edges', () => {
+    const image = makeImage(100, 60, (x, y) => {
+      if (y < 15 || y >= 45) return WHITE;
+      return x >= 40 && x < 60 ? BLUE : RED;
+    });
+
+    expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#FF0000', '#0000FF']);
+  });
+
   it('3. drops the blended edge pixels of an anti-aliased disk', () => {
     // 4x4 supersampling on an opaque white background, as a renderer flattening a logo would produce.
     const disk = rgba('#1F4BFF');
