@@ -89,7 +89,9 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
 
   it('cleans an SVG: sanitized copy stored and recorded, original marked clean but kept private', async () => {
     // Editor leftovers the allowlist drops: the stored copy must differ from the upload.
-    const original = encode(TRIANGLE.replace('<path', '<!-- editor --><metadata>x</metadata><path'));
+    const original = encode(
+      TRIANGLE.replace('<path', '<!-- editor --><metadata>x</metadata><path'),
+    );
     const assetId = await upload(original);
     await scan(assetId);
     const [row] = await rowsOf(assetId);
