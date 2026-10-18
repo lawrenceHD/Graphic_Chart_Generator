@@ -7,6 +7,13 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Corrigé
+- **color-engine** (2026-10-18) : un logo transparent dont le dessin touche les bords perdait sa couleur, prise
+  pour un fond (`EMPTY_IMAGE` pour 45 % des logos plats de l'échantillon) : pourtour jugé en entier (décision D) ;
+  fond JPEG toléré (ΔE_OK 0,03) et halo de compression retiré (décision A) ; centre recalculé après fusion
+  (décision C) ; fond vif retiré proposé comme couleur de marque, `brandClusters` (décision B). Logos plats
+  parfaits : PNG transparent 56 → 98 %, JPEG sur blanc 20 → 67 %, planche de présentation 13 → 65 %.
+- **logo-kit** (2026-10-18) : variante monochrome vide quand une forme claire est posée sous les formes sombres
+  (pastille, fond d'icône) : une surface claire ne perce plus que ce qui est peint avant elle.
 - **web** (2026-10-18) : le test de limite d'upload échouait chaque jour après 12 h UTC (horloge fixée à midi alors
   que les tests précédents comptaient à l'heure réelle) ; table `rate_limit` vidée avant le test. Rejet de connexion
   non traité dans le test « mauvais mot de passe » supprimé.
@@ -16,6 +23,9 @@ Modifications notables du projet, par ticket. Format inspiré de
 - **web** (2026-10-18) : délai du test de démarrage élargi (instable sous `pnpm verify` parallèle).
 
 ### Ajouté
+- **Banc d'essai du corpus privé** (2026-10-18) : `tools/corpus/bench.mjs` (échantillon stratifié de la
+  bibliothèque, même logo en PNG transparent, PNG et JPEG sur blanc, planche de présentation ; logos des chartes
+  contre leur vérité terrain ; images réelles). Rapports écrits dans le dépôt privé uniquement.
 - **Corpus de 20 logos (`05_ENGINES.md` §6)** (2026-10-18) : 14 SVG créés pour le projet (simples, dégradés,
   masque et filtre, traits fins) et 6 rasters qui en sont tirés (`tools/corpus/render.mjs`), palettes écrites à la
   main et fidélité de référence (`manifest.json`) ; test `logo-kit` (composition, acceptation, palette extraite,

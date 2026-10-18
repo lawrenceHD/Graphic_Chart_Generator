@@ -53,10 +53,13 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    1 432 SVG, 64 images, 8 chartes PDF). Fait : note `journal/research/2026-10-18-identite-visuelle.md` ;
    (a) fiches `charters/<marque>/truth.json` + 15 logos extraits (9 SVG, 6 PNG) dans le dépôt privé (3453e75,
    à pousser par le propriétaire). Constat clé : le fichier logo ne porte pas le HEX officiel (conversion CMJN du
-   PDF) ; on juge l'extraction sur `renderedPalette`. Suite :
-   (b) banc d'essai chiffré sur tout le corpus ; (c) corrections A, B, C +
-   marges de présentation + fonds dégradés, mesurées avant/après ; (d) corpus versionné redessiné en vrais logos ;
-   (e) T-011. Le push vers `Graph_Charta` est refusé à l'agent par le classifieur : le propriétaire lance
+   PDF) ; on juge l'extraction sur `renderedPalette`.
+   (b) banc `tools/corpus/bench.mjs` (échantillon stratifié de 160 SVG par défaut, ~2 min ; le propriétaire a
+   demandé de ne pas traiter les 1 432) ; (c) corrections A, B, C, D, halo JPEG et monochrome (ordre de peinture)
+   sur la branche `fix/robust-logo-analysis`, chiffres dans `journal/OWNER_DECISIONS.md`, rapports avant/après
+   dans le dépôt privé (`reports/`). Suite : planches Pinterest (cadres, cartes, fonds dégradés : 77 % des images
+   réelles gardent un fond dominant) ; (d) corpus versionné redessiné en vrais logos ; (e) T-011 (les logos à
+   masque, filtre ou dégradé complexe gardent une fidélité monochrome < 0,95 en attendant la vectorisation). Le push vers `Graph_Charta` est refusé à l'agent par le classifieur : le propriétaire lance
    `git -C .cache/corpus-private push origin main`.
 4. T-016, reste à faire :
    - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
