@@ -3,8 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./raster": {
+      "types": "./dist/raster/index.d.ts",
+      "default": "./dist/raster/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
@@ -12,6 +20,7 @@
   },
   "devDependencies": {
     "@types/css-tree": "3.2.0",
+    "@types/node": "24.19.2",
     "@types/sax": "1.2.7",
     "fast-check": "4.10.2",
     "typescript": "6.0.3",
@@ -20,7 +29,9 @@
   "dependencies": {
     "@app/contracts": "workspace:*",
     "@app/kernel": "workspace:*",
+    "@resvg/resvg-js": "2.6.2",
     "css-tree": "3.2.1",
-    "sax": "1.6.1"
+    "sax": "1.6.1",
+    "sharp": "0.35.5"
   }
 }

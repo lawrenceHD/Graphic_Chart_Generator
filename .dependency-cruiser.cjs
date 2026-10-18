@@ -54,10 +54,11 @@ module.exports = {
     {
       name: 'pure-packages-no-node-builtins',
       severity: 'error',
-      comment: 'Pure packages never touch Node.js (ADR-016); only svg-engine/src/raster may',
+      comment:
+        'Pure packages never touch Node.js (ADR-016); only svg-engine raster (source and build) may',
       from: {
         path: `^packages/(${PURE_PACKAGES.join('|')})/`,
-        pathNot: '^packages/svg-engine/src/raster/',
+        pathNot: '^packages/svg-engine/(src|dist)/raster/',
       },
       to: { dependencyTypes: ['core'] },
     },
@@ -67,6 +68,13 @@ module.exports = {
       comment: 'mockup-engine runs in the browser only (ADR-016)',
       from: { path: '^packages/mockup-engine/' },
       to: { dependencyTypes: ['core'] },
+    },
+    {
+      name: 'raster-only-from-worker',
+      severity: 'error',
+      comment: 'ADR-016: the Node rasterizer is imported by apps/worker and its own tests only',
+      from: { pathNot: '^(apps/worker/|packages/svg-engine/(src|dist)/raster/)' },
+      to: { path: '^packages/svg-engine/(src|dist)/raster/' },
     },
   ],
   options: {
