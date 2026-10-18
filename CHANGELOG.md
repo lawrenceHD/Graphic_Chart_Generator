@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-009 — Variantes monochromes** (2026-10-18) : chemin structurel avec évidements réels (masque de découpe),
+  dégradés remplacés, repli raster signalé ; IoU et score de fidélité via le `Rasterizer` injecté ; 10 tests.
 - **T-008 — Rasterisation isolée** (2026-10-18) : port `Rasterizer`, enfant resvg confiné (permissions Node,
   512 Mo, 5 s), `ensureViewBox`, `normalizeRaster` (sharp), `detectType`, `downscaleNearest` ; 22 tests.
 - **T-007 — Assainisseur SVG** (2026-10-18) : liste blanche, arbre reconstruit, 30 cas d'attaque, corpus légitime,
