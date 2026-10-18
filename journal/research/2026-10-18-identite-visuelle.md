@@ -223,8 +223,8 @@ Propositions (au chef de projet) :
    `monochrome/`, `favicon/`), `02_CHARTE/charte-graphique.pdf`, `03_COULEURS_ET_TYPOGRAPHIES/`
    (`design-tokens.json`, `tokens.css`, `palette.csv`, `contrast-matrix.csv`, `polices-et-licences.txt`),
    `04_MOCKUPS/` (marqués « simulation »).
-2. **Nommage** : `<projet>_logo-<variante>_<couleur>_fond-<fond>.<ext>` (ex. `acme_logo-principal_noir_fond-
-   transparent.svg`, `acme_symbole_couleur_512px.png`), `<projet>` en slug ASCII ; test : tout nom de l'archive
+2. **Nommage** : `<projet>_logo-<variante>_<couleur>_fond-<fond>.<ext>` (ex.
+   `acme_logo-principal_noir_fond-transparent.svg`, `acme_symbole_couleur_512px.png`), `<projet>` en slug ASCII ; test : tout nom de l'archive
    respecte le motif.
 3. **README généré** : projet, version, date, contenu, rôle de chaque format (SVG, PDF, PNG, JPG), quatre règles
    d'usage, limites réelles (CMJN indicatif, variantes « à vérifier » si fidélité < 0,97).
