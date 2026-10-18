@@ -5,7 +5,7 @@
 
 ## Agent actif
 - **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-18
-- **Tâche** : outillage multi-agents (skills ECC et logo-design, MCP, protocole de relais)
+- **Tâche** : correction et avancement du projet sous délégation du propriétaire (T-005 fait ; T-006 ensuite)
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
 ## Branches (empilées, poussées sur origin le 2026-10-18)
@@ -18,16 +18,15 @@ main (5d95f32, = origin/main)
             └─ fix/code-review-2026-10-18  9 défauts corrigés, bibliothèque de logos, LF   verify vert
                └─ ticket/T-005-palette-extraction  T-005 terminé, verify vert
 ```
-Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002 → T-003 → T-004 → chore.
+Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
 ## Étape en cours
-1. Fait : protocole de relais (`journal/`), `HANDOFF.md`, `CHANGELOG.md`, `.gemini/` (contexte, MCP, commandes), rapport historique `sortie tikets/T-001.md`.
-2. **En attente du propriétaire** : le classifieur de sécurité de Claude Code a refusé que l'agent écrive dans sa propre configuration (`.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `tools/agent-hooks/`). Tout est prêt dans un dossier de staging avec un script d'installation à lancer par le propriétaire (voir le message de l'agent du 2026-10-18).
-3. Ensuite : commit de `chore/agent-relay-tooling`, puis `pnpm verify`.
+1. Fait : relais et config Gemini ; 9 défauts corrigés ; bibliothèque de logos (`pnpm logos:fetch`) ; T-005 (`sortie tikets/T-005.md`).
+2. **En attente du propriétaire** : le classifieur de sécurité de Claude Code refuse que l'agent écrive dans sa propre configuration (`.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`, `tools/agent-hooks/`), même lancé par script. Staging et script d'installation : voir le dernier message de l'agent ; à lancer par le propriétaire avec `! bash …`.
 
 ## Prochaines actions (ordre recommandé)
 1. Propriétaire : lancer le script d'installation de l'outillage (skills, agents, MCP, hooks), puis redémarrer.
-2. T-006 (échelles, matrice de contraste ;  déjà fait), puis T-007 (assainisseur SVG).
+2. T-006 (échelles, matrice de contraste ; `mapToGamut` déjà fait en T-005), puis T-007 (assainisseur SVG).
 
 ## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |
@@ -46,7 +45,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002
 - **T-003** : ≈ 1 250 lignes hors tests (> 400) ; `AddPage.pageType` au lieu de `type` ; `RestoreMockup` interne ; formes de `expect` — à valider (`sortie tikets/T-003.md`).
 - **T-004** : GO à reconfirmer (teinte `null` au lieu de `0`).
 - **T-002** : `'unsafe-eval'` en développement seulement — à valider.
-- **T-005** : image d'une seule couleur →  (étape 2 de la spec) — repli à décider ().
+- **T-005** : image d'une seule couleur → `EMPTY_IMAGE` (étape 2 de la spec) — repli à décider (`sortie tikets/T-005.md`).
 - **T-007** : `viewBox` sans dimensions — le ticket (avertissement) contredit `10_QUALITY.md` cas 29 (calculé).
 - **T-010** : profil FOGRA39 et `transicc` à fournir ; 21 couleurs listées pour 24 annoncées ; livrable dans `docs/spikes/`.
 - **Spécification** : longueur minimale de `AUTH_SECRET` / `INTERNAL_PRINT_SECRET` ; `requestId` dans `ProblemDetails` ; PostgreSQL dans la CI.
