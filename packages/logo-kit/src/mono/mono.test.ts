@@ -59,6 +59,24 @@ describe('monochromeSvg — structural path (05_ENGINES.md §5.1–§5.2)', () =
     expect(await score(original, variant.svg)).toBeGreaterThanOrEqual(0.97);
   });
 
+  it('a light surface only knocks out what was painted before it (paint order)', async () => {
+    // Light badge first, ink drawn on it (inside a transformed group), then a light dot on the ink.
+    const original = sanitized(
+      '<rect x="10" y="10" width="80" height="80" fill="#F5F5F5"/>' +
+        '<g transform="translate(10 10)"><circle cx="40" cy="40" r="20" fill="#1F4BFF"/></g>' +
+        '<circle cx="50" cy="50" r="8" fill="#FFFFFF"/>',
+    );
+    const variant = mono(original);
+    const raster = await rasterizer.rasterize(variant.svg, 100);
+    if (!raster.ok) throw new Error(raster.error.reason);
+    const alphaAt = (x: number, y: number): number => raster.value.rgba[(y * 100 + x) * 4 + 3] ?? 0;
+
+    expect(alphaAt(50, 35)).toBe(255); // ink painted over the light badge survives
+    expect(alphaAt(50, 50)).toBe(0); // the later light dot is a hole in it
+    expect(alphaAt(15, 15)).toBe(0); // the badge itself is not ink
+    expect(await score(original, variant.svg)).toBeGreaterThanOrEqual(0.97);
+  });
+
   it('4. a white-only logo is kept, not emptied, in the white variant', async () => {
     const original = sanitized('<circle cx="50" cy="50" r="40" fill="#FFFFFF"/>');
     const variant = mono(original, '#FFFFFF');
