@@ -92,6 +92,45 @@ describe('extractPalette (05_ENGINES.md §2.4)', () => {
     expect(clustersOf(image).map((cluster) => cluster.hex)).toEqual(['#FF0000', '#E0E0E0']);
   });
 
+  it('looks inside a thin presentation frame for the background, and drops the frame', () => {
+    // 2 px light-blue frame line, white background, red / blue logo (a framed Pinterest export).
+    const image = makeImage(100, 100, (x, y) => {
+      if (Math.min(x, y, 99 - x, 99 - y) < 2) return rgba('#8090D0');
+      if (x >= 30 && x < 70 && y >= 30 && y < 70) return y < 50 ? RED : BLUE;
+      return WHITE;
+    });
+    const result = extractPalette(image);
+    if (!result.ok) throw new Error(result.error);
+
+    expect(result.value.clusters.map((cluster) => cluster.hex)).toEqual(['#0000FF', '#FF0000']);
+    expect(result.value.background?.hex).toBe('#FFFFFF');
+  });
+
+  it('a transparent margin is not a frame: a padded square icon keeps its colour as a cluster', () => {
+    const image = makeImage(100, 100, (x, y) => {
+      if (Math.min(x, y, 99 - x, 99 - y) < 2) return TRANSPARENT;
+      return x >= 35 && x < 65 && y >= 20 && y < 80 ? WHITE : RED;
+    });
+    const result = extractPalette(image);
+    if (!result.ok) throw new Error(result.error);
+
+    expect(result.value.background).toBeNull();
+    expect(result.value.clusters.map((cluster) => cluster.hex)).toEqual(['#FF0000', '#FFFFFF']);
+  });
+
+  it('a rounded tile cropped tight on white is not mistaken for a framed background', () => {
+    // Dark tile, corner radius 20, on white: the white corners and dark sides are no uniform frame.
+    const DARK = rgba('#202830');
+    const image = makeImage(100, 100, (x, y) => {
+      const cx = Math.min(Math.max(x, 20), 79);
+      const cy = Math.min(Math.max(y, 20), 79);
+      if (Math.hypot(x + 0.5 - (cx + 0.5), y + 0.5 - (cy + 0.5)) > 20) return WHITE;
+      return x >= 40 && x < 60 && y >= 30 && y < 70 ? WHITE : DARK;
+    });
+
+    expect(clustersOf(image).map((cluster) => cluster.hex)).toContain('#202830');
+  });
+
   it('3. drops the blended edge pixels of an anti-aliased disk', () => {
     // 4x4 supersampling on an opaque white background, as a renderer flattening a logo would produce.
     const disk = rgba('#1F4BFF');

@@ -173,3 +173,8 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   PNG transparent 56 % → 98 % ; PNG sur blanc 71 % → 85 % ; JPEG sur blanc 20 % → 67 % ; JPEG sur planche de
   présentation 13 % → 65 %. Limite connue : un logo recadré au ras qui touche plus d'un quart du pourtour garde son
   fond blanc (grappe neutre claire, sans effet sur `primary`).
+- **Liseré de présentation (2026-10-19, suite de A)** : si le pourtour ne révèle pas de fond, les anneaux situés
+  1 à 4 px à l'intérieur sont essayés tour à tour, tant que la bande extérieure ressemble à un liseré : opaque et
+  d'une seule couleur (≥ 90 % à ΔE_OK < 0,10 de sa couleur la plus fréquente). Le liseré part avec le fond. Cas
+  réel : export encadré d'un trait clair de 2 px, fond marine jamais retiré (94 % de la palette) ; après, les trois
+  couleurs du logo. Garde-fous testés : marge transparente, tuile arrondie recadrée au ras sur blanc.

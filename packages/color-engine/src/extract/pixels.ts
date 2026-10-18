@@ -20,19 +20,32 @@ export function isRetained(image: DecodedImage, pixel: number): boolean {
   return (image.data[pixel * 4 + 3] ?? 0) >= MIN_ALPHA;
 }
 
-function borderPixels(image: DecodedImage): Set<number> {
+// Pixels at exactly `inset` pixels from the nearest image edge (inset 0: the border itself).
+function ringPixels(image: DecodedImage, inset: number): number[] {
   const { width, height } = image;
-  const border = new Set<number>();
-  for (let x = 0; x < width; x += 1) {
-    border.add(x);
-    border.add((height - 1) * width + x);
+  const right = width - 1 - inset;
+  const bottom = height - 1 - inset;
+  if (right < inset || bottom < inset) return [];
+  const ring = new Set<number>();
+  for (let x = inset; x <= right; x += 1) {
+    ring.add(inset * width + x);
+    ring.add(bottom * width + x);
   }
-  for (let y = 0; y < height; y += 1) {
-    border.add(y * width);
-    border.add(y * width + width - 1);
+  for (let y = inset; y <= bottom; y += 1) {
+    ring.add(y * width + inset);
+    ring.add(y * width + right);
   }
-  return border;
+  return [...ring];
 }
+
+// Thin presentation frames (a 1-4 px line around a Pinterest or Behance export) hide the background from
+// the outermost ring: inner rings are tried in turn, only while the band outside them looks like a frame
+// line, opaque and of one colour (≥ 90 % within FRAME_DELTA of its most frequent colour). A transparent
+// logo touching the edges, or a rounded tile cropped tight (white corners, dark sides), is no frame.
+// The band goes with the background.
+const FRAME_INSETS = [0, 1, 2, 3, 4];
+const FRAME_DELTA = 0.1;
+const FRAME_UNIFORM_SHARE = 0.9;
 
 // Step 2: a uniform opaque background is removed when it frames the logo and covers ≥ 30 % of it.
 interface Background {
@@ -46,15 +59,28 @@ function backgroundPixels(
   retained: readonly number[],
   labs: LabCache,
 ): Background | null {
-  const whole = borderPixels(image);
-  const border = [...whole].filter((pixel) => isRetained(image, pixel));
-  if (border.length === 0) return null;
+  const band: number[] = [];
+  for (const inset of FRAME_INSETS) {
+    if (!isFrame(image, band, labs)) return null;
+    const ring = ringPixels(image, inset);
+    const found = uniformBackground(image, ring, retained, labs);
+    if (found !== null) {
+      const frame = new Set(band);
+      const pixels = [...frame, ...found.pixels.filter((pixel) => !frame.has(pixel))];
+      return { pixels, key: found.key };
+    }
+    band.push(...ring);
+  }
+  return null;
+}
+
+function mostFrequentKey(image: DecodedImage, pixels: readonly number[]): number {
   const counts = new Map<number, number>();
-  for (const pixel of border) {
+  for (const pixel of pixels) {
     const key = colorKeyAt(image.data, pixel);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  // Most frequent border colour; ties broken by ascending hex, i.e. ascending 24-bit key.
+  // Ties broken by ascending hex, i.e. ascending 24-bit key.
   let dominant = 0;
   let dominantCount = -1;
   for (const [key, count] of counts) {
@@ -63,10 +89,32 @@ function backgroundPixels(
       dominantCount = count;
     }
   }
+  return dominant;
+}
+
+function isFrame(image: DecodedImage, band: readonly number[], labs: LabCache): boolean {
+  if (band.length === 0) return true;
+  if (band.some((pixel) => !isRetained(image, pixel))) return false;
+  const reference = labs.lab(mostFrequentKey(image, band));
+  const close = band.filter(
+    (pixel) => distanceOk(labs.lab(colorKeyAt(image.data, pixel)), reference) < FRAME_DELTA,
+  );
+  return close.length >= FRAME_UNIFORM_SHARE * band.length;
+}
+
+function uniformBackground(
+  image: DecodedImage,
+  whole: readonly number[],
+  retained: readonly number[],
+  labs: LabCache,
+): Background | null {
+  const border = whole.filter((pixel) => isRetained(image, pixel));
+  if (border.length === 0) return null;
+  const dominant = mostFrequentKey(image, border);
   const reference = labs.lab(dominant);
   const near = (pixel: number): boolean =>
     distanceOk(labs.lab(colorKeyAt(image.data, pixel)), reference) < BACKGROUND_DELTA;
-  if (border.filter(near).length < BACKGROUND_BORDER_SHARE * whole.size) return null;
+  if (border.filter(near).length < BACKGROUND_BORDER_SHARE * whole.length) return null;
   const background = retained.filter(near);
   return background.length >= BACKGROUND_MIN_SHARE * retained.length
     ? {
