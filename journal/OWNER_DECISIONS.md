@@ -94,4 +94,6 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   demandé (SEC-12) ; plafond 10 Mo (raster), les 5 Mo du SVG sont appliqués par le scan.
 - `POST /assets/:id/complete` : `409 UPLOAD_MISSING` si l'objet n'existe pas, `409 UPLOAD_SIZE_MISMATCH` si la taille
   diffère ; idempotent (`202`, renvoi du job tant que l'asset est `quarantined`).
-- Limite « déclaration d'upload 15/min » (§7) : non livrée dans cette partie, prévue avec un limiteur générique.
+- Limites §7 : fenêtre **fixe**, clés `rate_limit` hachées (SHA-256) ; IP = première entrée de `X-Forwarded-For`
+  (`clientIp`), à confirmer selon l'hébergeur (en-tête de confiance) ; sans IP, un compartiment commun `unknown`
+  (refus plutôt que contournement). La limite par compte de SEC-05 garde son module (`login-throttle.ts`).

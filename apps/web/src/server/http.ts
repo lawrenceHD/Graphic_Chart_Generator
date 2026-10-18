@@ -73,3 +73,16 @@ export async function readJson<T>(
     ? ok(parsed.data)
     : err(problemResponse(request, 400, 'INVALID_BODY', 'body does not match the contract'));
 }
+
+/** Client address as reported by the hosting proxy (first X-Forwarded-For entry), or null. */
+export function clientIp(request: Request): string | null {
+  const first = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return first === undefined || first === '' ? null : first;
+}
+
+/** 429 with Retry-After (04_API_CONTRACTS.md §7). */
+export function tooManyRequests(request: Request, retryAfterSeconds: number): Response {
+  const response = problemResponse(request, 429, 'RATE_LIMITED', 'too many requests');
+  response.headers.set('retry-after', String(retryAfterSeconds));
+  return response;
+}

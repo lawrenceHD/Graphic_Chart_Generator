@@ -7,7 +7,8 @@ import {
   quarantineAsset,
   type AssetRow,
 } from './asset-service';
-import { problemResponse, readJson } from './http';
+import { clientIp, problemResponse, readJson, tooManyRequests } from './http';
+import type { RateLimiter } from './rate-limiter';
 import { guardAsset, guardProject, type RouteDeps, type RouteParams } from './route-guard';
 
 // 04_API_CONTRACTS.md §3 "Assets" and §6 (ADR-023). The browser uploads straight to R2; the application
@@ -15,7 +16,12 @@ import { guardAsset, guardProject, type RouteDeps, type RouteParams } from './ro
 export interface AssetRouteDeps extends RouteDeps {
   readonly storage: ObjectStorage;
   readonly queue: JobQueue;
+  readonly limiter: RateLimiter;
 }
+
+// 04_API_CONTRACTS.md §7: upload declarations, per identity and per IP.
+const DECLARATIONS_PER_ACTOR = { max: 15, windowMs: 60_000 };
+const DECLARATIONS_PER_IP = { max: 30, windowMs: 60_000 };
 
 // The announced type is ignored (SEC-12): the scan reads the magic bytes. The file name is kept for display.
 const DeclareBody = z
@@ -38,6 +44,18 @@ export function assetHandlers(deps: AssetRouteDeps) {
     async declareUpload(request: Request, context: Context): Promise<Response> {
       const guard = await guardProject(deps, request, context.params, 'asset:create');
       if (!guard.ok) return guard.error;
+      const { actor } = guard.value;
+      const identity =
+        actor.kind === 'user'
+          ? actor.userId
+          : actor.kind === 'guest'
+            ? actor.guestSessionId
+            : actor.kind;
+      const wait = await deps.limiter.hit([
+        { key: `upload:${identity}`, limit: DECLARATIONS_PER_ACTOR },
+        { key: `upload-ip:${clientIp(request) ?? 'unknown'}`, limit: DECLARATIONS_PER_IP },
+      ]);
+      if (wait > 0) return tooManyRequests(request, wait);
       const body = await readJson(request, DeclareBody);
       if (!body.ok) return body.error;
       const row = await declareAsset(

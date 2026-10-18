@@ -4,7 +4,8 @@ import { assets, eq, guestSessions, projects } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { ok, uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { assetHandlers } from './asset-routes';
+import { assetHandlers, type AssetRouteDeps } from './asset-routes';
+import { createRateLimiter } from './rate-limiter';
 
 const adminUrl = integrationDatabaseUrl();
 const APP_URL = 'http://localhost:3000';
@@ -39,6 +40,7 @@ describe.runIf(adminUrl !== '')(
   () => {
     let test: TestDatabase;
     let routes: ReturnType<typeof assetHandlers>;
+    let deps: AssetRouteDeps;
     const objects = new Map<string, number>();
     const sent: { name: JobName; payload: JobPayload<JobName>; key: string }[] = [];
     const actors: Record<string, Actor> = {};
@@ -63,14 +65,16 @@ describe.runIf(adminUrl !== '')(
           return Promise.resolve();
         },
       };
-      routes = assetHandlers({
+      deps = {
         orm,
         appUrl: APP_URL,
         resolveActor: (request) =>
           Promise.resolve(actors[request.headers.get('x-test-actor') ?? ''] ?? null),
         storage: memoryStorage(objects),
         queue,
-      });
+        limiter: createRateLimiter(orm, () => new Date()),
+      };
+      routes = assetHandlers(deps);
     });
     afterAll(async () => {
       await test.dispose();
@@ -131,6 +135,22 @@ describe.runIf(adminUrl !== '')(
       expect((await declare('owner', { ...valid, extra: true })).status).toBe(400);
       expect((await declare('stranger', valid)).status).toBe(404);
       expect((await declare('nobody', valid)).status).toBe(401);
+    });
+
+    it('limits declarations to 15 per minute per identity (04_API_CONTRACTS.md §7)', async () => {
+      const limiter = createRateLimiter(test.database.orm, () => new Date('2026-10-18T12:00:00Z'));
+      const limited = assetHandlers({ ...deps, limiter });
+      const body = { kind: 'logo_original', fileName: 'x.svg', bytes: 1 };
+      const statuses: number[] = [];
+      for (let attempt = 0; attempt < 16; attempt += 1) {
+        statuses.push(
+          (await limited.declareUpload(request('POST', 'owner', body), params(projectId))).status,
+        );
+      }
+      expect(statuses.filter((status) => status === 201)).toHaveLength(15);
+      expect(statuses[15]).toBe(429);
+      // The fixed clock above must not leak its window into the other tests.
+      await test.database.pool.query('DELETE FROM rate_limit');
     });
 
     it('completes only once the object exists, quarantines and enqueues the scan idempotently', async () => {

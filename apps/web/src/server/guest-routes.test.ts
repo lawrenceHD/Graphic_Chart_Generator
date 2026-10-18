@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { expireGuestProjects, guestActorFromCookie } from './guest-service';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { createProject } from './project-service';
+import { createRateLimiter } from './rate-limiter';
 
 const adminUrl = integrationDatabaseUrl();
 const APP_URL = 'http://localhost:3000';
@@ -28,6 +29,7 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
       // Turnstile's verdict is an input of these tests; its client is tested in turnstile.test.ts.
       verifyTurnstile: () => Promise.resolve(turnstileAnswer),
       now: () => clock,
+      limiter: createRateLimiter(test.database.orm, () => clock),
       resolveActor: () => Promise.resolve(signedIn),
     });
   });
@@ -35,12 +37,17 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     await test.dispose();
   });
 
-  const post = (path: string, body: unknown, cookie = '', origin = APP_URL): Request =>
-    new Request(`${APP_URL}/api/v1${path}`, {
+  // A distinct client per request by default, so that the per-IP limit only bites in its own test.
+  let client = 0;
+  const post = (path: string, body: unknown, cookie = '', origin = APP_URL, ip = ''): Request => {
+    client += 1;
+    const forwarded = ip === '' ? `198.51.100.${String(client)}` : ip;
+    return new Request(`${APP_URL}/api/v1${path}`, {
       method: 'POST',
-      headers: { origin, cookie, 'content-type': 'application/json' },
+      headers: { origin, cookie, 'content-type': 'application/json', 'x-forwarded-for': forwarded },
       body: JSON.stringify(body),
     });
+  };
   async function newGuest(): Promise<{ cookie: string; actor: Actor | null }> {
     const response = await routes.create(post('/guest-sessions', { turnstileToken: 'ok' }));
     const setCookie = response.headers.get('set-cookie') ?? '';
@@ -68,6 +75,18 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
         )
       ).status,
     ).toBe(403);
+  });
+
+  it('limits session creation to 5 per hour per IP, before any Turnstile call', async () => {
+    const fromOneIp = () =>
+      routes.create(post('/guest-sessions', { turnstileToken: 'ok' }, '', APP_URL, '203.0.113.50'));
+    for (let created = 0; created < 5; created += 1) expect((await fromOneIp()).status).toBe(201);
+    const limited = await fromOneIp();
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(3500);
+    expect((await routes.create(post('/guest-sessions', { turnstileToken: 'ok' }))).status).toBe(
+      201,
+    );
   });
 
   it('resolves the guest actor from its cookie only while valid', async () => {

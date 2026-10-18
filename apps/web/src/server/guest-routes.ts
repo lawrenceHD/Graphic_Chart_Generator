@@ -6,7 +6,15 @@ import {
   GUEST_SESSION_HOURS,
   guestActorFromCookie,
 } from './guest-service';
-import { authorizationResponse, checkOrigin, problemResponse, readJson } from './http';
+import {
+  authorizationResponse,
+  checkOrigin,
+  clientIp,
+  problemResponse,
+  readJson,
+  tooManyRequests,
+} from './http';
+import type { RateLimiter } from './rate-limiter';
 import { authenticate, type RouteDeps } from './route-guard';
 import type { TurnstileVerifier } from './turnstile';
 
@@ -17,7 +25,10 @@ export interface GuestRouteDeps extends RouteDeps {
   readonly guestSecret: string;
   readonly verifyTurnstile: TurnstileVerifier;
   readonly now: () => Date;
+  readonly limiter: RateLimiter;
 }
+
+const GUEST_SESSIONS_PER_IP = { max: 5, windowMs: 3_600_000 }; // 04_API_CONTRACTS.md §7
 
 const CreateBody = z.object({ turnstileToken: z.string().min(1).max(2048) }).strict();
 
@@ -41,9 +52,14 @@ export function guestHandlers(deps: GuestRouteDeps) {
     async create(request: Request): Promise<Response> {
       const rejected = checkOrigin(request, deps.appUrl);
       if (rejected) return rejected;
+      const ip = clientIp(request);
+      // Before Turnstile, so that a flood costs neither verification calls nor rows.
+      const wait = await deps.limiter.hit([
+        { key: `guest-session:${ip ?? 'unknown'}`, limit: GUEST_SESSIONS_PER_IP },
+      ]);
+      if (wait > 0) return tooManyRequests(request, wait);
       const body = await readJson(request, CreateBody);
       if (!body.ok) return body.error;
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
       if (!(await deps.verifyTurnstile(body.value.turnstileToken, ip))) {
         return problemResponse(request, 403, 'TURNSTILE_FAILED', 'anti-bot check failed');
       }

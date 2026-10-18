@@ -7,6 +7,9 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **SEC-24 — Limites de débit** (2026-10-18) : limiteur à fenêtre fixe sur `rate_limit` (clés hachées), appliqué à
+  la déclaration d'upload (15/min par identité, 30/min par IP) et à la création de session invitée (5/h par IP) ;
+  6 tests.
 - **T-018 — Upload et scan d'assets** (2026-10-18) : worker `asset.scan` (assainissement, normalisation raster,
   copie `logo_sanitized`, rejet par code stable) ; port `ObjectStorage` et adaptateur R2 (`packages/storage`,
   URL présignées de 5 min, taille signée), file pg-boss (`@app/db/queue`), routes `assets/uploads`, `complete`,

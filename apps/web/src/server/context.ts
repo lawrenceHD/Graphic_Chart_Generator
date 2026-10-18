@@ -13,6 +13,7 @@ import { createLoginThrottle, type LoginThrottle } from './login-throttle';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
+import { createRateLimiter, type RateLimiter } from './rate-limiter';
 
 // Built on first use, never at import time: `next build` must not need the runtime environment.
 let auth: Auth | undefined;
@@ -64,8 +65,16 @@ export function getGuestHandlers(): ReturnType<typeof guestHandlers> {
     guestSecret: env.AUTH_SECRET,
     verifyTurnstile: createTurnstileVerifier(env.TURNSTILE_SECRET),
     now: () => new Date(),
+    limiter: getRateLimiter(),
   });
   return guestRoutes;
+}
+
+let rateLimiter: RateLimiter | undefined;
+
+function getRateLimiter(): RateLimiter {
+  rateLimiter ??= createRateLimiter(getDatabase().orm, () => new Date());
+  return rateLimiter;
 }
 
 let loginThrottle: LoginThrottle | undefined;
@@ -103,6 +112,7 @@ export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
       () => new Date(),
     ),
     queue: lazyQueue,
+    limiter: getRateLimiter(),
   });
   return assetRoutes;
 }

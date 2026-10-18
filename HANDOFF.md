@@ -43,9 +43,8 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 ## Prochaines actions (ordre recommandé)
 1. **T-019** : job `project.analyze` (palette `color-engine` + variantes `logo-kit` depuis `logo_sanitized`,
    sans IA) et flux SSE `GET /projects/:id/events` (NOTIFY PostgreSQL), dont l'événement `asset.status` de T-018.
-2. Limiteur de débit générique sur `rate_limit` :
-   - limites du §7 de `04_API_CONTRACTS.md` (déclaration d'upload, analyse, sessions invitées) ;
-   - y reprendre `login-throttle.ts`.
+2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
+   d'upload et de session invitée sont faites.
 3. Worker :
    - purge planifiée (sessions invitées expirées, `deleted_at` dépassé, objets R2) ;
    - lettres mortes → `ASSET_SCAN_TIMEOUT`.
