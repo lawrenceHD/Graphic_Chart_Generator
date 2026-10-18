@@ -21,7 +21,8 @@ main (5d95f32, = origin/main)
                      └─ ticket/T-007-svg-sanitizer  T-007 terminé, verify vert
                         └─ ticket/T-008-raster-isolation  T-008 terminé, verify vert
                            └─ ticket/T-009-logo-mono  T-009 terminé, verify vert
-                              └─ ticket/T-012-logo-rules  T-012 terminé, verify vert
+                              └─ ticket/T-012-logo-rules  T-012 terminé + correctifs CI
+                                 └─ ticket/T-015-can  can()/authorize() (partie 1), verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 

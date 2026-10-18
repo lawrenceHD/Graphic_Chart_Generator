@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-015 (partie 1) — Autorisation centrale** (2026-10-18) : `can()` (matrice ADR-025, refus par défaut, e-mail
+  vérifié) et `authorize()` (401 / 404 / 403) ; 13 tests.
 - **T-012 — Règles du logo** (2026-10-18) : favicon (80 %, fond arrondi, avertissement d'allongement), zone
   d'exclusion et son schéma, 4 panneaux Do & Don't (teinte hors palette ADR-021, fond < 3:1) ; 14 tests.
 - **T-009 — Variantes monochromes** (2026-10-18) : chemin structurel avec évidements réels (masque de découpe),
@@ -42,6 +44,10 @@ Modifications notables du projet, par ticket. Format inspiré de
   `backup/pre-v4.1/*`.
 
 ### Corrigé
+- **CI rouge depuis le 2026-10-17** : sur une machine propre, le lint typé s'exécutait avant tout build (1 208
+  erreurs) ; `verify` lance désormais le typecheck (qui construit les dépendances) avant le lint. Le rapport SARIF
+  de Gitleaks est exclu de prettier. La CI vérifie chaque branche poussée et publie ses erreurs en annotations.
+- **Analyse SVG** : arrêt à la première limite franchie (cas 22 : de ≈ 5 s à 0,2 s) ; pixels RGBA en alpha droit.
 - 9 défauts de la revue du 2026-10-18 (`fix/code-review-2026-10-18`) : pool PostgreSQL sans écouteur d'erreur,
   masquage des logs, `RestoreMockup` accepté de l'extérieur (`applyInverse` séparé), positions de page
   incohérentes, hex non validé, troncature de `formatRatio`, NFC, identifiants vides, panne de base non journalisée.
