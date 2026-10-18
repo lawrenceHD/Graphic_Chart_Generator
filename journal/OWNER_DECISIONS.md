@@ -116,3 +116,8 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 ## Lettres mortes (délégation, 2026-10-18) — à reporter dans `docs/02_ARCHITECTURE.md` §5.1
 - `asset.scan` épuisé (3 tentatives) → file `asset.scan.failed` → asset `quarantined` passé `rejected`,
   `ASSET_SCAN_TIMEOUT`. Un asset déjà `clean` ou `rejected` n'est jamais modifié.
+
+## Corpus réel (propriétaire, 2026-10-18)
+- Le propriétaire dépose dans `corpus-reel/` (ignoré par Git, seul le README est suivi) des logos et chartes d'une
+  page trouvés en ligne. Usage local : vérité terrain des codes couleur officiels et robustesse sur des fichiers
+  réels. Il complète le corpus de 20 logos créés pour le projet, sans le remplacer ni devenir une fixture commitée.

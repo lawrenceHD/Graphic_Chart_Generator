@@ -37,3 +37,7 @@ next-env.d.ts
 # Local caches (trademarked logo library, see tools/logo-library/README.md)
 .cache/
 .claude/skills/logo-design/assets/
+
+# Real-world logos and brand sheets dropped by the owner (trademarks, never committed, see corpus-reel/README.md)
+corpus-reel/*
+!corpus-reel/README.md
