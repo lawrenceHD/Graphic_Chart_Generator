@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apply } from './commands.js';
+import { apply, applyInverse } from './commands.js';
 import type { BrandDocument } from './schema.js';
 import { deepFreeze, makeDocument } from './test-fixtures.js';
 
@@ -59,11 +59,11 @@ describe('expect precondition (ADR-018)', () => {
       hex: '#222222',
     });
 
-    expect(apply(sameToken.doc, first.inverse)).toEqual({
+    expect(applyInverse(sameToken.doc, first.inverse)).toEqual({
       ok: false,
       error: { code: 'EXPECTATION_FAILED' },
     });
-    const undone = apply(otherToken.doc, first.inverse);
+    const undone = applyInverse(otherToken.doc, first.inverse);
     expect(undone.ok).toBe(true);
     if (undone.ok) {
       expect(undone.value.doc.tokens.colors.primary).toEqual(start.tokens.colors.primary);
@@ -127,7 +127,9 @@ describe('RemovePage and AddPage (ADR-019)', () => {
       overrides: { layout: 'split' },
       expect: null,
     });
-    const restored = applied(removed.doc, removed.inverse);
+    const restoredResult = applyInverse(removed.doc, removed.inverse);
+    if (!restoredResult.ok) throw new Error(restoredResult.error.code);
+    const restored = restoredResult.value;
     expect(restored.doc.pages.find((page) => page.id === 'page-mockup')).toEqual(
       document.pages.find((page) => page.id === 'page-mockup'),
     );

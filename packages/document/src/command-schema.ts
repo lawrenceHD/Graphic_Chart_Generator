@@ -13,6 +13,7 @@ import {
   PageOverridesSchema,
   PageSchema,
 } from './schema.js';
+import { normalizeNfcDeep } from './text.js';
 
 const CommandTextSchema = z
   .string()
@@ -20,15 +21,13 @@ const CommandTextSchema = z
   .refine((value) => !/<[A-Za-z/!]/u.test(value))
   .transform((value) => value.normalize('NFC'));
 
-const PageIdSchema = CommandTextSchema;
+const PageIdSchema = CommandTextSchema.refine((value) => value.length > 0);
 const PositionSchema = DocumentTextSchema.min(1);
 const LayoutSchema = z.enum(['split', 'grid', 'full-bleed', 'minimal']);
-const BrandValuesSchema = z.tuple([
-  BrandValueSchema,
-  BrandValueSchema,
-  BrandValueSchema,
-  BrandValueSchema,
-]);
+const BrandValuesSchema = z.preprocess(
+  (value) => normalizeNfcDeep(value),
+  z.tuple([BrandValueSchema, BrandValueSchema, BrandValueSchema, BrandValueSchema]),
+);
 
 // ADR-018: `expect` is the value the command expects to find; `null` stands for "absent".
 const SetColorTokenSchema = z
@@ -141,7 +140,7 @@ const AddPageSchema = z
     pageType: PageTypeSchema,
     afterPageId: PageIdSchema.nullable(),
     title: CommandTextSchema.optional(),
-    data: PageDataSchema.optional(),
+    data: z.preprocess((value) => normalizeNfcDeep(value), PageDataSchema).optional(),
     overrides: PageOverridesSchema.optional(),
     position: PositionSchema.optional(),
     expect: z.null().optional(),

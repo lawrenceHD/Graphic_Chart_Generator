@@ -142,15 +142,29 @@ function resolvePosition(
     }
     insertionIndex = anchorIndex + 1;
   }
-  // An explicit position restores a page to its exact former key (inverses).
-  if (explicitPosition !== undefined) {
-    return ok(explicitPosition);
-  }
   const previous = insertionIndex > 0 ? (orderedPages[insertionIndex - 1]?.position ?? null) : null;
   const next = orderedPages[insertionIndex]?.position ?? null;
+  // An explicit position restores a page to its exact former key (inverses). It must be a valid key strictly
+  // between the neighbours of afterPageId, otherwise the page lands elsewhere and its inverse can never apply.
+  if (explicitPosition !== undefined) {
+    return isKeyBetween(previous, explicitPosition, next)
+      ? ok(explicitPosition)
+      : err({ code: 'INVALID_COMMAND' });
+  }
   try {
     return ok(generateKeyBetween(previous, next));
   } catch {
     return err({ code: 'INVALID_COMMAND' });
   }
+}
+
+// Same ordering as sortPages (code-unit comparison). The library only checks the key format: it does not
+// reject keys given out of order.
+function isKeyBetween(previous: string | null, key: string, next: string | null): boolean {
+  try {
+    generateKeyBetween(key, null);
+  } catch {
+    return false;
+  }
+  return (previous === null || previous < key) && (next === null || key < next);
 }

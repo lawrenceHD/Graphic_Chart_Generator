@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as fc from 'fast-check';
 import { PAIRING_IDS } from '@app/contracts';
-import { apply } from './commands.js';
+import { apply, applyInverse } from './commands.js';
 import type { BrandDocument } from './schema.js';
 import { deepFreeze, makeDocument } from './test-fixtures.js';
 
@@ -195,7 +195,7 @@ describe('apply inverse properties', () => {
       expect: { sceneId: 'scene-new', finish: 'foil' },
     });
 
-    const restored = apply(applied.value.doc, applied.value.inverse);
+    const restored = applyInverse(applied.value.doc, applied.value.inverse);
     expect(restored.ok).toBe(true);
     if (restored.ok) {
       expect(restored.value.doc).toEqual(document);
@@ -254,7 +254,7 @@ function roundTrip(document: BrandDocument, command: unknown): void {
   // ADR-018: every inverse carries the value its command just wrote.
   expect(Object.hasOwn(applied.value.inverse, 'expect')).toBe(true);
 
-  const restored = apply(deepFreeze(applied.value.doc), deepFreeze(applied.value.inverse));
+  const restored = applyInverse(deepFreeze(applied.value.doc), deepFreeze(applied.value.inverse));
   expect(restored.ok).toBe(true);
   if (restored.ok) {
     expect(restored.value.doc).toEqual(document);

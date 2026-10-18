@@ -10,7 +10,10 @@ export function redactSensitive(value: unknown, depth = 0): unknown {
   if (depth > MAX_DEPTH) return REDACTED;
   if (Array.isArray(value)) return value.map((item: unknown) => redactSensitive(item, depth + 1));
   if (typeof value !== 'object' || value === null) return value;
+  return redactRecord(value, depth);
+}
 
+function redactRecord(value: object, depth = 0): Record<string, unknown> {
   const redacted: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value)) {
     redacted[key] = SENSITIVE_KEY.test(key) ? REDACTED : redactSensitive(entry, depth + 1);
@@ -21,14 +24,7 @@ export function redactSensitive(value: unknown, depth = 0): unknown {
 export function createLogger(destination?: pino.DestinationStream): pino.Logger {
   return pino(
     {
-      formatters: {
-        log: (object) => {
-          const redacted = redactSensitive(object);
-          return typeof redacted === 'object' && redacted !== null && !Array.isArray(redacted)
-            ? redacted
-            : {};
-        },
-      },
+      formatters: { log: (object) => redactRecord(object) },
     },
     destination,
   );

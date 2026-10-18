@@ -1,4 +1,4 @@
-export { apply, type ApplyResult, type CommandError } from './commands.js';
+export { apply, applyInverse, type ApplyResult, type CommandError } from './commands.js';
 export { CommandSchema, type ApplyInput, type Command } from './command-schema.js';
 export { migrate, type MigrationError } from './migrate.js';
 export {

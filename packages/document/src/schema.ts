@@ -152,9 +152,9 @@ export type ColorToken = z.infer<typeof ColorTokenSchema>;
 
 export const PageSchema = z
   .object({
-    id: DocumentTextSchema,
+    id: DocumentTextSchema.min(1),
     type: PageTypeSchema,
-    position: DocumentTextSchema,
+    position: DocumentTextSchema.min(1),
     title: DocumentTextSchema,
     data: PageDataSchema,
     overrides: PageOverridesSchema,

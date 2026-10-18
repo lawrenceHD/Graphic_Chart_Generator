@@ -1,5 +1,5 @@
 import { err, type Result } from '@app/kernel';
-import { ApplyInputSchema, type ApplyInput } from './command-schema.js';
+import { ApplyInputSchema, CommandSchema, type ApplyInput } from './command-schema.js';
 import { applyBrandCommand } from './command-brand.js';
 import { isTooLarge, type OperationResult } from './command-internal.js';
 import { applyPageFieldCommand } from './command-page-fields.js';
@@ -19,12 +19,25 @@ export type ApplyResult = Result<
   CommandError
 >;
 
+// Public entry point: user, copilot and API commands only (docs/04_API_CONTRACTS.md §4).
 export function apply(documentInput: unknown, commandInput: unknown): ApplyResult {
+  return run(documentInput, CommandSchema.safeParse(commandInput));
+}
+
+// Replays an inverse produced by apply() and stored in a revision; it may be the internal RestoreMockup,
+// which public callers must never send (it writes arbitrary JSON into data.mockup).
+export function applyInverse(documentInput: unknown, inverseInput: unknown): ApplyResult {
+  return run(documentInput, ApplyInputSchema.safeParse(inverseInput));
+}
+
+function run(
+  documentInput: unknown,
+  parsedCommand: { success: true; data: ApplyInput } | { success: false },
+): ApplyResult {
   const parsedDocument = BrandDocumentSchema.safeParse(documentInput);
   if (!parsedDocument.success) {
     return err({ code: 'INVALID_COMMAND' });
   }
-  const parsedCommand = ApplyInputSchema.safeParse(commandInput);
   if (!parsedCommand.success) {
     return err({ code: 'INVALID_COMMAND' });
   }
