@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { and, assets, eq, isNull, type createDatabase } from '@app/db';
+import { and, appendProjectEvent, assets, eq, isNull, type createDatabase } from '@app/db';
 import { uuidV7 } from '@app/kernel';
 
 // Asset rows of the upload flow (02_ARCHITECTURE.md §5.1): pending → quarantined here, then the worker's
@@ -46,11 +46,20 @@ export async function findAsset(orm: Orm, assetId: string): Promise<AssetRow | u
 
 /** pending → quarantined; a concurrent completion finds the row already moved and gets it unchanged. */
 export async function quarantineAsset(orm: Orm, assetId: string): Promise<AssetRow | undefined> {
-  const [moved] = await orm
-    .update(assets)
-    .set({ status: 'quarantined' })
-    .where(and(eq(assets.id, assetId), eq(assets.status, 'pending')))
-    .returning();
+  // The transition and its SSE event commit together (04_API_CONTRACTS.md §5).
+  const moved = await orm.transaction(async (tx) => {
+    const [row] = await tx
+      .update(assets)
+      .set({ status: 'quarantined' })
+      .where(and(eq(assets.id, assetId), eq(assets.status, 'pending')))
+      .returning();
+    if (row)
+      await appendProjectEvent(tx, row.projectId, {
+        type: 'asset.status',
+        data: { assetId, status: 'quarantined' },
+      });
+    return row;
+  });
   return moved ?? findAsset(orm, assetId);
 }
 

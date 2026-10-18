@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { Actor, JobName, JobPayload, JobQueue, ObjectStorage } from '@app/contracts';
-import { assets, eq, guestSessions, projects } from '@app/db';
+import { assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { ok, uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -171,6 +171,11 @@ describe.runIf(adminUrl !== '')(
       expect(sent).toEqual([
         { name: 'asset.scan', payload: { assetId }, key: assetId },
         { name: 'asset.scan', payload: { assetId }, key: assetId },
+      ]);
+      // One SSE event for the one transition (04_API_CONTRACTS.md §5), not one per call.
+      const events = await readProjectEvents(test.database.orm, projectId, 0, 100);
+      expect(events.events.map(({ event }) => event)).toEqual([
+        { type: 'asset.status', data: { assetId, status: 'quarantined' } },
       ]);
     });
 

@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { ObjectStorage } from '@app/contracts';
-import { assets, eq, guestSessions, projects } from '@app/db';
+import { assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { err, ok, uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
@@ -82,6 +82,11 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
   }
   const rowsOf = (assetId: string) =>
     test.database.orm.select().from(assets).where(eq(assets.id, assetId));
+  // asset.status events of one asset, in stream order (04_API_CONTRACTS.md §5).
+  const statusEventsOf = async (assetId: string) =>
+    (await readProjectEvents(test.database.orm, projectId, 0, 1000)).events.flatMap(({ event }) =>
+      event.type === 'asset.status' && event.data.assetId === assetId ? [event.data] : [],
+    );
   const derivedOf = async (assetId: string) =>
     (await test.database.orm.select().from(assets).where(eq(assets.kind, 'logo_sanitized'))).filter(
       (row) => Reflect.get(Object(row.meta), 'sourceAssetId') === assetId,
@@ -110,6 +115,7 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
     expect(objects.get(derived[0]?.storageKey ?? '')).toEqual(svg);
     expect(svg).not.toEqual(original);
     expect(row?.meta).toEqual({ sanitizedAssetId: derived[0]?.id });
+    expect(await statusEventsOf(assetId)).toEqual([{ assetId, status: 'clean' }]);
   });
 
   it('is idempotent: a second run changes nothing, and only quarantined assets are scanned', async () => {
@@ -117,6 +123,7 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
     await scan(assetId);
     await scan(assetId);
     expect(await derivedOf(assetId)).toHaveLength(1);
+    expect(await statusEventsOf(assetId)).toHaveLength(1);
     const pending = await upload(encode(TRIANGLE), 'pending');
     await scan(pending);
     expect((await rowsOf(pending))[0]?.status).toBe('pending');
@@ -144,6 +151,9 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
       await scan(assetId);
       expect((await rowsOf(assetId))[0]).toMatchObject({ status: 'rejected', rejectReason: code });
       expect(await derivedOf(assetId)).toHaveLength(0);
+      expect(await statusEventsOf(assetId)).toEqual([
+        { assetId, status: 'rejected', rejectReason: code },
+      ]);
     }
   });
 
@@ -159,6 +169,10 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
     await scan(done);
     await rejectTimedOut(test.database.orm, done);
     expect((await rowsOf(done))[0]).toMatchObject({ status: 'clean', rejectReason: null });
+    expect(await statusEventsOf(stuck)).toEqual([
+      { assetId: stuck, status: 'rejected', rejectReason: 'ASSET_SCAN_TIMEOUT' },
+    ]);
+    expect(await statusEventsOf(done)).toEqual([{ assetId: done, status: 'clean' }]);
     await expect(rejectTimedOut(test.database.orm, id())).resolves.toBeUndefined();
   });
 

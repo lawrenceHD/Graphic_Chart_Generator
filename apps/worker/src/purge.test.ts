@@ -5,6 +5,7 @@ import {
   documents,
   eq,
   guestSessions,
+  projectEvents,
   projects,
   revisions,
   usageEvents,
@@ -73,6 +74,13 @@ describe.runIf(adminUrl !== '')('purge (03_DATA_MODEL.md §6, AC-01.2)', () => {
       command: {},
       inverse: {},
     });
+    // An SSE event past the 24 h replay window (04_API_CONTRACTS.md §5).
+    await orm.insert(projectEvents).values({
+      projectId,
+      type: 'analysis.done',
+      data: { seq: 1 },
+      createdAt: hoursAgo(25),
+    });
     for (const name of ['original', 'sanitized']) {
       const storageKey = `projects/${projectId}/assets/${projectId}/${name}`;
       objects.add(storageKey);
@@ -103,7 +111,9 @@ describe.runIf(adminUrl !== '')('purge (03_DATA_MODEL.md §6, AC-01.2)', () => {
       expiredGuestProjects: 1,
       purgedProjects: 2,
       purgedGuestSessions: 1,
+      purgedEvents: 2, // those of the two live projects; the others went with their project
     });
+    expect(await orm.select().from(projectEvents)).toEqual([]);
     expect([await exists(expired), await exists(deleted)]).toEqual([false, false]);
     expect([await exists(live), await exists(kept)]).toEqual([true, true]);
     expect([keysOf(expired), keysOf(deleted)]).toEqual([[], []]);
@@ -115,6 +125,7 @@ describe.runIf(adminUrl !== '')('purge (03_DATA_MODEL.md §6, AC-01.2)', () => {
       expiredGuestProjects: 0,
       purgedProjects: 0,
       purgedGuestSessions: 0,
+      purgedEvents: 0,
     });
   });
 

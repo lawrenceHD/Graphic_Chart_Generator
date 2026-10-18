@@ -7,7 +7,7 @@ import {
   type RasterImage,
   type Rasterizer,
 } from '@app/contracts';
-import { and, assets, eq, isNull, type createDatabase } from '@app/db';
+import { and, appendProjectEvent, assets, eq, isNull, type createDatabase } from '@app/db';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
 import { detectType, ensureViewBox, sanitizeSvg, type DetectedType } from '@app/svg-engine';
 
@@ -78,9 +78,8 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
     .where(and(eq(assets.id, assetId), isNull(assets.deletedAt)));
   if (asset?.status !== 'quarantined') return;
   const pending = and(eq(assets.id, assetId), eq(assets.status, 'quarantined'));
-  const reject = async (code: AssetErrorCode, mime: string | null = null): Promise<void> => {
-    await orm.update(assets).set({ status: 'rejected', rejectReason: code, mime }).where(pending);
-  };
+  const reject = (code: AssetErrorCode, mime: string | null = null): Promise<void> =>
+    markRejected(orm, asset.projectId, assetId, code, { mime });
 
   if (asset.kind !== 'logo_original') return reject('ASSET_TYPE_UNSUPPORTED');
   const read = await storage.get(asset.storageKey, MAX_RASTER_BYTES);
@@ -109,6 +108,10 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
       .where(pending)
       .returning({ id: assets.id });
     if (!moved) return;
+    await appendProjectEvent(tx, asset.projectId, {
+      type: 'asset.status',
+      data: { assetId, status: 'clean' },
+    });
     await tx.insert(assets).values({
       id: sanitizedId,
       projectId: asset.projectId,
@@ -125,10 +128,33 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
   });
 }
 
+// The verdict and its SSE event (04_API_CONTRACTS.md §5) commit together; only a quarantined asset moves.
+async function markRejected(
+  orm: Orm,
+  projectId: string,
+  assetId: string,
+  code: AssetErrorCode,
+  extra: { readonly mime?: string | null },
+): Promise<void> {
+  await orm.transaction(async (tx) => {
+    const [moved] = await tx
+      .update(assets)
+      .set({ status: 'rejected', rejectReason: code, ...extra })
+      .where(and(eq(assets.id, assetId), eq(assets.status, 'quarantined')))
+      .returning({ id: assets.id });
+    if (!moved) return;
+    await appendProjectEvent(tx, projectId, {
+      type: 'asset.status',
+      data: { assetId, status: 'rejected', rejectReason: code },
+    });
+  });
+}
+
 /** Dead letter of asset.scan: every attempt failed on infrastructure, so the user gets a verdict, not a spinner. */
 export async function rejectTimedOut(orm: Orm, assetId: string): Promise<void> {
-  await orm
-    .update(assets)
-    .set({ status: 'rejected', rejectReason: 'ASSET_SCAN_TIMEOUT' })
-    .where(and(eq(assets.id, assetId), eq(assets.status, 'quarantined')));
+  const [asset] = await orm
+    .select({ projectId: assets.projectId })
+    .from(assets)
+    .where(eq(assets.id, assetId));
+  if (asset) await markRejected(orm, asset.projectId, assetId, 'ASSET_SCAN_TIMEOUT', {});
 }

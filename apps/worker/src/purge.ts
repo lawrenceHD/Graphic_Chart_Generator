@@ -10,7 +10,9 @@ import {
   isNotNull,
   isNull,
   lte,
+  projectEvents,
   projects,
+  purgeProjectEvents,
   revisions,
   shareLinks,
   sql,
@@ -33,9 +35,12 @@ export interface PurgeReport {
   readonly expiredGuestProjects: number;
   readonly purgedProjects: number;
   readonly purgedGuestSessions: number;
+  readonly purgedEvents: number;
 }
 
 const PROJECTS_PER_RUN = 200;
+// Replay window of the SSE log: a client away longer reloads the project instead (04_API_CONTRACTS.md §5).
+const EVENT_RETENTION_MS = 24 * 3_600_000;
 
 async function purgeProject(deps: PurgeDeps, projectId: string): Promise<void> {
   const stored = await deps.orm
@@ -48,6 +53,7 @@ async function purgeProject(deps: PurgeDeps, projectId: string): Promise<void> {
     await tx.delete(shareLinks).where(eq(shareLinks.projectId, projectId));
     await tx.delete(exports).where(eq(exports.projectId, projectId));
     await tx.delete(chatMessages).where(eq(chatMessages.projectId, projectId));
+    await tx.delete(projectEvents).where(eq(projectEvents.projectId, projectId));
     await tx.delete(revisions).where(eq(revisions.projectId, projectId));
     await tx.delete(documents).where(eq(documents.projectId, projectId));
     await tx.delete(assets).where(eq(assets.projectId, projectId));
@@ -84,9 +90,12 @@ export async function purge(deps: PurgeDeps): Promise<PurgeReport> {
     )
     .returning({ id: guestSessions.id });
 
+  const events = await purgeProjectEvents(orm, new Date(now.getTime() - EVENT_RETENTION_MS));
+
   return {
     expiredGuestProjects: expired.length,
     purgedProjects: doomed.length,
     purgedGuestSessions: sessions.length,
+    purgedEvents: events,
   };
 }
