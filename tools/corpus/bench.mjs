@@ -10,12 +10,16 @@ import { pathToFileURL } from 'node:url';
 
 const root = join(import.meta.dirname, '../..');
 const corpus = join(root, '.cache/corpus-private');
-const imp = (path) => import(pathToFileURL(join(root, path)).href);
-const { extractPalette, assignRoles, deltaEOk } = await imp('packages/color-engine/dist/index.js');
+// BENCH_ENGINE: another checkout's built packages (e.g. a worktree of an older commit) for before/after.
+const engine = process.env.BENCH_ENGINE ?? root;
+const imp = (path) => import(pathToFileURL(join(engine, path)).href);
+const { extractPalette, assignRoles, brandClusters, deltaEOk } = await imp(
+  'packages/color-engine/dist/index.js',
+);
 const { sanitizeSvg, downscaleNearest } = await imp('packages/svg-engine/dist/index.js');
 const { normalizeRaster } = await imp('packages/svg-engine/dist/raster/index.js');
 const { monochromeSvg, fidelityScore } = await imp('packages/logo-kit/dist/index.js');
-const require = createRequire(join(root, 'packages/svg-engine/package.json'));
+const require = createRequire(join(engine, 'packages/svg-engine/package.json'));
 const { Resvg } = require('@resvg/resvg-js');
 const sharp = require('sharp');
 
@@ -85,25 +89,38 @@ function extract(image) {
   const result = extractPalette(input);
   const ms = performance.now() - started;
   if (!result.ok) return { error: result.error, ms };
-  const roles = assignRoles(result.value.clusters);
+  // Decision B: a vivid removed background leads the clusters handed to the roles.
+  const { background } = result.value;
+  const brand = brandClusters ? brandClusters(result.value) : result.value.clusters;
+  const roles = assignRoles(brand);
   return {
     ms,
     clusters: result.value.clusters.map((c) => ({ hex: c.hex, share: round(c.share) })),
+    brand: brand.map((c) => ({ hex: c.hex, share: round(c.share) })),
+    background: background ? `${background.hex}:${(background.share * 100).toFixed(0)}` : null,
     primary: roles.primary
       ? `${roles.primary.hex}${roles.primary.source === 'derived' ? '*' : ''}`
       : null,
   };
 }
 
-/** Compare an extraction with reference colours (and their visible shares). */
-function score(extraction, shares) {
+/**
+ * Compare an extraction with reference colours (and their visible shares). A reference colour equal to the
+ * background the bench itself added (white, board grey) cannot be told from it: not counted as visible.
+ */
+function score(extraction, shares, added = null) {
   if (!extraction.clusters) return { failed: true };
-  const refs = [...shares.keys()];
-  const near = (hex) => Math.min(...extraction.clusters.map((c) => deltaEOk(hex, c.hex)), Infinity);
+  const all = [...shares.keys()];
+  // Found among the brand clusters (decision B: a vivid removed background counts as found).
+  const found = extraction.brand ?? extraction.clusters;
+  const refs = all.filter((hex) => added === null || deltaEOk(hex, added) >= MATCH);
+  const near = (hex) => Math.min(...found.map((c) => deltaEOk(hex, c.hex)), Infinity);
   const visible = refs.filter((hex) => shares.get(hex) >= VISIBLE);
   const missed = visible.filter((hex) => near(hex) >= MATCH);
+  // An intruder matches no colour of the logo, the white of a logo included: a white cluster is a leaked
+  // background only when the logo itself has no white.
   const spurious = extraction.clusters.filter(
-    (c) => Math.min(...refs.map((hex) => deltaEOk(hex, c.hex)), Infinity) >= MATCH,
+    (c) => Math.min(...all.map((hex) => deltaEOk(hex, c.hex)), Infinity) >= MATCH,
   );
   return {
     visible: visible.length,
@@ -122,6 +139,8 @@ async function decode(bytes) {
     ? { image: result.value, ms: performance.now() - started }
     : { error: result.error.code, ms: performance.now() - started };
 }
+
+const ADDED = { 'png-white': '#FFFFFF', 'jpeg-white': '#FFFFFF', 'jpeg-board': '#F2F2F2' };
 
 /** The same logo as users really send it: flattened on white, as PNG and as JPEG. */
 async function variants(png) {
@@ -158,7 +177,7 @@ async function benchSvg(name, source, references) {
     for (const [kind, bytes] of Object.entries(await variants(image.png))) {
       const decoded = await decode(bytes);
       const extraction = decoded.image ? extract(decoded.image) : { error: decoded.error };
-      row[kind] = { ...extraction, ...score(extraction, shares) };
+      row[kind] = { ...extraction, ...score(extraction, shares, ADDED[kind]) };
     }
     const mono = monochromeSvg(svg, '#000000');
     if (!mono.ok) row.mono = { error: mono.error.code };
@@ -311,6 +330,8 @@ lines.push(
   '| entrée | kind | logos | couleurs visibles trouvées | strict | logos parfaits | logos avec intrus | part intrus moy. | groupes moy. |',
   '|---|---|---|---|---|---|---|---|---|',
 );
+// Gradients: a gradient is cut into slices whose centres only approach its stops; their "intruders" are
+// mostly legitimate intermediate colours. Their rows are indicative.
 for (const variant of ['transparent', 'png-white', 'jpeg-white', 'jpeg-board']) {
   for (const kind of ['flat', 'gradient', 'mask-filter']) {
     const rows = lib.filter(
@@ -383,8 +404,8 @@ lines.push(
   '',
   `## Logos des chartes (${results.charters.length})`,
   '',
-  '| logo | fond | trouvées | intrus | ΔE aux couleurs officielles | groupes extraits |',
-  '|---|---|---|---|---|---|',
+  '| logo | fond (vérité) | fond retiré | primary | trouvées | intrus | ΔE aux couleurs officielles | groupes extraits |',
+  '|---|---|---|---|---|---|---|---|',
 );
 for (const r of results.charters) {
   const e = r.extraction ?? {};
@@ -392,7 +413,7 @@ for (const r of results.charters) {
     .map(([hex, d]) => `${hex} ${d.toFixed(2)}`)
     .join(' · ');
   lines.push(
-    `| ${r.name} | ${r.background ?? '—'} | ${e.found ?? '—'}/${e.visible ?? '—'} | ${(e.spurious ?? []).join(' ') || '—'} | ${official} | ${(e.clusters ?? []).map((c) => `${c.hex}:${(c.share * 100).toFixed(0)}`).join(' ')} |`,
+    `| ${r.name} | ${r.background ?? '—'} | ${e.background ?? '—'} | ${e.primary ?? '—'} | ${e.found ?? '—'}/${e.visible ?? '—'} | ${(e.spurious ?? []).join(' ') || '—'} | ${official} | ${(e.clusters ?? []).map((c) => `${c.hex}:${(c.share * 100).toFixed(0)}`).join(' ')} |`,
   );
 }
 
