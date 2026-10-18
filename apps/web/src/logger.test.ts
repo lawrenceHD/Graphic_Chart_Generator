@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
-import { createLogger } from './logger.js';
+import { createLogger } from './logger';
 
 describe('request logger', () => {
   it('adds a requestId and redacts sensitive fields', () => {

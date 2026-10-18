@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-import { buildContentSecurityPolicy, secureResponse } from './security-headers.js';
+import { buildContentSecurityPolicy, secureResponse } from './security-headers';
 
 const options = { r2AccountId: 'acme', development: false };
 

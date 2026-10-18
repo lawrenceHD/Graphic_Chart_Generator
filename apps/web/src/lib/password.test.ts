@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hashPassword, verifyPassword } from './password.js';
+import { hashPassword, verifyPassword } from './password';
 
 describe('Argon2id password hashing (SEC-01, T-013)', () => {
   it('produces a PHC string with the OWASP parameters and a random salt', async () => {

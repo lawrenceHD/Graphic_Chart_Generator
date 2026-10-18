@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { createDatabase } from '@app/db';
 import { afterAll, describe, expect, it } from 'vitest';
-import { createHealthResponse } from './health-response.js';
+import { createHealthResponse } from './health-response';
 
 // The real database URL lives in the private root .env.local; it is loaded, never printed.
 const rootEnvFile = resolve(import.meta.dirname, '../../../.env.local');

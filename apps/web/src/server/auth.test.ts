@@ -1,7 +1,7 @@
 import { account, eq, user } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { actorFromSession, createAuth, type Auth } from './auth.js';
+import { actorFromSession, createAuth, type Auth } from './auth';
 
 const adminUrl = integrationDatabaseUrl();
 const settings = {

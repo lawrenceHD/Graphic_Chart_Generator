@@ -4,7 +4,7 @@ import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@
 import { makeDocument } from '@app/document/testing';
 import { uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { applyCommand, redo, undo, undoRevision } from './document-service.js';
+import { applyCommand, redo, undo, undoRevision } from './document-service';
 
 const adminUrl = integrationDatabaseUrl();
 const id = (): string => uuidV7(Date.now(), randomBytes(10));

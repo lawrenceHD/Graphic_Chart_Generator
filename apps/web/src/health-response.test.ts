@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHealthResponse } from './health-response.js';
+import { createHealthResponse } from './health-response';
 
 describe('createHealthResponse', () => {
   it('returns ok after the database query succeeds', async () => {
