@@ -155,6 +155,23 @@ export const assets = pgTable(
   (table) => [index('assets_project_kind').on(table.projectId, table.kind)],
 );
 
+// SSE log (04_API_CONTRACTS.md §5, decision T-019): NOTIFY keeps nothing, so a reconnecting client replays
+// the rows after its Last-Event-ID. The identity column is the stream's increasing event id. Short-lived:
+// purged by the hourly job.
+export const projectEvents = pgTable(
+  'project_events',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id),
+    type: text('type').notNull(),
+    data: jsonb('data').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index('project_events_project_id').on(table.projectId, table.id)],
+);
+
 export const chatMessages = pgTable(
   'chat_messages',
   {

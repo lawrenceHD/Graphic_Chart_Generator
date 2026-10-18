@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import * as schema from './schema/index.js';
 
 export * from './schema/index.js';
+export * from './events.js';
 
 // A health check must answer "degraded" quickly instead of hanging on an unreachable host.
 const CONNECTION_TIMEOUT_MS = 3_000;
