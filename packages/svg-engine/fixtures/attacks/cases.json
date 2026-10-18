@@ -1,0 +1,244 @@
+[
+  {
+    "id": 1,
+    "file": "01-script.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 2,
+    "file": "02-event-handlers.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 3,
+    "file": "03-anchor-javascript.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 4,
+    "file": "04-use-javascript.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 5,
+    "file": "05-foreign-object.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 6,
+    "file": "06-iframe-object-embed.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 7,
+    "file": "07-animate-set-href.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 8,
+    "file": "08-xxe.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 9,
+    "file": "09-billion-laughs.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 10,
+    "file": "10-image-http.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 11,
+    "file": "11-image-file.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 12,
+    "file": "12-use-external.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 13,
+    "file": "13-style-attribute-url.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 14,
+    "file": "14-style-import.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 15,
+    "file": "15-fill-external-url.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 16,
+    "file": "16-fe-image.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 17,
+    "file": "17-data-uri-href.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 18,
+    "file": "18-numeric-entity-javascript.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 19,
+    "file": "19-case-and-whitespace.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_FORBIDDEN_CONTENT"
+    }
+  },
+  {
+    "id": 20,
+    "file": "20-editor-namespaces.svg",
+    "expected": {
+      "ok": true,
+      "absent": ["sodipodi", "inkscape", "metadata"]
+    }
+  },
+  {
+    "id": 21,
+    "generator": "deep-nesting",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_TOO_COMPLEX"
+    }
+  },
+  {
+    "id": 22,
+    "generator": "node-count",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_TOO_COMPLEX"
+    }
+  },
+  {
+    "id": 23,
+    "file": "23-use-cycle.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_TOO_COMPLEX"
+    }
+  },
+  {
+    "id": 24,
+    "generator": "use-expansion-bomb",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_TOO_COMPLEX"
+    }
+  },
+  {
+    "id": 25,
+    "generator": "huge-attribute-value",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_TOO_LARGE"
+    }
+  },
+  {
+    "id": 26,
+    "file": "26-bom-and-encoding.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_DECODE_FAILED"
+    }
+  },
+  {
+    "id": 27,
+    "file": "27-polyglot-html.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_TYPE_UNSUPPORTED"
+    }
+  },
+  {
+    "id": 28,
+    "file": "28-text.svg",
+    "expected": {
+      "ok": false,
+      "code": "ASSET_SVG_UNSUPPORTED_FEATURE",
+      "hint": "convert-text-to-outlines"
+    }
+  },
+  {
+    "id": 29,
+    "file": "29-no-viewbox-no-size.svg",
+    "expected": {
+      "ok": true,
+      "warnings": ["VIEWBOX_NEEDS_BBOX"]
+    }
+  },
+  {
+    "id": 30,
+    "file": "30-missing-reference.svg",
+    "expected": {
+      "ok": true,
+      "absent": ["missing", "nowhere"],
+      "warnings": ["MISSING_REFERENCE"]
+    }
+  }
+]

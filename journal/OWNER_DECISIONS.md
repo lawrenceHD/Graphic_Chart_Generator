@@ -71,3 +71,11 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   ancienne) ; (3) étape 7, à égalité de distance, la grappe d'accueil au centre hexadécimal croissant ;
   (4) `accent`, à égalité de `C` : part décroissante puis hexadécimal croissant ; (5) étape 2, la couleur la plus
   fréquente du pourtour est départagée par hexadécimal croissant.
+
+## T-007 (délégation, 2026-10-18) — à reporter dans `docs/05_ENGINES.md` §3 et `docs/10_QUALITY.md` §6
+- Cas 29 : `VIEWBOX_NEEDS_BBOX` en T-007 ; le `viewBox` est calculé par la rasterisation (T-008).
+- `d` et `points` : limite = taille du fichier (5 Mo) au lieu de 10 000 caractères (47 logos réels sur 1 432 refusés).
+- Attributs de filtre ajoutés à la liste blanche : `filterUnits`, `primitiveUnits`, `color-interpolation-filters`,
+  `operator`, `k1`–`k4`.
+- `data:` refusé comme schéma (début de valeur ou de `url()`), `javascript:` / `vbscript:` partout.
+- `xlink:href` normalisé en `href` ; `@import` / `url()` externes → `FORBIDDEN_CONTENT`.
