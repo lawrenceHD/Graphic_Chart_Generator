@@ -10,3 +10,6 @@ coverage/
 docs/
 .claude/
 *.md
+# Written in the workspace by the Gitleaks action and by the CI verify step
+results.sarif
+verify.log
