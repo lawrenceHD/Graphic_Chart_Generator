@@ -10,7 +10,8 @@
     "test": "turbo run test",
     "build": "turbo run build",
     "deps:check": "depcruise --config .dependency-cruiser.cjs apps packages",
-    "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run deps:check"
+    "verify": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run deps:check",
+    "logos:fetch": "node tools/logo-library/fetch.mjs"
   },
   "devDependencies": {
     "dependency-cruiser": "18.5.0",

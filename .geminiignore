@@ -24,3 +24,6 @@ docs/_archives/
 *.webp
 *.ico
 *.pdf
+
+# Local caches
+.cache/
