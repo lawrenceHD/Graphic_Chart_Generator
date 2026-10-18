@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { documents, revisions, type createDatabase } from '@app/db';
+import { and, documents, eq, revisions, type createDatabase } from '@app/db';
 import {
   apply,
   applyInverse,
@@ -12,7 +12,6 @@ import {
   type CommandError,
 } from '@app/document';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
-import { and, eq } from 'drizzle-orm';
 
 // Server side of 04_API_CONTRACTS.md §3 "Document" and 03_DATA_MODEL.md §5 (ADR-018). Each operation runs in
 // one transaction holding the document row lock, so concurrent writers serialise on `seq`.

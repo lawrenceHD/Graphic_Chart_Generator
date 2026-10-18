@@ -1,9 +1,8 @@
 import { randomBytes } from 'node:crypto';
-import { documents, guestSessions, projects, revisions } from '@app/db';
+import { documents, eq, guestSessions, projects, revisions } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { makeDocument } from '@app/document/testing';
 import { uuidV7 } from '@app/kernel';
-import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { applyCommand, redo, undo, undoRevision } from './document-service.js';
 
