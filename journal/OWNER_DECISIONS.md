@@ -105,3 +105,14 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   `revisions`, `documents`, `assets`, `projects`) ; une interruption est reprise au passage suivant.
 - Une session invitée expirée est supprimée quand aucun projet ni aucun `usage_events` (rétention 13 mois) ne la
   référence. `expireGuestProjects` a quitté le web (rien ne l'y planifiait) pour le worker.
+
+## Corpus de logos (propriétaire, 2026-10-18) — à reporter dans `docs/05_ENGINES.md` §6
+- Les 20 logos du corpus sont **créés pour le projet par l'agent** (option « créés pour le projet » du §6) :
+  14 SVG selon la répartition du §6 et 6 rasters (2 PNG transparents, 2 PNG fond blanc, 2 JPEG) dérivés de ces SVG,
+  avec palette attendue écrite à la main. Le propriétaire valide visuellement les variantes.
+- La bibliothèque `logo-design-skill` (marques déposées) n'entre pas dans le corpus : contrôle de robustesse local
+  seulement (`tools/logo-library/README.md`).
+
+## Lettres mortes (délégation, 2026-10-18) — à reporter dans `docs/02_ARCHITECTURE.md` §5.1
+- `asset.scan` épuisé (3 tentatives) → file `asset.scan.failed` → asset `quarantined` passé `rejected`,
+  `ASSET_SCAN_TIMEOUT`. Un asset déjà `clean` ou `rejected` n'est jamais modifié.

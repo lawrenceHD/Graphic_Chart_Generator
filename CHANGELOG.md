@@ -7,11 +7,18 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Corrigé
+- **web** (2026-10-18) : le test de limite d'upload échouait chaque jour après 12 h UTC (horloge fixée à midi alors
+  que les tests précédents comptaient à l'heure réelle) ; table `rate_limit` vidée avant le test. Rejet de connexion
+  non traité dans le test « mauvais mot de passe » supprimé.
+- **document** (2026-10-18) : délai des tests de propriétés porté à 20 s (0,6 s seuls, > 5 s sous `pnpm verify`).
 - **svg-engine** (2026-10-18) : `viewBox` imbriqué (`symbol`, `pattern`, `marker`) validé comme celui de la racine
   (valeur libre conservée auparavant, trouvée par un test de propriété).
 - **web** (2026-10-18) : délai du test de démarrage élargi (instable sous `pnpm verify` parallèle).
 
 ### Ajouté
+- **Lettres mortes de `asset.scan`** (2026-10-18) : après 3 tentatives en échec, le job passe dans
+  `asset.scan.failed` et le worker rejette l'asset encore en quarantaine avec `ASSET_SCAN_TIMEOUT` (jamais un asset
+  déjà jugé) ; 2 tests, 2 sabotages détectés.
 - **Purge horaire (AC-01.2, `03_DATA_MODEL.md` §6)** (2026-10-18) : job `maintenance.purge` du worker (cron UTC) :
   expiration des projets invités à 24 h, suppression des fichiers R2 puis des lignes des projets supprimés, des
   sessions invitées expirées sans référence ; 2 tests.

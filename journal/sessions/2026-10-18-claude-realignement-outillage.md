@@ -38,3 +38,12 @@ Branche `chore/agent-relay-tooling` au-dessus de `ticket/T-004-color-engine-math
 - T-015 partie 1 (`can()`), T-013 (Better Auth confirmé, Argon2id natif), T-014 (schéma Drizzle, migration, PostgreSQL en CI).
 - Échecs instructifs : trois sabotages d'abord non détectés (T-005, T-007 ×2) → tests renforcés ; `sed` et backticks du shell ont plusieurs fois corrompu des fichiers → préférer l'outil d'édition ; resvg rend en alpha prémultiplié.
 - Toujours bloqué : l'installation de l'outillage `.claude/` (refus du classifieur, à lancer par le propriétaire).
+
+## Reprise du soir (2026-10-18)
+- Lettres mortes de `asset.scan` → `ASSET_SCAN_TIMEOUT` (`37e5ae5`), TDD et deux sabotages détectés.
+- Deux défauts de tests trouvés par `pnpm verify` et corrigés (`bb6717c`, `aca4c71`) : limite d'upload dépendante de
+  l'heure (rouge après 12 h UTC), délais des tests de propriétés sous charge. `pnpm verify` vert.
+- Décision du propriétaire : le corpus de 20 logos (`05_ENGINES.md` §6) sera **créé pour le projet** par l'agent
+  (libre de droits, commitable) ; la bibliothèque `logo-design-skill` reste un contrôle de robustesse local.
+  Le propriétaire valide visuellement les variantes. À faire avant T-011.
+- Avancement MVP estimé à ~30 % (pondéré par les durées de `12_WORKFLOW_ROADMAP.md` §9) ; aucune interface encore.
