@@ -5,7 +5,7 @@ import { createR2Storage } from '@app/storage';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { createLogger, errorSummary } from './logger.js';
 import { purge } from './purge.js';
-import { scanAsset } from './scan.js';
+import { rejectTimedOut, scanAsset } from './scan.js';
 
 // Composition root of the worker process (02_ARCHITECTURE.md §2): real clock, network and child processes are
 // wired here only; job logic receives them.
@@ -48,6 +48,10 @@ await queue.work('asset.scan', async ({ assetId }, attempt) => {
     logger.error({ event: 'asset_scan_failed', assetId, attempt, error: errorSummary(error) });
     throw error;
   }
+});
+await queue.work('asset.scan.failed', async ({ assetId }) => {
+  await rejectTimedOut(database.orm, assetId);
+  logger.warn({ event: 'asset_scan_timed_out', assetId });
 });
 await queue.work('maintenance.purge', async () => {
   const report = await purge({

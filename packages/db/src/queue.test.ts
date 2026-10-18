@@ -50,6 +50,31 @@ describe.runIf(adminUrl !== '')('pg-boss job queue (ADR-005)', () => {
     ]);
   }, 30_000);
 
+  it('moves a job out of attempts to its dead-letter queue', async () => {
+    // Own database: the asset.scan handler of the test above would otherwise take some attempts.
+    const own = await createTestDatabase(adminUrl);
+    const producer = await startJobQueue(own.url, 'producer', fail);
+    const worker = await startJobQueue(own.url, 'worker', fail);
+    const doomed = '01890a5d-ac96-774b-bcce-b302099a8058';
+    const attempts: number[] = [];
+    const dead: string[] = [];
+    await worker.work('asset.scan.failed', (payload) => {
+      dead.push(payload.assetId);
+      return Promise.resolve();
+    });
+    await worker.work('asset.scan', (payload, attempt) => {
+      attempts.push(attempt);
+      return Promise.reject(new Error('down'));
+    });
+    await producer.send('asset.scan', { assetId: doomed }, doomed);
+    await until(() => dead.length > 0, 40_000);
+    await producer.stop();
+    await worker.stop();
+    await own.dispose();
+    expect(attempts).toEqual([0, 1, 2]);
+    expect(dead).toEqual([doomed]);
+  }, 60_000);
+
   it('refuses to enqueue a payload that breaks the contract', async () => {
     await expect(producer.send('asset.scan', { assetId: 'not-a-uuid' }, 'x')).rejects.toThrow(
       'invalid asset.scan payload',

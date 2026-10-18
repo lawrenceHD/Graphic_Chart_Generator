@@ -124,3 +124,11 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
     });
   });
 }
+
+/** Dead letter of asset.scan: every attempt failed on infrastructure, so the user gets a verdict, not a spinner. */
+export async function rejectTimedOut(orm: Orm, assetId: string): Promise<void> {
+  await orm
+    .update(assets)
+    .set({ status: 'rejected', rejectReason: 'ASSET_SCAN_TIMEOUT' })
+    .where(and(eq(assets.id, assetId), eq(assets.status, 'quarantined')));
+}

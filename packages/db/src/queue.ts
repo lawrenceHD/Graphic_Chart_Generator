@@ -12,6 +12,9 @@ const QUEUE_OPTIONS = {
   expireInSeconds: 300,
 } as const;
 
+// A job out of attempts is moved to its dead-letter queue, whose handler records the failure for the user.
+const DEAD_LETTERS = new Map<string, string>([['asset.scan', 'asset.scan.failed']]);
+
 export interface JobRunner extends JobQueue {
   /** Runs `handler` for each job; `attempt` counts from 0. A rejection fails the attempt (retried). */
   work<N extends JobName>(
@@ -41,8 +44,17 @@ export async function startJobQueue(
   });
   boss.on('error', onError);
   await boss.start();
-  for (const name of Object.keys(JOB_PAYLOADS)) {
-    if ((await boss.getQueue(name)) === null) await boss.createQueue(name, QUEUE_OPTIONS);
+  const names = Object.keys(JOB_PAYLOADS);
+  const targets = new Set(DEAD_LETTERS.values());
+  // Dead-letter queues must exist before the queues that point to them.
+  for (const name of [
+    ...names.filter((n) => targets.has(n)),
+    ...names.filter((n) => !targets.has(n)),
+  ]) {
+    const deadLetter = DEAD_LETTERS.get(name);
+    const options = deadLetter === undefined ? QUEUE_OPTIONS : { ...QUEUE_OPTIONS, deadLetter };
+    if ((await boss.getQueue(name)) === null) await boss.createQueue(name, options);
+    else if (deadLetter !== undefined) await boss.updateQueue(name, { deadLetter });
   }
 
   const parse = <N extends JobName>(name: N, data: unknown): JobPayload<N> => {

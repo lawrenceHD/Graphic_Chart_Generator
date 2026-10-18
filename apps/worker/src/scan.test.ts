@@ -6,7 +6,7 @@ import { err, ok, uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { scanAsset } from './scan.js';
+import { rejectTimedOut, scanAsset } from './scan.js';
 
 const adminUrl = integrationDatabaseUrl();
 const id = (): string => uuidV7(Date.now(), randomBytes(10));
@@ -145,6 +145,21 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
       expect((await rowsOf(assetId))[0]).toMatchObject({ status: 'rejected', rejectReason: code });
       expect(await derivedOf(assetId)).toHaveLength(0);
     }
+  });
+
+  it('rejects as timed out a quarantined asset whose every scan attempt failed, and nothing else', async () => {
+    const stuck = await upload(encode(TRIANGLE));
+    await rejectTimedOut(test.database.orm, stuck);
+    expect((await rowsOf(stuck))[0]).toMatchObject({
+      status: 'rejected',
+      rejectReason: 'ASSET_SCAN_TIMEOUT',
+    });
+    // A late dead letter must not overwrite a verdict already reached.
+    const done = await upload(encode(TRIANGLE));
+    await scan(done);
+    await rejectTimedOut(test.database.orm, done);
+    expect((await rowsOf(done))[0]).toMatchObject({ status: 'clean', rejectReason: null });
+    await expect(rejectTimedOut(test.database.orm, id())).resolves.toBeUndefined();
   });
 
   it('normalizes a raster to a PNG with its dimensions', async () => {

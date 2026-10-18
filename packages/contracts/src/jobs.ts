@@ -4,6 +4,8 @@ import { z } from 'zod';
 // validated on both sides: the queue is a boundary.
 export interface JobPayloads {
   'asset.scan': { assetId: string };
+  /** Dead letter of asset.scan: every attempt failed (infrastructure), the asset is rejected as timed out. */
+  'asset.scan.failed': { assetId: string };
   /** Hourly, scheduled by the worker (03_DATA_MODEL.md §6). */
   'maintenance.purge': Record<string, never>;
 }
@@ -14,6 +16,7 @@ export type JobPayload<N extends JobName> = JobPayloads[N];
 // index the map without casts.
 export const JOB_PAYLOADS: { readonly [N in JobName]: z.ZodType<JobPayloads[N]> } = {
   'asset.scan': z.object({ assetId: z.uuid() }).strict(),
+  'asset.scan.failed': z.object({ assetId: z.uuid() }).strict(),
   'maintenance.purge': z.object({}).strict(),
 };
 
