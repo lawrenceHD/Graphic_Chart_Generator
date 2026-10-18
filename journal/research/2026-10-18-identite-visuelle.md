@@ -181,6 +181,35 @@ avec rôle, polices, règles) → comparaison automatique avec ce que le produit
 7. **Typographie** : choix du couple selon le style des lettres du logo ; hiérarchie chiffrée (tailles, graisses,
    interlignes) sur la page 8.
 
+État au 2026-10-19 : les propositions 1 à 3 sont mises en œuvre et mesurées (décisions A à D, halo JPEG, liseré de
+présentation : `journal/OWNER_DECISIONS.md`).
+
+## 9. Confrontation aux 8 chartes PDF du propriétaire (2026-10-19)
+Fiches de vérité terrain dans le dépôt privé (`charters/<marque>/truth.json`). Ce qu'elles contiennent, comparé à
+ce que `docs/01_PRODUCT_MVP.md` prévoit pour les pages de charte (T-022) et les exports (T-028, T-029) :
+
+| Élément de charte | Chartes qui l'ont | MVP aujourd'hui | Proposition |
+|---|---|---|---|
+| Codes HEX / RVB / CMJN / Pantone | 7 / 8 / 6 / 6 | HEX, RVB, HSL, OKLCH, CMJN indicatif | Montrer HEX, RVB, CMJN en premier ; HSL et OKLCH en détail technique (aucune charte ne les montre) |
+| Codes incohérents (HEX ≠ RVB) | 3 chartes, 8 codes | — | Argument produit : une seule source, codes toujours cohérents ; test d'invariant à l'export |
+| Déclinaisons logo / fond autorisées | 4 | noir, blanc | Matrice « logo sur fond » calculée : chaque variante (couleur, noir, blanc) sur chaque couleur de la palette, autorisée si contraste ≥ 3 ; les combinaisons interdites montrées barrées |
+| Taille minimale | 8 (mm et px : 4) | valeurs par défaut, unité non dite | Toujours en mm (impression) **et** en px (écran) |
+| Zone de protection | 7 | 25 % de la hauteur | Inchangé (les chartes la rapportent à un élément du logo : non automatisable) |
+| Interdits illustrés | 7 (médiane 10) | 4 règles | Banque de règles générées depuis le SVG : déformation, rotation, recoloration, fond nuisible, **ombre portée, opacité réduite, contour, éléments déplacés** ; 8 affichées |
+| Police de substitution (Office, Docs) | 5 | — | Chaque police du catalogue fermé porte une police système de repli, affichée sur la page Typographie |
+| Couleurs autorisées pour le texte selon le fond | 3 | matrice de contraste | Tirer de la matrice une ligne « texte sur ce fond : … » par couleur |
+| Proportions d'usage des couleurs | 2 | — | Proportions conseillées (60-30-10) déduites des rôles (§8, proposition 4) |
+| Teintes dérivées (60 / 40 / 20 %, 50 / 25 / 10 %) | 2 | échelles `buildScale` | Déjà couvert |
+
+Critères d'acceptation proposés (testables) :
+- **Logo sur fond** : pour une palette de n couleurs, la page montre 3 × (n + 2) vignettes (variantes × fonds,
+  blanc et noir compris) ; une vignette est « autorisée » si et seulement si le contraste entre la couleur
+  principale de la variante et le fond est ≥ 3 (même calcul que §5.6 « fond inadapté »).
+- **Taille minimale** : deux valeurs affichées, `mm` et `px`, modifiables ; défaut 15 mm et 24 px de hauteur pour
+  un logo complet, 5 mm et 16 px pour le symbole seul (ordres de grandeur relevés dans les chartes).
+- **Interdits** : chaque règle est un SVG généré à partir du logo réel, repassé par `sanitizeSvg` ; au moins 8.
+- **Substitution** : `09_DESIGN_SYSTEM.md` §8, une colonne `fallback` (police système) par entrée du catalogue.
+
 ## Sources
 - Aluminum Association, *Brand Guide* v1.0, 2017 — lu en entier :
   <https://www.aluminum.org/sites/default/files/2021-10/Aluminum_Assoc_BrandGuide_V3.pdf>
