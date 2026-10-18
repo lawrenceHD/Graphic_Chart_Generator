@@ -42,7 +42,8 @@ describe.runIf(adminUrl !== '')('schema and migrations against PostgreSQL (T-014
   const name = `atelier_test_${randomBytes(6).toString('hex')}`;
   const admin = new Pool({ connectionString: adminUrl });
   admin.on('error', ignorePoolError);
-  const url = new URL(adminUrl);
+  // Vitest still runs this callback when the suite is skipped: build the URL without throwing on ''.
+  const url = new URL(adminUrl === '' ? 'postgresql://skipped@localhost/skipped' : adminUrl);
   url.pathname = `/${name}`;
   const database = createDatabase({ DATABASE_URL: url.toString() }, ignorePoolError);
   const { orm } = database;
