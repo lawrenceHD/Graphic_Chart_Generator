@@ -13,3 +13,10 @@ export {
   type PageData,
   type PageOverrides,
 } from './schema.js';
+export {
+  checkTargetedUndo,
+  redoTarget,
+  undoTarget,
+  type RevisionRef,
+  type TargetedUndoCheck,
+} from './history.js';
