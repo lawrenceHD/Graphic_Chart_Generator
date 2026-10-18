@@ -8,13 +8,14 @@
 - **Tâche** : outillage multi-agents (skills ECC et logo-design, MCP, protocole de relais)
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
-## Branches (empilées, **aucune poussée**)
+## Branches (empilées, poussées sur origin le 2026-10-18)
 ```
 main (5d95f32, = origin/main)
 └─ ticket/T-002-web-config-health      fff8bfc  T-002 v4.1   verify vert
    └─ ticket/T-003-document-commands   a2ddb84  T-003 v4.1   verify vert
       └─ ticket/T-004-color-engine-maths 96d68ef  T-004 v4.1 verify vert
-         └─ chore/agent-relay-tooling   (en cours) relais, CHANGELOG, config Gemini
+         └─ chore/agent-relay-tooling   021bf26  relais, CHANGELOG, config Gemini
+            └─ fix/code-review-2026-10-18  69a694e  9 défauts corrigés, bibliothèque de logos, LF   verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002 → T-003 → T-004 → chore.
 
@@ -29,7 +30,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre T-002
 3. Corriger les 9 défauts de l'analyse du 2026-10-18 (tableau ci-dessous), tests d'abord, dans les branches concernées.
 4. T-005 dès que ses bloqueurs sont tranchés (T-006 en dépend).
 
-## Défauts relevés le 2026-10-18 (tous reproduits, non corrigés)
+## Défauts relevés le 2026-10-18 — **tous corrigés** (dad04a7, 8520315, dc85a89), tests et sabotages à l'appui
 | # | Gravité | Fichier | Défaut | Branche |
 |---|---|---|---|---|
 | 1 | Haute | `packages/db/src/index.ts:9` | Pas d'écouteur `pool.on('error')` : plantage du processus si PostgreSQL redémarre | T-002 |

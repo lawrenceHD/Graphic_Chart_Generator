@@ -51,5 +51,11 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - Importer d'ECC et de `logo-design-skill` ce qui sert au projet (sélection et raisons dans
   `.claude/skills/SOURCES.md`), ainsi que les MCP importants, pour un travail partagé entre Claude et Gemini.
 - Mettre en place un CHANGELOG et des fichiers de relais écrits pendant les tâches (`journal/PROTOCOL.md`).
-- L'agent a demandé, sans réponse à ce jour : pousser les branches ; corriger les 9 défauts de l'analyse du code ;
   activer les hooks ; trancher les bloqueurs de T-005, T-007 et T-010 (voir `HANDOFF.md`).
+- **Délégation générale** (2026-10-18, message du propriétaire) : Claude est l'acteur principal ; il corrige et
+  améliore tout le projet, installe ce qui l'aide (avec mesure sur la sécurité), crée des agents, pousse ses travaux
+  et tranche les points ouverts dans le cadre du projet. Gemini et Codex interviendront ponctuellement.
+  Conséquence : les choix que l'agent fait sous cette délégation sont consignés ici avec la mention « (délégation) ».
+- **Push autorisé** des branches de travail.
+- **Bibliothèque de logos** : à récupérer pour le développement →  (cache local ignoré, marques non
+  redistribuées).
