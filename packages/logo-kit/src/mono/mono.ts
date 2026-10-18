@@ -25,6 +25,8 @@ const SHAPES = new Set(['path', 'rect', 'circle', 'ellipse', 'line', 'polyline',
 const PAINT_SERVERS = new Set(['linearGradient', 'radialGradient', 'pattern']);
 const RASTER_ONLY = new Set(['mask', 'filter']);
 // Large enough for any logo coordinates: the knockout mask must never clip the artwork.
+// Beyond this many segments the nested masks get too deep to render cheaply: raster path instead.
+const MAX_SEGMENTS = 64;
 const MASK_EXTENT = { x: '-100000', y: '-100000', width: '200000', height: '200000' };
 
 interface Context {
@@ -117,61 +119,90 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
     return attributes;
   };
   // Paint order matters: a light shape is a hole only in the ink painted before it, never in the ink
-  // drawn on top of it (a light badge under a dark mark). The k-th light shape closes segment k; one
-  // rebuild per segment keeps only that segment's ink, with the group structure around it.
-  const holes: SvgElement[] = [];
+  // drawn on top of it (a light badge under a dark mark). Light shapes after some ink form a boundary
+  // (consecutive ones share it; those before any ink knock out nothing). Segment k is the ink between
+  // boundaries k-1 and k; one rebuild per segment keeps its ink with the group structure around it.
+  interface Pass {
+    boundary: number; // segment of the ink being visited
+    inked: boolean; // some ink already painted
+    open: boolean; // light shapes met since the last ink: the next ink starts a new segment
+  }
+  const boundaries: SvgElement[][] = [];
+  const spans = new Map<SvgElement, number>(); // number of segments each group is copied into
   const rebuild = (
     node: SvgElement,
     context: Context,
     segment: number,
-    state: { light: number },
+    pass: Pass,
   ): SvgNode | null => {
     if (PAINT_SERVERS.has(node.name)) return null; // every fill and stroke now uses the target colour
     if (node.name === 'clipPath') return segment === 0 ? node : null; // geometry only, defined once
     const inner = childContext(node, context);
     if (SHAPES.has(node.name)) {
       if (hasInk && isLight(inner)) {
+        if (!pass.inked) return null;
+        pass.open = true;
         if (segment === 0) {
           const hole = paint(node, inner, '#000000');
           if (inner.transform !== '') hole.set('transform', inner.transform);
-          holes.push(element(node.name, hole));
+          (boundaries[pass.boundary] ??= []).push(element(node.name, hole));
         }
-        state.light += 1;
         return null;
       }
-      return state.light === segment ? element(node.name, paint(node, inner, target)) : null;
+      if (pass.open) pass.boundary += 1;
+      pass.open = false;
+      pass.inked = true;
+      return pass.boundary === segment ? element(node.name, paint(node, inner, target)) : null;
     }
-    const elements = node.children.filter(isSvgElement);
-    if (elements.length === 0 && node !== root) return state.light === segment ? node : null;
     const attributes = new Map(node.attributes);
     attributes.delete('fill');
     attributes.delete('stroke');
+    const elements = node.children.filter(isSvgElement);
+    if (elements.length === 0 && node !== root) {
+      // Other painted leaves (`use`, `text`): target colour inherited from the variant, own colour dropped.
+      return pass.boundary === segment ? element(node.name, attributes, [...node.children]) : null;
+    }
     if (segment > 0) attributes.delete('id'); // ids stay unique: later copies of a group are anonymous
     const children = node.children.flatMap((child) => {
       if (!isSvgElement(child)) return [child];
-      const rebuilt = rebuild(child, inner, segment, state);
+      const rebuilt = rebuild(child, inner, segment, pass);
       return rebuilt === null ? [] : [rebuilt];
     });
     if (node !== root && elements.length > 0 && !children.some(isSvgElement)) return null;
+    spans.set(node, (spans.get(node) ?? 0) + 1);
     return element(node.name, attributes, children);
   };
-  const first = rebuild(root, ROOT, 0, { light: 0 });
+  const fresh = (): Pass => ({ boundary: 0, inked: false, open: false });
+  const first = rebuild(root, ROOT, 0, fresh());
   if (first === null || !isSvgElement(first))
     return err({ code: 'INVALID_SVG', reason: 'empty root' });
 
   let output = first;
   const warnings: MonoWarning[] = [];
-  if (holes.length > 0) {
-    const segments = [first];
-    for (let segment = 1; segment <= holes.length; segment += 1) {
-      const copy = rebuild(root, ROOT, segment, { light: 0 });
-      if (copy !== null && isSvgElement(copy)) segments.push(copy);
-      else segments.push(element(root.name, new Map()));
+  if (boundaries.length > 0) {
+    // A split the structural path cannot render faithfully goes to the raster path (§5.2): too many
+    // segments, a `use` whose target may be copied, a group whose opacity would be applied per segment.
+    const fallback: Result<MonoVariant, MonoError> = ok({
+      svg: serializeSvg(root),
+      path: 'raster-fallback-needed',
+      warnings: [],
+    });
+    if (boundaries.length > MAX_SEGMENTS || [...walk(root)].some((node) => node.name === 'use')) {
+      return fallback;
     }
+    const segments = [first];
+    for (let segment = 1; segment < boundaries.length + 1; segment += 1) {
+      const copy = rebuild(root, ROOT, segment, fresh());
+      segments.push(copy !== null && isSvgElement(copy) ? copy : element(root.name, new Map()));
+    }
+    const splitsCompositing = [...spans].some(
+      ([node, count]) => count > 1 && node !== root && node.attributes.has('opacity'),
+    );
+    if (splitsCompositing) return fallback;
     output = withKnockouts(
       first,
       segments,
-      holes,
+      boundaries,
       new Set([...walk(root)].flatMap((node) => node.attributes.get('id') ?? [])),
     );
     warnings.push('LIGHT_SURFACES_KNOCKED_OUT');
@@ -181,12 +212,13 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
   return ok({ svg: canonical.value.svg, path: 'structural', warnings });
 }
 
-// Segment k is masked by the light shapes painted after it (holes k…n, black = hole); the last segment,
-// painted after every light shape, is not masked.
+// Masks nest: segment 0 is wrapped in mask 0 (the holes of boundary 0), then together with segment 1 in
+// mask 1, and so on, so each segment is masked by every boundary painted after it while each hole is
+// written once (output linear in the number of light shapes). The last segment is not masked.
 function withKnockouts(
   root: SvgElement,
   segments: readonly SvgElement[],
-  holes: readonly SvgElement[],
+  boundaries: readonly (readonly SvgElement[])[],
   ids: ReadonlySet<string>,
 ): SvgElement {
   const free = (wanted: string): string => {
@@ -197,22 +229,25 @@ function withKnockouts(
   const extent = new Map(Object.entries(MASK_EXTENT));
   const isMeta = (child: SvgNode): boolean =>
     isSvgElement(child) && (child.name === 'title' || child.name === 'desc');
+  const artwork = (segment: SvgElement | undefined): SvgNode[] =>
+    (segment?.children ?? []).filter((child) => !isMeta(child));
   const masks: SvgElement[] = [];
-  const painted = segments.flatMap((segment, index) => {
-    const artwork = segment.children.filter((child) => !isMeta(child));
-    if (!artwork.some(isSvgElement)) return [];
-    if (index === holes.length) return artwork;
+  let painted = artwork(segments[0]);
+  boundaries.forEach((holes, index) => {
     const id = free(`logo-kit-knockout-${String(index + 1)}`);
     masks.push(
       element('mask', new Map([['id', id], ['maskUnits', 'userSpaceOnUse'], ...extent]), [
         element('rect', new Map([...extent, ['fill', '#FFFFFF']])),
-        ...holes.slice(index),
+        ...holes,
       ]),
     );
-    return [element('g', new Map([['mask', `url(#${id})`]]), artwork)];
+    const masked = painted.some(isSvgElement)
+      ? [element('g', new Map([['mask', `url(#${id})`]]), painted)]
+      : [];
+    painted = [...masked, ...artwork(segments[index + 1])];
   });
   return element(root.name, new Map(root.attributes), [
-    ...root.children.filter(isMeta),
+    ...segments.flatMap((segment) => segment.children.filter(isMeta)),
     element('defs', new Map(), masks),
     ...painted,
   ]);

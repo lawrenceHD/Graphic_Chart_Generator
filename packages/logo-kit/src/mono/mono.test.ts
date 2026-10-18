@@ -77,6 +77,56 @@ describe('monochromeSvg — structural path (05_ENGINES.md §5.1–§5.2)', () =
     expect(await score(original, variant.svg)).toBeGreaterThanOrEqual(0.97);
   });
 
+  it('each light shape is written once, consecutive ones share a mask (linear output)', () => {
+    // 40 ink / light pairs, then two lights in a row: 40 masks, each light shape written once.
+    const pairs = Array.from(
+      { length: 40 },
+      (_, k) =>
+        `<rect x="${String(k * 2)}" y="0" width="2" height="90" fill="#1F4BFF"/>` +
+        `<rect x="${String(k * 2)}" y="${String(k)}" width="1" height="1" fill="#FFFFFF"/>`,
+    ).join('');
+    const variant = mono(sanitized(`${pairs}<circle cx="5" cy="95" r="2" fill="#FFFFFF"/>`));
+
+    expect(variant.path).toBe('structural');
+    expect(variant.svg.match(/<mask /g)).toHaveLength(40);
+    expect(variant.svg.match(/fill="#FFFFFF"/g)).toHaveLength(40); // one white rect per mask
+    expect(variant.svg.match(/<circle /g)).toHaveLength(1);
+  });
+
+  it('too many ink / light alternations → raster fallback', () => {
+    const pairs = Array.from(
+      { length: 70 },
+      (_, k) =>
+        `<rect x="${String(k)}" y="0" width="1" height="90" fill="#1F4BFF"/>` +
+        `<rect x="${String(k)}" y="${String(k)}" width="1" height="1" fill="#FFFFFF"/>`,
+    ).join('');
+
+    expect(mono(sanitized(pairs)).path).toBe('raster-fallback-needed');
+  });
+
+  it('a <use> or a translucent group cut by a light shape → raster fallback, never a wrong render', () => {
+    const viaUse = sanitized(
+      '<defs><path id="s" d="M0 0h50v50z"/></defs><rect width="100" height="100" fill="#B3261E"/>' +
+        '<circle cx="50" cy="50" r="10" fill="#FFFFFF"/><use href="#s" fill="#B3261E"/>',
+    );
+    const translucent = sanitized(
+      '<g opacity="0.5"><rect width="60" height="60" fill="#B3261E"/>' +
+        '<circle cx="20" cy="20" r="5" fill="#FFFFFF"/><rect x="30" y="30" width="60" height="60" fill="#B3261E"/></g>',
+    );
+
+    expect(mono(viaUse).path).toBe('raster-fallback-needed');
+    expect(mono(translucent).path).toBe('raster-fallback-needed');
+  });
+
+  it('a <use> loses its colour in the variant', () => {
+    const variant = mono(
+      sanitized('<defs><path id="s" d="M0 0h50v50z"/></defs><use href="#s" fill="#B3261E"/>'),
+    );
+
+    expect(variant.path).toBe('structural');
+    expect(variant.svg).not.toContain('#B3261E');
+  });
+
   it('4. a white-only logo is kept, not emptied, in the white variant', async () => {
     const original = sanitized('<circle cx="50" cy="50" r="40" fill="#FFFFFF"/>');
     const variant = mono(original, '#FFFFFF');
