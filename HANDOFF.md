@@ -57,8 +57,10 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    (b) banc `tools/corpus/bench.mjs` (échantillon stratifié de 160 SVG par défaut, ~2 min ; le propriétaire a
    demandé de ne pas traiter les 1 432) ; (c) corrections A, B, C, D, halo JPEG et monochrome (ordre de peinture)
    sur la branche `fix/robust-logo-analysis`, chiffres dans `journal/OWNER_DECISIONS.md`, rapports avant/après
-   dans le dépôt privé (`reports/`). Suite : planches Pinterest (cadres, cartes, fonds dégradés : 77 % des images
-   réelles gardent un fond dominant) ; (d) corpus versionné redessiné en vrais logos ; (e) T-011 (les logos à
+   dans le dépôt privé (`reports/`). Liseré de présentation traité (2026-10-19). Les images réelles restantes
+   à « fond dominant » sont surtout des planches de marque complètes (hors usage prévu) ou des logos clairs sur
+   leur couleur (sortie juste). Pages de charte : écarts avec les 8 vraies chartes et critères proposés pour
+   T-022 dans `journal/research/2026-10-18-identite-visuelle.md` §9 ; (d) corpus versionné redessiné en vrais logos ; (e) T-011 (les logos à
    masque, filtre ou dégradé complexe gardent une fidélité monochrome < 0,95 en attendant la vectorisation). Le push vers `Graph_Charta` est refusé à l'agent par le classifieur : le propriétaire lance
    `git -C .cache/corpus-private push origin main`.
 4. T-016, reste à faire :
