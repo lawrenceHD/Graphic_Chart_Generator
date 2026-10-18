@@ -49,6 +49,13 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    `logo-kit/src/corpus.test.ts`) ; **validation visuelle du propriétaire attendue** (page « Corpus de 20 logos »).
    Ensuite T-011 sur ce corpus et sur `corpus-reel/` (logos réels déposés en vrac par le propriétaire, à trier).
    Point ouvert pour le propriétaire : réduction de palette §2.4 7a (voir `journal/OWNER_DECISIONS.md`).
+   **Mandat 2026-10-18 (propriétaire)** : exploiter à fond le corpus privé `Graph_Charta` (`pnpm corpus:fetch` :
+   1 432 SVG, 64 images, 8 chartes PDF). Fait : note `journal/research/2026-10-18-identite-visuelle.md`. Suite :
+   (a) fiches de vérité terrain par charte (codes officiels, polices, règles ; logos extraits **en SVG** des PDF
+   avec PyMuPDF, installé sur le poste) ; (b) banc d'essai chiffré sur tout le corpus ; (c) corrections A, B, C +
+   marges de présentation + fonds dégradés, mesurées avant/après ; (d) corpus versionné redessiné en vrais logos ;
+   (e) T-011. Le push vers `Graph_Charta` est refusé à l'agent par le classifieur : le propriétaire lance
+   `git -C .cache/corpus-private push origin main`.
 4. T-016, reste à faire :
    - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
    - variables Google.
