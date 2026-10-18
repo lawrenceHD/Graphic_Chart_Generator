@@ -210,6 +210,39 @@ Critères d'acceptation proposés (testables) :
 - **Interdits** : chaque règle est un SVG généré à partir du logo réel, repassé par `sanitizeSvg` ; au moins 8.
 - **Substitution** : `09_DESIGN_SYSTEM.md` §8, une colonne `fallback` (police système) par entrée du catalogue.
 
+## 10. Référentiel de livraison d'agence (fourni par le propriétaire, 2026-10-19)
+Kit méthodologique privé du propriétaire (5 fichiers, non versionné ici) : processus d'une agence qui dessine des
+logos, de la qualification du brief au contrat. Sans données ni sources ; il confirme des choix existants (CMJN
+indicatif « à valider avec l'imprimeur », pas de Pantone inventé, PDF de référence RVB, seuils WCAG, monochromes
+vérifiés sans ombre ni contour ajoutés) et apporte surtout la **livraison professionnelle**. Hors champ : brief
+créatif, pistes, contrat, dépôt de marque (le produit part d'un logo existant).
+
+Propositions (au chef de projet) :
+1. **Archive livrée (T-029, AC-12.3)** — arborescence fixe, dossiers vides retirés :
+   `00_LIRE_AVANT_UTILISATION/` (`README.txt`, `INVENTAIRE.md`), `01_LOGO/` (`vectoriel/`, `png-transparent/`,
+   `monochrome/`, `favicon/`), `02_CHARTE/charte-graphique.pdf`, `03_COULEURS_ET_TYPOGRAPHIES/`
+   (`design-tokens.json`, `tokens.css`, `palette.csv`, `contrast-matrix.csv`, `polices-et-licences.txt`),
+   `04_MOCKUPS/` (marqués « simulation »).
+2. **Nommage** : `<projet>_logo-<variante>_<couleur>_fond-<fond>.<ext>` (ex. `acme_logo-principal_noir_fond-
+   transparent.svg`, `acme_symbole_couleur_512px.png`), `<projet>` en slug ASCII ; test : tout nom de l'archive
+   respecte le motif.
+3. **README généré** : projet, version, date, contenu, rôle de chaque format (SVG, PDF, PNG, JPG), quatre règles
+   d'usage, limites réelles (CMJN indicatif, variantes « à vérifier » si fidélité < 0,97).
+4. **Contrôle qualité automatique de l'export (bloquant)** : l'archive se rouvre ; chaque PNG a ses dimensions
+   annoncées, un canal alpha réel et aucun pixel opaque blanc résiduel sur son pourtour ; chaque variante citée
+   dans la charte existe dans l'archive et inversement ; les codes couleur sont identiques dans le PDF, le JSON, le
+   CSS et le CSV (même source). Un échec bloque la livraison et nomme la cause (AC-06.4, AC-12.5).
+5. **Plan de charte (T-022, T-028)** : page de garde (marque, version, date) ; page concept (univers du brief) ;
+   page finale « inventaire des fichiers ». Pour chaque couleur : usages autorisés et associations à éviter, tirés
+   de la matrice de contraste (§9).
+6. **Typographie (`09_DESIGN_SYSTEM.md` §8)** : pour chaque police du catalogue, repli système, licence, lien
+   officiel, interlignages (corps 1,5, titres 1,15 par défaut) ; export `tokens.css` à côté de
+   `design-tokens.json`.
+7. **Taille minimale par usage** : impression (mm), écran (px), favicon (16–32 px), symbole seul (§9).
+8. **Interdits** : banque portée à 12 (ajouts : variante inadaptée au fond, empiètement sur la zone de
+   protection, fichier pixellisé, recomposition), dont au moins 8 illustrés (§9).
+9. **Mention juridique** dans le produit : la charte ne vaut ni recherche d'antériorité ni dépôt de marque.
+
 ## Sources
 - Aluminum Association, *Brand Guide* v1.0, 2017 — lu en entier :
   <https://www.aluminum.org/sites/default/files/2021-10/Aluminum_Assoc_BrandGuide_V3.pdf>
