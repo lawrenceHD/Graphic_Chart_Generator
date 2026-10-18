@@ -12,7 +12,8 @@ est suivi), comme la bibliothèque de `tools/logo-library/`.
 - **Robustesse** : JPEG compressés, fonds texturés, petites résolutions, comme ce que les utilisateurs enverront.
 
 ## Comment déposer
-Un dossier par marque, nom en minuscules sans espaces :
+En vrac : le propriétaire dépose tout à la racine du dossier, l'agent trie ensuite en un dossier par marque
+(nom en minuscules sans espaces) :
 
 ```
 corpus-reel/
