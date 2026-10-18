@@ -72,8 +72,9 @@ module.exports = {
     {
       name: 'raster-only-from-worker',
       severity: 'error',
-      comment: 'ADR-016: the Node rasterizer is imported by apps/worker and its own tests only',
-      from: { pathNot: '^(apps/worker/|packages/svg-engine/(src|dist)/raster/)' },
+      comment:
+        'ADR-016: the Node rasterizer is imported by apps/worker and by integration tests only',
+      from: { pathNot: '^(apps/worker/|packages/svg-engine/(src|dist)/raster/)|\\.test\\.ts$' },
       to: { path: '^packages/svg-engine/(src|dist)/raster/' },
     },
   ],
