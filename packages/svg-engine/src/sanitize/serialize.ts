@@ -40,6 +40,20 @@ export function normalizeRoot(root: CleanElement, warnings: SvgWarning[]): void 
   }
 }
 
+/** Nested viewBox (symbol, pattern, marker): canonical numbers, or dropped like renderers drop a malformed one. */
+export function normalizeNestedViewBoxes(element: CleanElement): void {
+  for (const child of element.children) {
+    if (!isCleanElement(child)) continue;
+    const raw = child.attributes.get('viewBox');
+    if (raw !== undefined) {
+      const viewBox = validViewBox(raw);
+      if (viewBox === undefined) child.attributes.delete('viewBox');
+      else child.attributes.set('viewBox', viewBox);
+    }
+    normalizeNestedViewBoxes(child);
+  }
+}
+
 const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const escapeText = (value: string): string =>

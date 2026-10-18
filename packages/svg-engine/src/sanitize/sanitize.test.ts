@@ -107,6 +107,23 @@ describe('sanitizeSvg — legitimate corpus', () => {
   });
 });
 
+describe('sanitizeSvg — nested viewBox', () => {
+  it('keeps a numeric nested viewBox and drops a malformed one (renderers ignore it anyway)', () => {
+    const symbol = (viewBox: string) =>
+      sanitizeSvg(
+        encode(
+          `${OPEN}<symbol id="s" viewBox="${viewBox}"><rect width="1" height="1"/></symbol></svg>`,
+        ),
+      );
+    const valid = symbol('0,0 10 10');
+    expect(valid.ok && valid.value.svg).toContain('<symbol id="s" viewBox="0 0 10 10">');
+    for (const malformed of ['onload0 0 10 10', '0 0 10', '0 0 -1 10', '1 2 3 x']) {
+      const result = symbol(malformed);
+      expect(result.ok && result.value.svg).toContain('<symbol id="s">');
+    }
+  });
+});
+
 describe('sanitizeSvg — properties', () => {
   const FORBIDDEN = ['onload', 'javascript:', '<script', '<!ENTITY'];
 

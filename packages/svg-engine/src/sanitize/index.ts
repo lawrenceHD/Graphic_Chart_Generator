@@ -9,7 +9,7 @@ import {
   type SvgWarning,
 } from './model.js';
 import { parseSvg } from './parse.js';
-import { normalizeRoot, serialize } from './serialize.js';
+import { normalizeNestedViewBoxes, normalizeRoot, serialize } from './serialize.js';
 import { checkUseExpansion, inlineRules, repairReferences } from './structure.js';
 
 export type { SvgWarning, WarningCode } from './model.js';
@@ -72,6 +72,7 @@ export function sanitizeSvgTree(bytes: Uint8Array): Result<SanitizedTree, AssetE
   const expansion = checkUseExpansion(root);
   if (!expansion.ok) return err(expansion.error);
   normalizeRoot(root, warnings);
+  normalizeNestedViewBoxes(root);
   return ok({ root, warnings });
 }
 
