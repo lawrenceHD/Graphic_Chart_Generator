@@ -51,11 +51,23 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - Importer d'ECC et de `logo-design-skill` ce qui sert au projet (sélection et raisons dans
   `.claude/skills/SOURCES.md`), ainsi que les MCP importants, pour un travail partagé entre Claude et Gemini.
 - Mettre en place un CHANGELOG et des fichiers de relais écrits pendant les tâches (`journal/PROTOCOL.md`).
-  activer les hooks ; trancher les bloqueurs de T-005, T-007 et T-010 (voir `HANDOFF.md`).
 - **Délégation générale** (2026-10-18, message du propriétaire) : Claude est l'acteur principal ; il corrige et
   améliore tout le projet, installe ce qui l'aide (avec mesure sur la sécurité), crée des agents, pousse ses travaux
   et tranche les points ouverts dans le cadre du projet. Gemini et Codex interviendront ponctuellement.
   Conséquence : les choix que l'agent fait sous cette délégation sont consignés ici avec la mention « (délégation) ».
 - **Push autorisé** des branches de travail.
-- **Bibliothèque de logos** : à récupérer pour le développement →  (cache local ignoré, marques non
+- **Bibliothèque de logos** : à récupérer pour le développement → `pnpm logos:fetch` (cache local ignoré, marques non
   redistribuées).
+
+## T-005 (délégation, 2026-10-18)
+- Images de test **générées par le code** (ticket) ; le corpus de 20 logos de `05_ENGINES.md` §6 reste à constituer
+  (logos libres de droits) et n'est pas un prérequis de T-005.
+- Ré-export minimal de l'API depuis `packages/color-engine/src/index.ts` (hors `src/extract/**`).
+- `mapToGamut` (§2.7, prévu en T-006) est implémenté dès T-005 dans `src/gamut.ts`, car les couleurs dérivées
+  (§2.6) l'exigent ; T-006 le réutilise.
+- Interprétations non écrites dans §2.4 : (1) étape 3, les voisins comparés sont les pixels **retenus à l'étape 1**
+  (y compris le fond exclu à l'étape 2, où se trouvent les mélanges) ; un voisin semi-transparent est ignoré ;
+  (2) étape 6, si plusieurs grappes sont à moins de `mergeThreshold`, la plus proche gagne (à égalité : la plus
+  ancienne) ; (3) étape 7, à égalité de distance, la grappe d'accueil au centre hexadécimal croissant ;
+  (4) `accent`, à égalité de `C` : part décroissante puis hexadécimal croissant ; (5) étape 2, la couleur la plus
+  fréquente du pourtour est départagée par hexadécimal croissant.
