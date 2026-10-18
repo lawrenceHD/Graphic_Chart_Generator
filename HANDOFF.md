@@ -22,7 +22,8 @@ main (5d95f32, = origin/main)
                         └─ ticket/T-008-raster-isolation  T-008 terminé, verify vert
                            └─ ticket/T-009-logo-mono  T-009 terminé, verify vert
                               └─ ticket/T-012-logo-rules  T-012 terminé + correctifs CI
-                                 └─ ticket/T-015-can  can()/authorize() (partie 1), verify vert
+                                 └─ ticket/T-015-can  can()/authorize() (partie 1), CI verte
+                                    └─ ticket/T-013-auth-spike  décision Better Auth + Argon2id
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 

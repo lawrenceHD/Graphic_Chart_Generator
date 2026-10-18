@@ -7,6 +7,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **T-013 — Spike authentification** (2026-10-18) : Better Auth 1.7.7 confirmé ; Argon2id natif de Node 24
+  (`apps/web/src/lib/password.ts`, sans dépendance) ; réglages SEC-01 à SEC-06 consignés.
 - **T-015 (partie 1) — Autorisation centrale** (2026-10-18) : `can()` (matrice ADR-025, refus par défaut, e-mail
   vérifié) et `authorize()` (401 / 404 / 403) ; 13 tests.
 - **T-012 — Règles du logo** (2026-10-18) : favicon (80 %, fond arrondi, avertissement d'allongement), zone
