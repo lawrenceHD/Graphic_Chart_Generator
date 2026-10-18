@@ -14,6 +14,23 @@ function isRequest(value: unknown): value is ChildRequest {
   );
 }
 
+// resvg returns premultiplied RGBA; the port promises straight alpha, otherwise a white anti-aliased edge
+// reads as grey (dark) in ink masks.
+function unpremultiply(pixels: Uint8Array): Uint8Array {
+  const straight = new Uint8Array(pixels);
+  for (let offset = 0; offset < straight.length; offset += 4) {
+    const alpha = straight[offset + 3] ?? 0;
+    if (alpha === 0 || alpha === 255) continue;
+    for (let channel = 0; channel < 3; channel += 1) {
+      straight[offset + channel] = Math.min(
+        255,
+        Math.round(((straight[offset + channel] ?? 0) * 255) / alpha),
+      );
+    }
+  }
+  return straight;
+}
+
 function answer(request: ChildRequest): ChildResponse {
   // No system fonts: sanitized SVGs contain no text, and font discovery would read the file system.
   const font = { loadSystemFonts: false };
@@ -31,6 +48,7 @@ function answer(request: ChildRequest): ChildResponse {
   return {
     kind: 'render',
     png: new Uint8Array(image.asPng()),
+    rgba: unpremultiply(new Uint8Array(image.pixels)),
     width: image.width,
     height: image.height,
   };

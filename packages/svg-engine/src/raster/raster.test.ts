@@ -29,6 +29,9 @@ describe('rasterize in an isolated child process (T-008, SEC-15)', () => {
     if (!result.ok) throw new Error(result.error.reason);
 
     expect([result.value.width, result.value.height]).toEqual([100, 100]);
+    expect(result.value.rgba).toHaveLength(100 * 100 * 4);
+    const centre = (50 * 100 + 50) * 4;
+    expect([...result.value.rgba.subarray(centre, centre + 4)]).toEqual([255, 0, 0, 255]);
     expect(await pixel(result.value.png, 50, 50)).toEqual([255, 0, 0, 255]);
     expect((await pixel(result.value.png, 1, 1))[3]).toBe(0);
   });
@@ -143,5 +146,23 @@ describe('normalizeRaster (05_ENGINES.md §4)', () => {
   it('refuses a non-raster file whatever its name', async () => {
     const result = await normalizeRaster(encode('<svg xmlns="http://www.w3.org/2000/svg"/>'));
     expect(!result.ok && result.error.code).toBe('ASSET_TYPE_UNSUPPORTED');
+  });
+});
+
+describe('RGBA pixels of the port', () => {
+  it('are straight alpha: an anti-aliased white edge stays white', async () => {
+    const svg = sanitized(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40.5" fill="#FFFFFF"/></svg>',
+    );
+    const result = await rasterizer.rasterize(svg, 100);
+    if (!result.ok) throw new Error(result.error.reason);
+    const { rgba } = result.value;
+    const edges: number[] = [];
+    for (let offset = 0; offset < rgba.length; offset += 4) {
+      const alpha = rgba[offset + 3] ?? 0;
+      if (alpha > 0 && alpha < 255) edges.push(rgba[offset] ?? 0);
+    }
+    expect(edges.length).toBeGreaterThan(0);
+    expect(Math.min(...edges)).toBeGreaterThanOrEqual(250);
   });
 });

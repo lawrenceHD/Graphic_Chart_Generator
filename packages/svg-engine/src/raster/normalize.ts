@@ -25,12 +25,15 @@ export async function normalizeRaster(
       return err({ code: 'ASSET_TOO_LARGE', reason: 'dimensions over 8192 px' });
     }
     // rotate() without angle applies the EXIF orientation; sharp writes no metadata unless asked to.
-    const { data, info } = await image
-      .rotate()
-      .ensureAlpha()
-      .png()
-      .toBuffer({ resolveWithObject: true });
-    return ok({ png: new Uint8Array(data), width: info.width, height: info.height });
+    const oriented = image.rotate().ensureAlpha();
+    const png = await oriented.clone().png().toBuffer({ resolveWithObject: true });
+    const rgba = await oriented.raw().toBuffer();
+    return ok({
+      png: new Uint8Array(png.data),
+      rgba: new Uint8Array(rgba),
+      width: png.info.width,
+      height: png.info.height,
+    });
   } catch {
     // sharp rejects with an Error for undecodable input; its message may echo internals, so it is dropped.
     return err({ code: 'ASSET_DECODE_FAILED', reason: 'raster could not be decoded' });

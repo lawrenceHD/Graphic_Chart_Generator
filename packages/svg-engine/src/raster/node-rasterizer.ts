@@ -49,8 +49,14 @@ function readResponse(message: unknown): Result<ChildResponse, RasterError> {
     names.every((name) => typeof field(name) === 'number');
   const kind = field('kind');
   const png = field('png');
-  if (kind === 'render' && png instanceof Uint8Array && numbers('width', 'height')) {
-    return ok({ kind, png, width: Number(field('width')), height: Number(field('height')) });
+  const rgba = field('rgba');
+  if (
+    kind === 'render' &&
+    png instanceof Uint8Array &&
+    rgba instanceof Uint8Array &&
+    numbers('width', 'height')
+  ) {
+    return ok({ kind, png, rgba, width: Number(field('width')), height: Number(field('height')) });
   }
   if (kind === 'bbox' && numbers('x', 'y', 'width', 'height')) {
     const [x, y, width, height] = ['x', 'y', 'width', 'height'].map((name) => Number(field(name)));
@@ -120,6 +126,7 @@ export function createNodeRasterizer(options: NodeRasterizerOptions = {}): Raste
       return response.value.kind === 'render'
         ? ok({
             png: response.value.png,
+            rgba: response.value.rgba,
             width: response.value.width,
             height: response.value.height,
           })

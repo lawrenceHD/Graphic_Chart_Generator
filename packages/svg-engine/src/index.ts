@@ -1,5 +1,11 @@
 export {
+  isSvgElement,
   sanitizeSvg,
+  sanitizeSvgTree,
+  serializeSvg,
+  type SanitizedTree,
+  type SvgElement,
+  type SvgNode,
   type SanitizedSvg,
   type SanitizeStats,
   type SvgWarning,

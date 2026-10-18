@@ -8,6 +8,7 @@ export type ChildResponse =
   | {
       readonly kind: 'render';
       readonly png: Uint8Array;
+      readonly rgba: Uint8Array;
       readonly width: number;
       readonly height: number;
     }

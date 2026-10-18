@@ -11,6 +11,7 @@ interface OpenElement {
 }
 
 const GEOMETRY_ATTRIBUTES = new Set(['d', 'points']);
+const PARSE_CHUNK = 64 * 1024;
 
 const tooComplex = (reason: string): AssetError => assetError('ASSET_SVG_TOO_COMPLEX', reason);
 
@@ -86,7 +87,11 @@ export function parseSvg(text: string): Result<RawElement, AssetError> {
   };
 
   try {
-    parser.write(text).close();
+    // Chunked so that parsing stops at the first broken limit instead of reading a hostile file to the end.
+    for (let start = 0; start < text.length && !failure; start += PARSE_CHUNK) {
+      parser.write(text.slice(start, start + PARSE_CHUNK));
+    }
+    if (!failure) parser.close();
   } catch {
     // sax rethrows a recorded error on the next write or close; the first failure is already kept.
     failure ??= assetError('ASSET_DECODE_FAILED', 'malformed XML');

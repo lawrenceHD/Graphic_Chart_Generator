@@ -17,6 +17,8 @@ export interface RasterError {
 
 export interface RasterImage {
   readonly png: Uint8Array;
+  /** Straight-alpha RGBA pixels of the same render, row-major (for pure analysis without a PNG decoder). */
+  readonly rgba: Uint8Array;
   readonly width: number;
   readonly height: number;
 }
