@@ -2,8 +2,9 @@ name: CI
 
 on:
   pull_request:
+  # Every pushed branch is verified: agents relay their work through branches (journal/PROTOCOL.md).
   push:
-    branches: [main]
+    branches: ['**']
 
 # Least privilege: the pipeline only reads the repository.
 permissions:
@@ -41,5 +42,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # On failure the error lines become annotations, readable through the public API without a token,
+      # so any agent can diagnose CI (job logs require authentication).
       - name: Run verify
-        run: pnpm verify
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! pnpm verify 2>&1 | tee verify.log; then
+            grep -E 'error|✖|FAIL|×|Error|warn' verify.log | tail -40 | sed 's/^/::error::/'
+            exit 1
+          fi
