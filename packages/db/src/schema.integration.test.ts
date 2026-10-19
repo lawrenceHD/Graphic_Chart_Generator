@@ -71,6 +71,7 @@ describe.runIf(adminUrl !== '')('schema and migrations against PostgreSQL (T-014
       'documents',
       'exports',
       'guest_sessions',
+      'project_events',
       'projects',
       'rate_limit',
       'revisions',

@@ -1,4 +1,5 @@
 import type { Actor, JobQueue } from '@app/contracts';
+import { listenProjectEvents } from '@app/db';
 import { startJobQueue, type JobRunner } from '@app/db/queue';
 import { createR2Storage } from '@app/storage';
 import { errorSummary } from '../lib/error-summary';
@@ -8,6 +9,8 @@ import { getRuntimeEnv } from '../lib/runtime-env';
 import { assetHandlers } from './asset-routes';
 import { actorFromSession, createAuth, type Auth } from './auth';
 import { documentHandlers } from './document-routes';
+import { createProjectEventHub, type ProjectEventHub } from './event-hub';
+import { eventHandlers } from './event-routes';
 import { guestActorFromCookie } from './guest-service';
 import { createLoginThrottle, type LoginThrottle } from './login-throttle';
 import { guestCookieOf, guestHandlers } from './guest-routes';
@@ -115,4 +118,26 @@ export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
     limiter: getRateLimiter(),
   });
   return assetRoutes;
+}
+
+// One LISTEN connection per process, opened by the first stream (event-hub.ts).
+let eventHub: ProjectEventHub | undefined;
+let eventRoutes: ReturnType<typeof eventHandlers> | undefined;
+
+export function getEventHandlers(): ReturnType<typeof eventHandlers> {
+  const logError = (event: string) => (error: unknown) => {
+    appLogger().error({ event, error: errorSummary(error) });
+  };
+  eventHub ??= createProjectEventHub(
+    (handlers) => listenProjectEvents(getRuntimeEnv().DATABASE_URL, handlers),
+    logError('project_events_listener_error'),
+  );
+  eventRoutes ??= eventHandlers({
+    orm: getDatabase().orm,
+    appUrl: getRuntimeEnv().APP_URL,
+    resolveActor,
+    hub: eventHub,
+    onError: logError('project_events_stream_error'),
+  });
+  return eventRoutes;
 }

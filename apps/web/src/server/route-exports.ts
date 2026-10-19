@@ -2,6 +2,7 @@
 export {
   getAssetHandlers,
   getDocumentHandlers,
+  getEventHandlers,
   getGuestHandlers,
   getProjectHandlers,
 } from './context';
