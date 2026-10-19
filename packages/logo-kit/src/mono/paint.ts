@@ -54,3 +54,11 @@ export function stopLuminance(stopColor: string | undefined): number {
   const paint = readPaint(stopColor ?? 'black');
   return paint.kind === 'color' ? paint.luminance : 0;
 }
+
+/** Identity of a paint for comparing colours: normalised hex, `url(#id)`, or undefined for none. */
+export function paintKey(value: string): string | undefined {
+  const text = value.trim().toLowerCase();
+  if (text === 'none' || text === 'transparent') return undefined;
+  if (/^url\(#[^)]+\)$/.test(value.trim())) return value.trim();
+  return hexOf(text) ?? text;
+}

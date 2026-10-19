@@ -7,10 +7,10 @@ import {
   type SvgElement,
   type SvgNode,
 } from '@app/svg-engine';
-import { LIGHT_LUMINANCE, readPaint, stopLuminance, type Paint } from './paint.js';
+import { LIGHT_LUMINANCE, paintKey, readPaint, stopLuminance, type Paint } from './paint.js';
 
 export type MonoTarget = '#000000' | '#FFFFFF';
-export type MonoWarning = 'LIGHT_SURFACES_KNOCKED_OUT';
+export type MonoWarning = 'LIGHT_SURFACES_KNOCKED_OUT' | 'MONO_STRUCTURE_LOST';
 export interface MonoVariant {
   readonly svg: string;
   readonly path: 'structural' | 'raster-fallback-needed';
@@ -60,13 +60,48 @@ function childContext(node: SvgElement, context: Context): Context {
   };
 }
 
-/** §5.2 black or white variant. */
-export function monochromeSvg(svg: string, target: MonoTarget): Result<MonoVariant, MonoError> {
-  return recolorSvg(svg, target);
+export interface MonoOptions {
+  /**
+   * Gap cut along each boundary between ink of different colours, as a share of the logo's larger side
+   * (0 = none, the §5.2 drawing). Painted in one colour, touching pieces of a multi-colour logo merge into a
+   * silhouette; the gap keeps them apart, as single-colour versions of such logos are drawn for print.
+   */
+  readonly separation?: number;
+  /** One shade of the target per ink colour (darkest colour → the target itself) instead of one colour. */
+  readonly tonal?: boolean;
 }
 
+/** §5.2 black or white variant. */
+export function monochromeSvg(
+  svg: string,
+  target: MonoTarget,
+  options: MonoOptions = {},
+): Result<MonoVariant, MonoError> {
+  return recolorSvg(svg, target, options);
+}
+
+/** Tonal monochrome: the target and lighter (or darker, for white) shades of it, one per ink colour. */
+export function tonalSvg(svg: string, target: MonoTarget): Result<MonoVariant, MonoError> {
+  return recolorSvg(svg, target, { tonal: true });
+}
+
+// Shades of a tonal variant: black ink spreads towards mid grey, white ink towards light grey, so every shade
+// stays far from the background it is meant for.
+const TONAL_RANGE: Record<MonoTarget, readonly [number, number]> = {
+  '#000000': [0, 150],
+  '#FFFFFF': [255, 165],
+};
+const grey = (level: number): string => {
+  const channel = Math.round(level).toString(16).padStart(2, '0').toUpperCase();
+  return `#${channel}${channel}${channel}`;
+};
+
 /** Same structural recolouring in any #RRGGBB colour (Do & Don't recolour panel, §5.6). */
-export function recolorSvg(svg: string, target: string): Result<MonoVariant, MonoError> {
+export function recolorSvg(
+  svg: string,
+  target: string,
+  options: MonoOptions = {},
+): Result<MonoVariant, MonoError> {
   const tree = sanitizeSvgTree(new TextEncoder().encode(svg));
   if (!tree.ok) return err({ code: 'INVALID_SVG', reason: tree.error.code });
   const root = tree.value.root;
@@ -101,14 +136,46 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
 
   // §5.1: light surfaces become holes only when the logo has some ink; a white-only logo keeps them.
   let hasInk = false;
+  const inkColours = new Map<string, number>(); // ink paint → luminance, for the tonal shades
   const visit = (node: SvgElement, context: Context): void => {
     if (node.name === 'clipPath' || PAINT_SERVERS.has(node.name)) return;
     const inner = childContext(node, context);
-    if (SHAPES.has(node.name) && surfaces(inner).some((value) => value < LIGHT_LUMINANCE))
+    if (SHAPES.has(node.name) && surfaces(inner).some((value) => value < LIGHT_LUMINANCE)) {
       hasInk = true;
+      const key = paintKey(inner.fill) ?? paintKey(inner.stroke);
+      const shade = luminance(readPaint(inner.fill)) ?? luminance(readPaint(inner.stroke));
+      if (key !== undefined && shade !== undefined) inkColours.set(key, shade);
+    }
     for (const child of node.children) if (isSvgElement(child)) visit(child, inner);
   };
   visit(root, ROOT);
+
+  // Tonal: darkest ink colour gets the target, the others evenly spaced shades (stable order: luminance, key).
+  const shades = new Map<string, string>();
+  if (options.tonal === true && (target === '#000000' || target === '#FFFFFF')) {
+    const [from, to] = TONAL_RANGE[target];
+    const ordered = [...inkColours].sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1));
+    ordered.forEach(([key], index) => {
+      const t = ordered.length === 1 ? 0 : index / (ordered.length - 1);
+      shades.set(key, grey(from + (to - from) * t));
+    });
+  }
+  const colourOf = (context: Context): string =>
+    shades.get(paintKey(context.fill) ?? paintKey(context.stroke) ?? '') ?? target;
+
+  // Separation gap, in user units of the root (viewBox or width/height; 100 when neither is set).
+  const box = (root.attributes.get('viewBox') ?? '')
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number);
+  const side =
+    box.length === 4 && box.every(Number.isFinite)
+      ? Math.max(box[2] ?? 0, box[3] ?? 0)
+      : Math.max(
+          Number(root.attributes.get('width') ?? 0),
+          Number(root.attributes.get('height') ?? 0),
+        ) || 100;
+  const gap = Math.max(0, options.separation ?? 0) * side;
 
   const paint = (node: SvgElement, context: Context, colour: string): Map<string, string> => {
     const attributes = new Map(node.attributes);
@@ -126,6 +193,7 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
     boundary: number; // segment of the ink being visited
     inked: boolean; // some ink already painted
     open: boolean; // light shapes met since the last ink: the next ink starts a new segment
+    colours: Set<string>; // ink colours painted so far (separation)
   }
   const boundaries: SvgElement[][] = [];
   const spans = new Map<SvgElement, number>(); // number of segments each group is copied into
@@ -149,10 +217,30 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
         }
         return null;
       }
+      // Separation: an ink shape of a new colour cuts a gap along its own outline into the ink painted before
+      // it (a stroke-only hole, same mechanism as a light shape), then paints itself over the inner half.
+      const key = paintKey(inner.fill);
+      if (gap > 0 && key !== undefined && pass.inked && [...pass.colours].some((c) => c !== key)) {
+        pass.open = true;
+        if (segment === 0) {
+          const outline = new Map(node.attributes);
+          outline.delete('fill');
+          outline.delete('stroke');
+          outline.set('fill', 'none');
+          outline.set('stroke', '#000000');
+          outline.set('stroke-width', String(gap));
+          outline.set('stroke-linejoin', 'round');
+          if (inner.transform !== '') outline.set('transform', inner.transform);
+          (boundaries[pass.boundary] ??= []).push(element(node.name, outline));
+        }
+      }
+      if (key !== undefined) pass.colours.add(key);
       if (pass.open) pass.boundary += 1;
       pass.open = false;
       pass.inked = true;
-      return pass.boundary === segment ? element(node.name, paint(node, inner, target)) : null;
+      return pass.boundary === segment
+        ? element(node.name, paint(node, inner, colourOf(inner)))
+        : null;
     }
     const attributes = new Map(node.attributes);
     attributes.delete('fill');
@@ -172,7 +260,7 @@ export function recolorSvg(svg: string, target: string): Result<MonoVariant, Mon
     spans.set(node, (spans.get(node) ?? 0) + 1);
     return element(node.name, attributes, children);
   };
-  const fresh = (): Pass => ({ boundary: 0, inked: false, open: false });
+  const fresh = (): Pass => ({ boundary: 0, inked: false, open: false, colours: new Set() });
   const first = rebuild(root, ROOT, 0, fresh());
   if (first === null || !isSvgElement(first))
     return err({ code: 'INVALID_SVG', reason: 'empty root' });

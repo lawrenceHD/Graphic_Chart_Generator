@@ -196,3 +196,21 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   comprise), une seule fois par transition.
 - **BLOCKER stockage de l'analyse** : option A retenue pour la partie 2 (variantes = assets `logo_variant`,
   palette dans `meta` de l'asset `logo_sanitized`, document composé à l'étape 4).
+
+## Variantes monochromes : structure (propriétaire, 2026-10-19) — à reporter dans `docs/05_ENGINES.md` §5.2 et §5.3
+- **Constat (propriétaire)** : des variantes monochromes « perdent leur forme ». Mesuré sur 39 logos multicolores de la
+  bibliothèque : le tracé §5.2 (tout en une couleur) efface le dessin intérieur de **27** d'entre eux (69 %) — les pièces
+  qui se touchent fusionnent en silhouette. Le score §5.3 (IoU des silhouettes) ne le voit pas : la silhouette est intacte.
+- **Score de structure** (`structureScore`) : part des frontières de couleur intérieures de l'original (pixels pleins
+  voisins d'écart RVB > 48, rendu 512 px) encore visibles dans la variante, par un vide ou un changement de teinte, dans
+  un rayon de 2 px. Seuil **0,9**.
+- **Variante une couleur séparée** (`monochromeSvg(…, { separation })`) : chaque forme d'une nouvelle couleur découpe un
+  filet le long de son contour dans l'encre peinte avant elle (même mécanisme que les évidements §5.1). Filet : **1,5 %**
+  du plus grand côté du logo. C'est le dessin des versions une couleur de ces logos pour l'impression.
+- **Choix** (`monochromeVariant`) : tracé §5.2 s'il garde la structure (≥ 0,9), sinon le tracé séparé ; avertissement
+  `MONO_STRUCTURE_LOST` si aucun n'y parvient. Sur le banc : les 27 cas perdus passent à ≥ 0,92.
+- **Variante tonale** (`tonalSvg`) : une nuance de la cible par couleur (noir → gris moyen ; blanc → gris clair) ;
+  structure gardée sur 38/39 logos. Proposée dans la charte à côté des variantes une couleur.
+- **À trancher par le chef de projet** : l'IoU d'une variante séparée descend à 0,85–0,99 (les filets retirent de
+  l'encre) ; la règle « ≥ 0,97 validée » de §5.3 doit s'appliquer au tracé non séparé, ou être remplacée par
+  « structure ≥ 0,9 et IoU ≥ 0,85 » pour une variante séparée.

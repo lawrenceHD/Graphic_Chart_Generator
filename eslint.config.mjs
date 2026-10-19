@@ -51,6 +51,8 @@ export default tseslint.config(
       'coverage/**',
       // Throwaway design prototype: own typecheck and browser gates (prototypes/studio/scripts/gates.mjs).
       'prototypes/**',
+      // Private corpus (separate repository): research tools, not project code.
+      '.cache/**',
     ],
   },
   ...tseslint.configs.strictTypeChecked,
