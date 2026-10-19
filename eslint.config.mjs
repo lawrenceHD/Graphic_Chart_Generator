@@ -49,6 +49,8 @@ export default tseslint.config(
       '**/next-env.d.ts',
       'docs/**',
       'coverage/**',
+      // Throwaway design prototype: own typecheck and browser gates (prototypes/studio/scripts/gates.mjs).
+      'prototypes/**',
     ],
   },
   ...tseslint.configs.strictTypeChecked,
