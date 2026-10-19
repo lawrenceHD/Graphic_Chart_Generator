@@ -1,15 +1,12 @@
-import {
-  useReducedMotion,
-  type TargetAndTransition,
-  type Transition,
-  type Variants,
-} from 'motion/react';
+import { type TargetAndTransition, type Transition, type Variants } from 'motion/react';
+import { useReduce } from './motion-pref';
 
 // docs/09_DESIGN_SYSTEM.md §4: one spring, one fade; transform and opacity only.
-export const spring: Transition = { type: 'spring', stiffness: 380, damping: 30, mass: 0.8 };
-export const softSpring: Transition = { type: 'spring', stiffness: 160, damping: 22, mass: 0.9 };
+// 09 §4 spring for direct feedback; a softer one for entrances and layout (owner: smoother motion).
+export const spring: Transition = { type: 'spring', stiffness: 300, damping: 30, mass: 0.8 };
+export const softSpring: Transition = { type: 'spring', stiffness: 120, damping: 20, mass: 1 };
 export const fade: Transition = { duration: 0.2, ease: [0.16, 1, 0.3, 1] };
-export const reveal: Transition = { duration: 0.6, ease: [0.16, 1, 0.3, 1] };
+export const reveal: Transition = { duration: 0.8, ease: [0.16, 1, 0.3, 1] };
 
 /** Entrance: 12 px rise + fade; under reduced motion, fade only (taste/motion-choreography). */
 export function useRise(delay = 0): {
@@ -18,7 +15,7 @@ export function useRise(delay = 0): {
   viewport: { once: boolean; margin: string };
   transition: Transition;
 } {
-  const reduce = useReducedMotion();
+  const reduce = useReduce();
   return {
     initial: reduce ? { opacity: 0 } : { opacity: 0, y: 16 },
     whileInView: { opacity: 1, y: 0 },

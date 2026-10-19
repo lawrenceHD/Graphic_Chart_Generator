@@ -1,14 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MotionConfig } from 'motion/react';
 import { App } from './App';
+import { MotionPreference } from './lib/motion-pref';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {/* "user": every Motion animation follows prefers-reduced-motion (09 §4). */}
-    <MotionConfig reducedMotion="user">
+    {/* Follows prefers-reduced-motion unless the viewer opts in or out (lib/motion-pref.tsx). */}
+    <MotionPreference>
       <App />
-    </MotionConfig>
+    </MotionPreference>
   </StrictMode>,
 );

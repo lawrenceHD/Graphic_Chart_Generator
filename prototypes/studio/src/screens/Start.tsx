@@ -1,4 +1,5 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useReduce } from '../lib/motion-pref';
 import { ArrowLeft, ArrowRight, Check, ImageUp, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BRANDS, svgUrl } from '../lib/brand';
@@ -21,7 +22,7 @@ const UNIVERSES = [
 ];
 
 export function Start() {
-  const reduce = useReducedMotion();
+  const reduce = useReduce();
   const [slug, setSlug] = useState<string | null>(null);
   const [brief, setBrief] = useState('');
   const [sending, setSending] = useState(false);
@@ -155,7 +156,9 @@ export function Start() {
                   onClick={() => pick(b.slug)}
                   className={`relative flex aspect-square flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border bg-preview p-3 ${chosen ? 'border-accent' : 'border-line'}`}
                 >
-                  <img src={svgUrl(b.logo)} alt="" className="h-1/2 w-3/4 object-contain" />
+                  <span className="grid h-3/5 w-4/5 place-items-center rounded-[18px] bg-white p-2">
+                    <img src={svgUrl(b.logo)} alt="" className="h-full w-full object-contain" />
+                  </span>
                   <span className="text-xs text-ink">{b.name}</span>
                   <AnimatePresence>
                     {chosen && (

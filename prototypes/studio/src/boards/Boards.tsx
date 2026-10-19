@@ -1,4 +1,5 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useReduce } from '../lib/motion-pref';
 import { Check, Minus, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { svgUrl, type Brand } from '../lib/brand';
@@ -56,7 +57,7 @@ function Sheet({
 }) {
   return (
     <div
-      className="@container relative flex aspect-[210/297] w-full flex-col overflow-hidden rounded-[6px] shadow-[0_1px_0_rgb(255_255_255/0.06)_inset,0_30px_60px_-30px_rgb(0_0_0/0.7)]"
+      className="@container relative flex aspect-[210/297] w-full flex-col overflow-hidden rounded-[22px] shadow-[0_1px_0_rgb(255_255_255/0.06)_inset,0_30px_60px_-30px_rgb(0_0_0/0.7)]"
       style={{
         background: dark ? palette.dark : '#FFFFFF',
         color: dark ? '#FFFFFF' : palette.dark,
@@ -109,7 +110,7 @@ function CoverBoard({ brand, palette }: BoardProps) {
   return (
     // The container holds no cqw value itself: its content does (inner block), sized from it.
     <div
-      className="@container relative aspect-[210/297] w-full overflow-hidden rounded-[6px] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.7)]"
+      className="@container relative aspect-[210/297] w-full overflow-hidden rounded-[22px] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.7)]"
       style={{
         background: palette.primary,
         color: inkOn(palette.primary),
@@ -190,7 +191,7 @@ function LogoBoard({ brand, palette }: BoardProps) {
 }
 
 function PaletteBoard({ brand, palette, progress }: BoardProps) {
-  const reduce = useReducedMotion();
+  const reduce = useReduce();
   const keys: PaletteKey[] = ['primary', 'accent', 'light', 'dark'];
   const shown = Math.ceil(progress * (keys.length + 1));
   return (

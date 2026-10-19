@@ -29,7 +29,8 @@ for (const route of routes) {
       await page.goto(base + route, { waitUntil: 'networkidle' });
       // Let the simulated analysis finish so the final studio is what gets audited.
       await page.waitForTimeout(
-        route.includes('studio') ? (motion === 'reduce' ? 10500 : 10500) : 1200,
+        // Entrances finished too: an element caught mid-fade would read as low contrast.
+        route.includes('studio') ? 12000 : 2000,
       );
       const label = `${route.padEnd(16)} ${String(width).padStart(4)} px  ${motion.padEnd(13)}`;
       const overflow = await page.evaluate(

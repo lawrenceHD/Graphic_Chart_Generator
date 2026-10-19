@@ -1,4 +1,5 @@
-import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'motion/react';
+import { AnimatePresence, motion, type PanInfo } from 'motion/react';
+import { useReduce } from '../lib/motion-pref';
 import {
   ArrowLeft,
   ArrowUp,
@@ -31,6 +32,7 @@ import {
   type AnalysisState,
 } from '../lib/stream';
 import { navigate, useMediaQuery } from '../router';
+import { Burst } from '../components/Burst';
 import { ExportDialog } from '../components/ExportDialog';
 
 const DISPLAY_FONTS = [
@@ -51,7 +53,7 @@ function boardState(board: BoardSpec, analysis: AnalysisState): BoardState {
 
 export function Studio({ slug }: { slug: string | undefined }) {
   const brand = useMemo(() => BRANDS.find((b) => b.slug === slug) ?? BRANDS[0]!, [slug]);
-  const reduce = useReducedMotion() ?? false;
+  const reduce = useReduce() ?? false;
   const [runKey, setRunKey] = useState(0);
   const [paused, setPaused] = useState(false);
   const analysis = useAnalysisStream(`${brand.slug}:${String(runKey)}`, paused, false);
@@ -226,6 +228,10 @@ export function Studio({ slug }: { slug: string | undefined }) {
           </motion.div>
         )}
       </AnimatePresence>
+      <Burst
+        play={analysis.done}
+        colors={[palette.primary, palette.accent, palette.light, '#ffffff']}
+      />
       <ExportDialog open={exporting} onClose={() => setExporting(false)} brand={brand} />
     </div>
   );
@@ -636,7 +642,7 @@ function Canvas({ brand, palette, analysis, selected, setSelected, reduce }: Sha
           className="flex gap-12"
         >
           {BOARDS.map((board, index) => (
-            <div key={board.key} className="relative w-[420px] shrink-0">
+            <div key={board.key} className="relative w-[460px] shrink-0">
               <button
                 type="button"
                 onClick={() => setSelected(board.key)}
@@ -649,7 +655,7 @@ function Canvas({ brand, palette, analysis, selected, setSelected, reduce }: Sha
               </button>
               <div
                 onPointerDown={() => setSelected(board.key)}
-                className={`rounded-[10px] outline-offset-[6px] transition-[outline-color] ${selected === board.key ? 'outline outline-2 outline-accent' : 'outline outline-2 outline-transparent'}`}
+                className={`rounded-[24px] outline-offset-[8px] transition-[outline-color] ${selected === board.key ? 'outline outline-2 outline-accent' : 'outline outline-2 outline-transparent'}`}
               >
                 <BoardSlot
                   board={board}
@@ -965,10 +971,10 @@ function MobileStudio(
         {BOARDS.map((board, index) => (
           <section
             key={board.key}
-            className="flex w-full shrink-0 snap-center justify-center px-5 pt-2"
+            className="flex w-full shrink-0 snap-center justify-center px-4 pt-2"
             aria-label={board.title}
           >
-            <div className="w-full max-w-[420px]">
+            <div className="w-full max-w-[460px]">
               <BoardSlot
                 board={board}
                 brand={brand}
@@ -983,7 +989,7 @@ function MobileStudio(
       </div>
       <motion.section
         aria-label="Copilote et réglages"
-        className="glass fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[24px] border-t border-line bg-surface/95 backdrop-blur-xl"
+        className="glass fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[32px] border-t border-line bg-surface/95 backdrop-blur-xl"
         animate={{ height: heights[sheet] }}
         transition={reduce ? { duration: 0 } : spring}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

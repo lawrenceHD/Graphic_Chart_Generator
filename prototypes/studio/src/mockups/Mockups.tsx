@@ -32,7 +32,7 @@ function Frame({
 }) {
   return (
     <figure
-      className={`relative m-0 overflow-hidden rounded-[var(--radius-lg)] ${className}`}
+      className={`photo-finish relative m-0 overflow-hidden rounded-[28px] ${className}`}
       aria-label={label}
     >
       {children}
