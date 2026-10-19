@@ -151,3 +151,50 @@ export async function structureScore(
   const kept = boundaries.filter((pixel) => visibleIn(variant.value, pixel)).length;
   return ok(kept / boundaries.length);
 }
+
+/**
+ * Share of the original's covered pixels that a variant leaves uncovered *and open to the outside* (reached
+ * from the image border through uncovered pixels). Holes cut inside the logo (lettering knocked out of a
+ * badge) do not count; an element that simply vanished does. Guards the knockout candidate.
+ */
+export async function exteriorLoss(
+  originalSvg: string,
+  variantSvg: string,
+  rasterizer: Rasterizer,
+): Promise<Result<number, RasterError>> {
+  const [original, variant] = await Promise.all([
+    rasterizer.rasterize(originalSvg, STRUCTURE_WIDTH),
+    rasterizer.rasterize(variantSvg, STRUCTURE_WIDTH),
+  ]);
+  if (!original.ok) return original;
+  if (!variant.ok) return variant;
+  const { width, height } = variant.value;
+  if (original.value.height !== height) {
+    return err({ code: 'RASTER_FAILED', reason: 'original and variant sizes differ' });
+  }
+  const covered = coverageMask(original.value);
+  const open = coverageMask(variant.value).map((value) => 1 - value);
+  // Flood the variant's uncovered pixels from the border (4-connected).
+  const outside = new Uint8Array(width * height);
+  const stack: number[] = [];
+  for (let x = 0; x < width; x += 1) stack.push(x, (height - 1) * width + x);
+  for (let y = 0; y < height; y += 1) stack.push(y * width, y * width + width - 1);
+  while (stack.length > 0) {
+    const pixel = stack.pop() ?? 0;
+    if (outside[pixel] === 1 || open[pixel] !== 1) continue;
+    outside[pixel] = 1;
+    const x = pixel % width;
+    if (x > 0) stack.push(pixel - 1);
+    if (x < width - 1) stack.push(pixel + 1);
+    if (pixel >= width) stack.push(pixel - width);
+    if (pixel < width * (height - 1)) stack.push(pixel + width);
+  }
+  let total = 0;
+  let lost = 0;
+  for (let pixel = 0; pixel < covered.length; pixel += 1) {
+    if (covered[pixel] !== 1) continue;
+    total += 1;
+    if (outside[pixel] === 1) lost += 1;
+  }
+  return ok(total === 0 ? 0 : lost / total);
+}

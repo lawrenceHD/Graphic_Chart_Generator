@@ -69,6 +69,12 @@ export interface MonoOptions {
   readonly separation?: number;
   /** One shade of the target per ink colour (darkest colour → the target itself) instead of one colour. */
   readonly tonal?: boolean;
+  /**
+   * Luminance from which a surface is light, i.e. a knockout (§5.1: 0.9). Lowered, light-ish lettering on a
+   * dark badge is knocked out instead of merging with it; monochromeVariant only keeps that drawing when
+   * nothing it removes opens onto the outside.
+   */
+  readonly lightThreshold?: number;
 }
 
 /** §5.2 black or white variant. */
@@ -129,9 +135,10 @@ export function recolorSvg(
         : (servers.get(paint.id) ?? 0);
   const surfaces = (context: Context): number[] =>
     [readPaint(context.fill), readPaint(context.stroke)].flatMap((paint) => luminance(paint) ?? []);
+  const light = options.lightThreshold ?? LIGHT_LUMINANCE;
   const isLight = (context: Context): boolean => {
     const parts = surfaces(context);
-    return parts.length > 0 && parts.every((value) => value >= LIGHT_LUMINANCE);
+    return parts.length > 0 && parts.every((value) => value >= light);
   };
 
   // §5.1: light surfaces become holes only when the logo has some ink; a white-only logo keeps them.
@@ -140,7 +147,7 @@ export function recolorSvg(
   const visit = (node: SvgElement, context: Context): void => {
     if (node.name === 'clipPath' || PAINT_SERVERS.has(node.name)) return;
     const inner = childContext(node, context);
-    if (SHAPES.has(node.name) && surfaces(inner).some((value) => value < LIGHT_LUMINANCE)) {
+    if (SHAPES.has(node.name) && surfaces(inner).some((value) => value < light)) {
       hasInk = true;
       const key = paintKey(inner.fill) ?? paintKey(inner.stroke);
       const shade = luminance(readPaint(inner.fill)) ?? luminance(readPaint(inner.stroke));

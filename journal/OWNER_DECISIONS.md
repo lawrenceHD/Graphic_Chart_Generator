@@ -207,8 +207,14 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - **Variante une couleur séparée** (`monochromeSvg(…, { separation })`) : chaque forme d'une nouvelle couleur découpe un
   filet le long de son contour dans l'encre peinte avant elle (même mécanisme que les évidements §5.1). Filet : **1,5 %**
   du plus grand côté du logo. C'est le dessin des versions une couleur de ces logos pour l'impression.
-- **Choix** (`monochromeVariant`) : tracé §5.2 s'il garde la structure (≥ 0,9), sinon le tracé séparé ; avertissement
-  `MONO_STRUCTURE_LOST` si aucun n'y parvient. Sur le banc : les 27 cas perdus passent à ≥ 0,92.
+- **Choix** (`monochromeVariant`) : tracés essayés dans l'ordre — §5.2 ; **évidements** (surfaces de luminance ≥ 0,6
+  évidées au lieu de 0,9 : lettrage clair sur un badge sombre) ; **séparé** — le premier qui garde la structure
+  (≥ 0,9) l'emporte. Un tracé à évidements est refusé s'il ouvre plus de 1 % de l'encre de l'original sur l'extérieur
+  (`exteriorLoss` : un élément qui disparaîtrait au lieu d'être évidé). Avertissement `MONO_STRUCTURE_LOST` si aucun
+  n'y parvient. Sur le banc : les 27 cas perdus passent à ≥ 0,92.
+- **Limite connue** : un « logo » livré avec son fond de présentation (extraction de PDF : page blanche, panneaux
+  pleine page découpés par `clipPath`) reste un pavé (structure 0). À traiter avec la détection de fond de l'analyse
+  (décisions A et D), sans casser les logos dont le fond carré est le logo (icônes d'application).
 - **Variante tonale** (`tonalSvg`) : une nuance de la cible par couleur (noir → gris moyen ; blanc → gris clair) ;
   structure gardée sur 38/39 logos. Proposée dans la charte à côté des variantes une couleur.
 - **À trancher par le chef de projet** : l'IoU d'une variante séparée descend à 0,85–0,99 (les filets retirent de

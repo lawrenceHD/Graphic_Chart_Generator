@@ -13,6 +13,7 @@ export {
   fidelityScore,
   inkMask,
   iou,
+  exteriorLoss,
   structureScore,
   type RgbaRaster,
 } from './fidelity.js';

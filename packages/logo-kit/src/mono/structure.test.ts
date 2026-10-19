@@ -84,4 +84,37 @@ describe('structure of monochrome variants', () => {
     expect(plain.value.separated).toBe(false);
     expect(plain.value.svg).toBe(mono(PLAIN).svg);
   });
+
+  it('a badge with light-ish lettering on it keeps the lettering as knockouts (not a solid block)', async () => {
+    // Cream lettering (luminance 0.88, just under the §5.1 light threshold) on a dark badge.
+    const badge = sanitized(
+      '<rect x="5" y="25" width="90" height="50" rx="10" fill="#003D29"/>' +
+        '<rect x="20" y="40" width="12" height="20" fill="#FAF1E5"/>' +
+        '<rect x="44" y="40" width="12" height="20" fill="#FAF1E5"/>' +
+        '<rect x="68" y="40" width="12" height="20" fill="#FAF1E5"/>',
+    );
+    expect(await structure(badge, mono(badge).svg)).toBeLessThan(0.2);
+    const chosen = await monochromeVariant(badge, '#000000', rasterizer);
+    if (!chosen.ok) throw new Error('variant failed');
+    expect(chosen.value.structure).toBeGreaterThanOrEqual(0.9);
+    const raster = await rasterizer.rasterize(chosen.value.svg, 100);
+    if (!raster.ok) throw new Error('raster failed');
+    const alpha = (x: number, y: number): number => raster.value.rgba[(y * 100 + x) * 4 + 3] ?? 0;
+    expect(alpha(26, 50)).toBe(0); // inside a letter: knocked out
+    expect(alpha(10, 50)).toBe(255); // the badge itself: ink
+  });
+
+  it('a light element overlapping the ink edge is never erased to gain structure', async () => {
+    // Dark word and a light yellow mark overlapping its edge: knocking the mark out would erase its outer
+    // part, which opens onto the outside.
+    const side = sanitized(
+      '<rect x="5" y="30" width="50" height="40" fill="#1A1A1A"/>' +
+        '<circle cx="64" cy="50" r="16" fill="#FFE07A"/>',
+    );
+    const chosen = await monochromeVariant(side, '#000000', rasterizer);
+    if (!chosen.ok) throw new Error('variant failed');
+    const raster = await rasterizer.rasterize(chosen.value.svg, 100);
+    if (!raster.ok) throw new Error('raster failed');
+    expect(raster.value.rgba[(50 * 100 + 74) * 4 + 3]).toBe(255); // the mark's outer part is still drawn
+  });
 });
