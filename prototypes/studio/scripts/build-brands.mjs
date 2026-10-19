@@ -72,7 +72,12 @@ for (const brand of BRANDS) {
   };
   const order = [pal.primary, pal.accent, pal.neutralLight, pal.neutralDark];
   const matrix = color.buildContrastMatrix(order);
-  const mono = (target) => unwrap(logoKit.monochromeSvg(svg, target), 'mono');
+  // The variant the product shows: plain drawing, or separated when it would lose the logo's structure.
+  const mono = async (target) =>
+    unwrap(await logoKit.monochromeVariant(svg, target, rasterizer), 'mono');
+  const black = await mono('#000000');
+  const white = await mono('#FFFFFF');
+  const tonal = unwrap(logoKit.tonalSvg(svg, '#000000'), 'tonal');
   const { file: _file, note: _note, ...meta } = brand;
   brands.push({
     ...meta,
@@ -96,7 +101,14 @@ for (const brand of BRANDS) {
       ratio: Math.round(c.ratio * 100) / 100,
       level: c.level,
     })),
-    mono: { black: mono('#000000').svg, white: mono('#FFFFFF').svg, path: mono('#000000').path },
+    mono: {
+      black: black.svg,
+      white: white.svg,
+      tonal: tonal.svg,
+      path: black.path,
+      separated: black.separated,
+      structure: black.structure,
+    },
     clearSpace: unwrap(logoKit.clearSpaceDiagramSvg(svg, bbox, 0.25, '#F5F5F5'), 'clear space'),
     favicon: unwrap(logoKit.faviconSvg(svg, bbox, { background: pal.neutralLight }), 'favicon').svg,
     donts: unwrap(logoKit.dosAndDontsSvg(svg, bbox, pal), 'donts').map((panel) => ({

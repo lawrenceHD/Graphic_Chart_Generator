@@ -23,7 +23,14 @@ export interface Brand {
   extra: ColorInfo[];
   scales: { primary: { step: number; hex: string }[]; accent: { step: number; hex: string }[] };
   contrast: { text: string; background: string; ratio: number; level: string }[];
-  mono: { black: string; white: string; path: string };
+  mono: {
+    black: string;
+    white: string;
+    tonal: string;
+    path: string;
+    separated: boolean;
+    structure: number | null;
+  };
   clearSpace: string;
   favicon: string;
   donts: { kind: string; svg: string }[];

@@ -148,8 +148,12 @@ function CoverBoard({ brand, palette }: BoardProps) {
 
 function LogoBoard({ brand, palette }: BoardProps) {
   const tiles = [
-    { label: 'Couleur', bg: '#FFFFFF', svg: brand.logo, border: true },
-    { label: 'Noir', bg: palette.light, svg: brand.mono.black },
+    {
+      label: brand.mono.separated ? 'Une couleur (filets)' : 'Une couleur',
+      bg: palette.light,
+      svg: brand.mono.black,
+    },
+    { label: 'Niveaux de gris', bg: '#FFFFFF', svg: brand.mono.tonal, border: true },
     { label: 'Blanc', bg: palette.dark, svg: brand.mono.white },
     {
       label: 'Sur couleur',
