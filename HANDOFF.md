@@ -30,6 +30,7 @@ main (5d95f32, = origin/main)
                                                 └─ ticket/T-018-asset-upload  upload présigné, file pg-boss, worker asset.scan
                                                    └─ fix/robust-logo-analysis  banc du corpus, extraction et monochrome robustes (A–D), verify vert
                                                       └─ ticket/T-019-analyze-events  partie 1 : journal project_events, flux SSE, asset.status ; verify vert
+                                                         └─ proto/studio-prototype  maquette navigable (prototypes/studio), gates vertes
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -49,6 +50,13 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    (décisions dans `journal/OWNER_DECISIONS.md`).
    **Interface** : note `journal/research/2026-10-19-interface-studio.md` (ancien front, inspirations, modèle Stitch,
    kit XIAS) ; décisions du propriétaire attendues (§5 : animation, gel de la landing, thème).
+   **Maquette** (2026-10-19, demande du propriétaire) : `prototypes/studio/` (README), hors `pnpm verify`, ses propres
+   contrôles (`node scripts/gates.mjs`). Avis du propriétaire attendu avant T-020.
+   **Défauts moteur trouvés par la maquette (à corriger)** :
+   - resvg panique (`geom.rs:27`, unwrap sur None) sur 4 des 7 SVG extraits des chartes PDF (clipPath nombreux) :
+     ces uploads finiraient `RASTER_FAILED`. Reproduire avec `charters/cfdt/cfdt.svg` du corpus privé.
+   - Variante blanche d'un logo à forme de fond (Instacart) : la forme de fond est peinte dans la couleur cible,
+     la variante devient un pavé plein. `logo-kit` mono doit écarter une forme de fond couvrant la zone du logo.
 2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
    d'upload et de session invitée sont faites.
 3. ~~Worker : lettres mortes~~ fait. ~~Corpus de 20 logos~~ fait (`packages/svg-engine/fixtures/corpus/`, test
