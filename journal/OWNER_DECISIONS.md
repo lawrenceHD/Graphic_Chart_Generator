@@ -178,3 +178,21 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   d'une seule couleur (≥ 90 % à ΔE_OK < 0,10 de sa couleur la plus fréquente). Le liseré part avec le fond. Cas
   réel : export encadré d'un trait clair de 2 px, fond marine jamais retiré (94 % de la palette) ; après, les trois
   couleurs du logo. Garde-fous testés : marge transparente, tuile arrondie recadrée au ras sur blanc.
+
+## T-019 partie 1 (délégation, 2026-10-19) — à reporter dans `docs/03_DATA_MODEL.md` et `docs/04_API_CONTRACTS.md` §5
+- **BLOCKER reprise SSE tranché : option A.** Table `project_events` (id identité croissant, `project_id`, `type`,
+  `data` jsonb validé par `ProjectEventSchema`, `created_at`), migration `0001_project_events`. NOTIFY ne garde rien ;
+  le client reconnecté rejoue les lignes après `Last-Event-ID`.
+- **Ordre garanti** : chaque écrivain ajoute l'événement dans la transaction du changement qu'il annonce, sous un
+  verrou consultatif par projet (`pg_advisory_xact_lock`) : les id d'un projet deviennent visibles dans l'ordre, un
+  lecteur ne peut pas sauter un id validé plus tard.
+- **Flux** : une connexion LISTEN par processus web ; le réveil dit seulement « relis » (curseur d'id), donc une
+  notification perdue ou dupliquée ne perd ni ne répète rien. Battement `: ping` toutes les 15 s, qui relit aussi
+  le journal (rattrapage au pire 15 s). `retry: 3000`. Le flux se ferme au bout de 10 min : le client se reconnecte
+  et ses droits sont revérifiés (`project:read`). `Last-Event-ID` mal formé → rejeu complet.
+- **Rétention** : 24 h (job horaire), et les événements partent avec leur projet. Au-delà, le client recharge
+  l'état du projet (`GET /projects/:id`).
+- **`asset.status`** : émis à `quarantined` (web, `complete`), `clean` et `rejected` (worker, lettre morte
+  comprise), une seule fois par transition.
+- **BLOCKER stockage de l'analyse** : option A retenue pour la partie 2 (variantes = assets `logo_variant`,
+  palette dans `meta` de l'asset `logo_sanitized`, document composé à l'étape 4).

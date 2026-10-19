@@ -5,7 +5,7 @@
 
 ## Agent actif
 - **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-18
-- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 en cours : T-018 fait ; suite T-019.
+- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 en cours : T-019 partie 1 faite (événements SSE) ; suite T-019 partie 2 (job d'analyse).
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
 ## Branches (empilées, poussées sur origin le 2026-10-18)
@@ -29,6 +29,7 @@ main (5d95f32, = origin/main)
                                              └─ ticket/T-017-guest-sessions  sessions invitées + SEC-05, CI verte
                                                 └─ ticket/T-018-asset-upload  upload présigné, file pg-boss, worker asset.scan
                                                    └─ fix/robust-logo-analysis  banc du corpus, extraction et monochrome robustes (A–D), verify vert
+                                                      └─ ticket/T-019-analyze-events  partie 1 : journal project_events, flux SSE, asset.status ; verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -42,8 +43,12 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    Le classifieur de Claude Code refuse que l'agent écrive dans `.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`.
 
 ## Prochaines actions (ordre recommandé)
-1. **T-019** : job `project.analyze` (palette `color-engine` + variantes `logo-kit` depuis `logo_sanitized`,
-   sans IA) et flux SSE `GET /projects/:id/events` (NOTIFY PostgreSQL), dont l'événement `asset.status` de T-018.
+1. **T-019 partie 2** : job `project.analyze` (palette `color-engine` avec `brandClusters`, variantes `logo-kit` depuis
+   `logo_sanitized`, sans IA), `POST /projects/:id/analyze` (`Idempotency-Key`), événements `analysis.step` et
+   `analysis.done`. Partie 1 faite : table `project_events`, `GET /projects/:id/events`, `asset.status`
+   (décisions dans `journal/OWNER_DECISIONS.md`).
+   **Interface** : note `journal/research/2026-10-19-interface-studio.md` (ancien front, inspirations, modèle Stitch,
+   kit XIAS) ; décisions du propriétaire attendues (§5 : animation, gel de la landing, thème).
 2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
    d'upload et de session invitée sont faites.
 3. ~~Worker : lettres mortes~~ fait. ~~Corpus de 20 logos~~ fait (`packages/svg-engine/fixtures/corpus/`, test
@@ -86,17 +91,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 | 9 | Basse | `apps/web/src/health-response.ts:5` | Cause de la panne de base avalée sans log | T-002 |
 
 ## Questions ouvertes (BLOCKER)
-- **T-019** :
-  - BLOCKER — reprise SSE (`Last-Event-ID`, `04_API_CONTRACTS.md` §5) : NOTIFY ne garde rien, et le modèle de
-    données n'a pas de table d'événements.
-    Options : A) table `project_events` (id croissant, rétention courte) ; B) au connect, rejouer un état reconstruit
-    (statuts d'assets, étapes d'analyse) sans historique.
-    Recommandation : A, purgée par le job horaire.
-  - BLOCKER — où ranger palette et variantes d'une analyse sans IA ? Le `BrandDocument` exige les champs de marque
-    de l'IA.
-    Options : A) variantes = assets `logo_variant` et palette dans `meta` de `logo_sanitized`, document composé à
-    l'étape 4 ; B) document partiel (schéma à assouplir).
-    Recommandation : A.
+- **T-019** : les deux BLOCKER (reprise SSE, stockage de l'analyse) sont tranchés par délégation, option A (`journal/OWNER_DECISIONS.md`).
 - **T-003** : ≈ 1 250 lignes hors tests (> 400) ; `AddPage.pageType` au lieu de `type` ; `RestoreMockup` interne ; formes de `expect` — à valider (`sortie tikets/T-003.md`).
 - **T-004** : GO à reconfirmer (teinte `null` au lieu de `0`).
 - **T-002** : `'unsafe-eval'` en développement seulement — à valider.
