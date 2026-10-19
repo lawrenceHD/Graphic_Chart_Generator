@@ -27,10 +27,10 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { BOARDS } from '../boards/Boards';
-import { Counter, Float, Magnetic, SplitWords, Tilt } from '../components/fx';
+import { Counter, Float, Magnetic, Reveal, SplitWords, Tilt } from '../components/fx';
 import { BRANDS, WALL, svgUrl, type Brand } from '../lib/brand';
 import { contrastRatio, inkOn, levelInfo } from '../lib/color';
-import { reveal, softSpring, spring, useRise } from '../lib/motion';
+import { reveal, softSpring, spring } from '../lib/motion';
 import { MotionToggle, useReduce } from '../lib/motion-pref';
 import { paletteOf } from '../lib/palette';
 import { SCENES, SCENE_LABEL, hasPhotos, photoOf } from '../lib/photos';
@@ -61,7 +61,63 @@ export function Landing() {
         <FinalCta />
       </main>
       <Footer />
+      <BackToTop />
     </div>
+  );
+}
+
+/** Floating "back to top", shown once the hero is passed; its ring is the reading progress. */
+function BackToTop() {
+  const reduce = useReduce();
+  const { scrollY, scrollYProgress } = useScroll();
+  const [shown, setShown] = useState(false);
+  useEffect(() => scrollY.on('change', (y) => setShown(y > window.innerHeight * 0.9)), [scrollY]);
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
+  return (
+    <AnimatePresence>
+      {shown && (
+        <motion.button
+          type="button"
+          aria-label="Revenir en haut de la page"
+          onClick={() => window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })}
+          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.6, y: 20 }}
+          whileHover={{ y: -3 }}
+          whileTap={{ scale: 0.92 }}
+          transition={softSpring}
+          className="fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full bg-accent text-on-accent shadow-[0_18px_40px_-16px_rgb(0_0_0/0.5)]"
+          style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 56 56"
+            className="absolute inset-0 h-full w-full -rotate-90"
+          >
+            <circle
+              cx="28"
+              cy="28"
+              r="25"
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.2"
+              strokeWidth="3"
+            />
+            <motion.circle
+              cx="28"
+              cy="28"
+              r="25"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              style={{ pathLength: progress }}
+            />
+          </svg>
+          <ArrowUp className="h-5 w-5" aria-hidden />
+        </motion.button>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -73,9 +129,7 @@ function Nav() {
     <header className="sticky top-0 z-40 px-2 pt-2 sm:px-4">
       <motion.nav
         aria-label="Navigation principale"
-        animate={{ maxWidth: compact ? 880 : 1200 }}
-        transition={softSpring}
-        className={`glass mx-auto flex h-16 items-center gap-4 rounded-full border px-3 pl-6 backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-500 ${compact ? 'border-line bg-surface/80 shadow-[0_18px_40px_-28px_rgb(0_0_0/0.45)]' : 'border-transparent bg-transparent'}`}
+        className={`glass mx-auto flex h-16 max-w-[1200px] items-center gap-4 rounded-full border px-3 pl-6 backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-500 ${compact ? 'border-line bg-surface/80 shadow-[0_18px_40px_-28px_rgb(0_0_0/0.45)]' : 'border-transparent bg-transparent'}`}
       >
         <a href="#/" className="font-display text-2xl font-extrabold tracking-tight">
           Charta
@@ -131,8 +185,8 @@ function WordPill() {
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={WORDS[index]}
-          initial={{ y: '100%', opacity: 0, filter: 'blur(6px)' }}
-          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
           exit={{ y: '-100%', opacity: 0 }}
           transition={{ ...reveal, duration: 0.7 }}
           className="inline-block"
@@ -149,7 +203,7 @@ function HeroChips() {
   const palette = paletteOf(B0);
   const ratio = contrastRatio(palette.light, palette.primary);
   const chip =
-    'absolute flex items-center gap-2 rounded-[22px] border border-line bg-surface/90 px-4 py-2.5 text-xs shadow-[0_24px_50px_-28px_rgb(0_0_0/0.45)] backdrop-blur';
+    'absolute flex items-center gap-2 rounded-[22px] border border-line bg-surface/90 px-4 py-2.5 text-xs shadow-[0_24px_50px_-28px_rgb(0_0_0/0.45)]';
   return (
     <div aria-hidden data-decorative className="pointer-events-none absolute inset-0">
       <Float
@@ -196,25 +250,24 @@ function HeroChips() {
 }
 
 function Hero() {
-  const reduce = useReduce();
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const blobY = useTransform(scrollYProgress, [0, 1], [0, 180]);
   return (
-    <section ref={ref} className="relative mx-auto max-w-6xl px-4 pb-6 pt-8 sm:pt-14">
+    <section className="relative mx-auto max-w-6xl px-4 pb-6 pt-8 sm:pt-14">
       <motion.div
         aria-hidden
-        style={{ y: reduce ? 0 : blobY }}
         className="pointer-events-none absolute inset-x-0 top-24 mx-auto h-[420px] max-w-3xl"
       >
         <div
-          className="float absolute left-[10%] top-0 h-64 w-64 rounded-full opacity-40 blur-3xl"
-          style={{ background: B0.roles.accent.hex, animationDuration: '14s' }}
+          // Radial gradients, not blur filters: a blurred layer is re-rasterised far more often.
+          className="float absolute left-[4%] top-[-10%] h-96 w-96 rounded-full opacity-50"
+          style={{
+            background: `radial-gradient(closest-side, ${B0.roles.accent.hex}, transparent)`,
+            animationDuration: '14s',
+          }}
         />
         <div
-          className="float absolute right-[8%] top-10 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          className="float absolute right-[2%] top-0 h-[26rem] w-[26rem] rounded-full opacity-35"
           style={{
-            background: BRANDS[1]!.roles.primary.hex,
+            background: `radial-gradient(closest-side, ${BRANDS[1]!.roles.primary.hex}, transparent)`,
             animationDuration: '17s',
             animationDelay: '-4s',
           }}
@@ -267,7 +320,7 @@ function Hero() {
         <Magnetic className="w-full sm:w-auto">
           <a
             href={`#/studio/${B0.slug}`}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-full border border-line-strong bg-surface/60 px-8 text-base font-medium backdrop-blur sm:w-auto"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-8 text-base font-medium sm:w-auto"
           >
             <Play className="h-4 w-4" aria-hidden /> Voir le studio en action
           </a>
@@ -400,14 +453,14 @@ function Metric({
   label: string;
 }) {
   return (
-    <motion.div {...useRise(index * 0.08)} className="bg-surface p-7 sm:p-8">
+    <Reveal delay={index * 0.08} className="bg-surface p-7 sm:p-8">
       <Counter
         to={to}
         suffix={suffix}
         className="block font-display text-[clamp(48px,8vw,84px)] font-extrabold leading-none tracking-tight"
       />
       <p className="m-0 mt-3 text-sm text-ink-2">{label}</p>
-    </motion.div>
+    </Reveal>
   );
 }
 
@@ -1039,7 +1092,7 @@ function Tile({
   className?: string;
 }) {
   return (
-    <motion.article {...useRise()} className={className}>
+    <Reveal className={className}>
       <Tilt
         max={5}
         className={`flex h-full flex-col gap-5 border border-line bg-surface p-6 sm:p-7 ${CARD}`}
@@ -1050,7 +1103,7 @@ function Tile({
         </div>
         <div className="flex-1">{children}</div>
       </Tilt>
-    </motion.article>
+    </Reveal>
   );
 }
 
@@ -1105,7 +1158,7 @@ function MockupShowcase() {
                         <div className="skeleton aspect-[4/5]" />
                       )}
                     </Tilt>
-                    <figcaption className="absolute bottom-4 left-4 -rotate-2 rounded-full bg-surface/90 px-4 py-1.5 text-sm font-medium shadow-sm backdrop-blur">
+                    <figcaption className="absolute bottom-4 left-4 -rotate-2 rounded-full bg-surface px-4 py-1.5 text-sm font-medium shadow-sm">
                       {SCENE_LABEL[scene]}
                     </figcaption>
                   </motion.figure>
@@ -1229,7 +1282,7 @@ function FinalCta() {
       <div
         aria-hidden
         data-decorative
-        className="pointer-events-none absolute left-1/2 top-[78%] h-[960px] w-[960px] -translate-x-1/2 sm:top-[64%]"
+        className="pointer-events-none absolute left-1/2 top-[84%] h-[960px] w-[960px] -translate-x-1/2 sm:top-[82%]"
       >
         <div className="spin-slow relative h-full w-full">
           {ring.map((logo, index) => {
@@ -1299,7 +1352,7 @@ function Footer() {
               Le générateur de chartes graphiques qui se construisent sous vos yeux.
             </p>
             <form
-              className="glass mt-6 flex max-w-sm items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1.5 pl-5 backdrop-blur"
+              className="mt-6 flex max-w-sm items-center gap-2 rounded-full border border-white/15 bg-[oklch(0.23_0.01_60)] p-1.5 pl-5 transition-colors focus-within:border-white/40"
               onSubmit={(event) => {
                 event.preventDefault();
                 if (email.includes('@')) setJoined(true);
@@ -1314,7 +1367,7 @@ function Footer() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="Recevoir les nouveautés"
-                className="h-11 min-w-0 flex-1 bg-[oklch(0.16_0.01_60)] text-sm text-white outline-none placeholder:text-[oklch(0.82_0.008_85)]"
+                className="h-11 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[oklch(0.82_0.008_85)]"
               />
               <button
                 type="submit"
@@ -1387,15 +1440,6 @@ function Footer() {
             <Globe className="h-3.5 w-3.5" aria-hidden /> Français · English
           </span>
           <span className="flex-1">© 2026 Charta</span>
-          <Magnetic>
-            <button
-              type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })}
-              className="flex h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm hover:bg-white/10"
-            >
-              <ArrowUp className="h-4 w-4" aria-hidden /> Haut de page
-            </button>
-          </Magnetic>
         </div>
       </div>
       <div aria-hidden data-decorative className="relative mt-8 select-none overflow-hidden">
@@ -1416,8 +1460,8 @@ function Footer() {
             </motion.span>
           ))}
         </div>
-        <div className="pointer-events-none absolute inset-0 overflow-hidden mix-blend-overlay">
-          <div className="sheen absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="sheen absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </div>
       </div>
     </footer>

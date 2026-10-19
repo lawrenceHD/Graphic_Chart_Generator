@@ -64,7 +64,7 @@ function Sheet({
         fontFamily: brand.fonts.text,
       }}
     >
-      <header className="flex items-baseline justify-between px-[7cqw] pt-[6cqw] text-[2.3cqw] uppercase tracking-[0.12em] opacity-60">
+      <header className="flex items-baseline justify-between px-[7cqw] pt-[6cqw] text-[2.3cqw] uppercase tracking-[0.12em] opacity-70">
         <span>{brand.name} — Charte graphique</span>
         <span className="tabular">{String(page).padStart(2, '0')}</span>
       </header>
@@ -224,13 +224,13 @@ function PaletteBoard({ brand, palette, progress }: BoardProps) {
                   </span>
                 </motion.div>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-[2cqw] p-[2.4cqw] font-mono text-[2.1cqw] leading-relaxed">
-                  <dt className="opacity-50">HEX</dt>
+                  <dt className="opacity-70">HEX</dt>
                   <dd className="m-0">{hex}</dd>
-                  <dt className="opacity-50">RVB</dt>
+                  <dt className="opacity-70">RVB</dt>
                   <dd className="m-0">{rgbOf(hex).join(' ')}</dd>
-                  <dt className="opacity-50">OKLCH</dt>
+                  <dt className="opacity-70">OKLCH</dt>
                   <dd className="m-0">{formatOklch(hex)}</dd>
-                  <dt className="opacity-50">CMJN*</dt>
+                  <dt className="opacity-70">CMJN*</dt>
                   <dd className="m-0">{[c, m, y, k].join(' ')}</dd>
                 </dl>
               </motion.div>
@@ -240,7 +240,7 @@ function PaletteBoard({ brand, palette, progress }: BoardProps) {
       </div>
       {progress >= 1 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-[4cqw]">
-          <p className="mb-[1.5cqw] text-[2.3cqw] opacity-60">Échelle de la principale</p>
+          <p className="mb-[1.5cqw] text-[2.3cqw] opacity-70">Échelle de la principale</p>
           <div className="flex overflow-hidden rounded-[1.4cqw]">
             {buildScale(palette.primary).map((step) => (
               <div
@@ -251,7 +251,7 @@ function PaletteBoard({ brand, palette, progress }: BoardProps) {
               />
             ))}
           </div>
-          <p className="mt-[2cqw] text-[1.9cqw] opacity-50">
+          <p className="mt-[2cqw] text-[1.9cqw] opacity-70">
             * CMJN indicatif, à valider avec l'imprimeur.
           </p>
         </motion.div>
@@ -352,17 +352,17 @@ function TypeBoard({ brand, palette }: BoardProps) {
         </span>
         <div className="text-right text-[2.4cqw] leading-relaxed">
           <p className="m-0 font-semibold">{brand.fonts.display.replace(' Variable', '')}</p>
-          <p className="m-0 opacity-60">Titres · licence libre (OFL)</p>
+          <p className="m-0 opacity-70">Titres · licence libre (OFL)</p>
           <p className="m-0 mt-[1.5cqw] font-semibold">
             {brand.fonts.text.replace(' Variable', '')}
           </p>
-          <p className="m-0 opacity-60">Texte · licence libre (OFL)</p>
+          <p className="m-0 opacity-70">Texte · licence libre (OFL)</p>
         </div>
       </div>
       <div className="mt-[4cqw] space-y-[2.4cqw]">
         {sizes.map((size) => (
           <div key={size.label} className="flex items-baseline gap-[3cqw]">
-            <span className="w-[12cqw] shrink-0 font-mono text-[1.9cqw] opacity-50">
+            <span className="w-[12cqw] shrink-0 font-mono text-[1.9cqw] opacity-70">
               {size.label}
             </span>
             <span
@@ -378,14 +378,14 @@ function TypeBoard({ brand, palette }: BoardProps) {
           </div>
         ))}
         <div className="flex gap-[3cqw]">
-          <span className="w-[12cqw] shrink-0 font-mono text-[1.9cqw] opacity-50">Texte</span>
+          <span className="w-[12cqw] shrink-0 font-mono text-[1.9cqw] opacity-70">Texte</span>
           <p className="m-0 text-[2.8cqw] leading-[1.55]">
             {brand.brief} La typographie porte la voix de la marque : lisible, posée, cohérente sur
             tous les supports.
           </p>
         </div>
       </div>
-      <p className="absolute bottom-[6cqw] left-[7cqw] right-[7cqw] font-mono text-[2cqw] opacity-50">
+      <p className="absolute bottom-[6cqw] left-[7cqw] right-[7cqw] font-mono text-[2cqw] opacity-70">
         ABCDEFGHIJKLMNOPQRSTUVWXYZ · abcdefghijklmnopqrstuvwxyz · 0123456789 · àâçéèêëîïôûù
       </p>
     </Sheet>

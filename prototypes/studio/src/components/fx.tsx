@@ -1,4 +1,5 @@
 import { animate, motion, useInView, useMotionValue, useSpring, useTransform } from 'motion/react';
+import type React from 'react';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useReduce } from '../lib/motion-pref';
 import { reveal } from '../lib/motion';
@@ -32,7 +33,7 @@ export function Tilt({
   const glareX = useTransform(px, [-0.5, 0.5], ['0%', '100%']);
   const glare = useTransform(
     glareX,
-    (x) => `radial-gradient(circle at ${x} 20%, rgb(255 255 255 / 0.28), transparent 55%)`,
+    (x) => `radial-gradient(circle at ${x} 20%, rgb(255 255 255 / 0.14), transparent 55%)`,
   );
   return (
     <motion.div
@@ -58,7 +59,7 @@ export function Tilt({
       {!reduce && (
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-soft-light"
+          className="pointer-events-none absolute inset-0 rounded-[inherit]"
           style={{ background: glare }}
         />
       )}
@@ -134,8 +135,58 @@ export function Magnetic({
   );
 }
 
-/** Words rising one after the other from behind a mask. Screen readers get the plain sentence. The whole line
- *  is observed: each word starts clipped by its mask, so observing the words themselves would never fire. */
+// One IntersectionObserver for every reveal on the page: it only toggles a class, CSS does the motion.
+const watchers = new WeakMap<Element, () => void>();
+let observer: IntersectionObserver | undefined;
+function watch(node: Element, onEnter: () => void): () => void {
+  observer ??= new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        watchers.get(entry.target)?.();
+        observer?.unobserve(entry.target);
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px' },
+  );
+  watchers.set(node, onEnter);
+  observer.observe(node);
+  return () => observer?.unobserve(node);
+}
+
+function useRevealed<T extends Element>(): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    return node ? watch(node, () => setShown(true)) : undefined;
+  }, []);
+  return [ref, shown];
+}
+
+/** Block fading and rising into place when it enters the viewport (CSS transition). */
+export function Reveal({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const [ref, shown] = useRevealed<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${shown ? 'is-in' : ''} ${className}`}
+      style={{ ['--d' as string]: `${String(delay)}s` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Words rising one after the other from behind a mask. Screen readers get the plain sentence. */
 export function SplitWords({
   text,
   className = '',
@@ -147,31 +198,25 @@ export function SplitWords({
   delay?: number;
   step?: number;
 }) {
-  const reduce = useReduce();
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: '0px 0px -8% 0px' });
+  const [ref, shown] = useRevealed<HTMLSpanElement>();
   const words = text.split(' ');
   return (
-    <span ref={ref} className={className} aria-label={text} role="text">
+    <span
+      ref={ref}
+      className={`${shown ? 'is-in' : ''} ${className}`}
+      aria-label={text}
+      role="text"
+    >
       {words.map((word, index) => (
         <span
           key={index}
           aria-hidden
           className="inline-block overflow-hidden pb-[0.1em] align-bottom"
         >
-          <motion.span
-            className="inline-block will-change-transform"
-            initial={reduce ? { opacity: 0 } : { y: '110%', rotate: 4 }}
-            animate={inView ? (reduce ? { opacity: 1 } : { y: 0, rotate: 0 }) : undefined}
-            transition={
-              reduce
-                ? { duration: 0.1 }
-                : { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: delay + index * step }
-            }
-          >
+          <span className="word" style={{ ['--d' as string]: `${String(delay + index * step)}s` }}>
             {word}
             {index < words.length - 1 ? ' ' : ''}
-          </motion.span>
+          </span>
         </span>
       ))}
     </span>
