@@ -699,7 +699,7 @@ function Journey() {
   return (
     <section
       id="fonctionnement"
-      className="relative mx-2 overflow-hidden rounded-[44px] bg-[oklch(0.2_0.01_60)] py-20 text-[oklch(0.97_0.008_85)] sm:mx-4 sm:py-28"
+      className="relative mx-2 overflow-clip rounded-[44px] bg-[oklch(0.2_0.01_60)] py-20 text-[oklch(0.97_0.008_85)] sm:mx-4 sm:py-28"
     >
       <motion.div
         aria-hidden
@@ -1107,12 +1107,38 @@ function Tile({
   );
 }
 
+// Scene → vector stand-in, used for every scene that has no photograph yet (free generation is rationed).
+const VECTOR_FOR: Record<string, (typeof MOCKUPS)[number]['Component']> = Object.fromEntries(
+  MOCKUPS.map(({ key, Component }) => [key, Component]),
+);
+const SCENE_VECTOR: Record<string, string> = {
+  cards: 'cards',
+  store: 'store',
+  tote: 'tote',
+  tee: 'tee',
+  phone: 'phone',
+  billboard: 'social',
+  office: 'letter',
+};
+
 function MockupShowcase() {
   const reduce = useReduce();
-  const [slug, setSlug] = useState(BRANDS[1]!.slug);
+  // Open on the brand that has the most photographs.
+  const [slug, setSlug] = useState(
+    () =>
+      [...BRANDS].sort(
+        (a, b) =>
+          SCENES.filter((s) => photoOf(b.slug, s)).length -
+          SCENES.filter((s) => photoOf(a.slug, s)).length,
+      )[0]!.slug,
+  );
   const brand: Brand = BRANDS.find((b) => b.slug === slug) ?? B0;
   const palette = paletteOf(brand);
   const photos = hasPhotos(brand.slug);
+  // Photographs first: the eye lands on the most realistic piece.
+  const scenes = [...SCENES].sort(
+    (a, b) => Number(Boolean(photoOf(brand.slug, b))) - Number(Boolean(photoOf(brand.slug, a))),
+  );
   return (
     <section id="mockups" className="mx-2 rounded-[44px] bg-elevated py-24 sm:mx-4">
       <div className="mx-auto max-w-6xl px-4">
@@ -1125,70 +1151,54 @@ function MockupShowcase() {
         </h2>
         <p className="mt-4 max-w-lg text-ink-2">
           Choisissez une marque : tous les supports changent en même temps.
-          {photos ? ' Photographies générées à partir du vrai logo.' : ''}
+          {photos ? ' Les photographies sont générées à partir du vrai logo.' : ''}
         </p>
         <div className="mt-6">
           <BrandChips group="mockups" value={slug} onChange={setSlug} />
         </div>
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {photos
-            ? SCENES.map((scene, index) => {
-                const url = photoOf(brand.slug, scene);
-                return (
-                  <motion.figure
-                    key={`${brand.slug}-${scene}`}
-                    className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''}`}
-                    initial={reduce ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={reduce ? { duration: 0.1 } : { ...softSpring, delay: index * 0.08 }}
-                  >
-                    <Tilt
-                      max={5}
-                      className="h-full overflow-hidden rounded-[36px] shadow-[0_40px_80px_-44px_rgb(0_0_0/0.6)]"
-                    >
-                      {url ? (
-                        <motion.img
-                          src={url}
-                          alt={`${SCENE_LABEL[scene] ?? scene} ${brand.name}`}
-                          className="block h-full min-h-[420px] w-full object-cover"
-                          whileHover={reduce ? undefined : { scale: 1.05 }}
-                          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                        />
-                      ) : (
-                        <div className="skeleton aspect-[4/5]" />
-                      )}
-                    </Tilt>
-                    <figcaption className="absolute bottom-4 left-4 -rotate-2 rounded-full bg-surface px-4 py-1.5 text-sm font-medium shadow-sm">
-                      {SCENE_LABEL[scene]}
-                    </figcaption>
-                  </motion.figure>
-                );
-              })
-            : MOCKUPS.map(({ key, label, Component }, index) => (
-                <motion.figure
-                  key={key}
-                  className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''}`}
-                  initial={
-                    reduce ? { opacity: 0 } : { opacity: 0, y: 40, rotate: index % 2 ? 2 : -2 }
-                  }
-                  whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                  viewport={{ once: true, margin: '-10%' }}
-                  transition={
-                    reduce ? { duration: 0.1 } : { ...softSpring, delay: (index % 3) * 0.08 }
-                  }
+          {scenes.map((scene, index) => {
+            const url = photoOf(brand.slug, scene);
+            const Vector = VECTOR_FOR[SCENE_VECTOR[scene] ?? 'cards'];
+            return (
+              <motion.figure
+                key={`${brand.slug}-${scene}`}
+                className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''}`}
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={reduce ? { duration: 0.1 } : { ...softSpring, delay: index * 0.07 }}
+              >
+                <Tilt
+                  max={5}
+                  className="h-full overflow-hidden rounded-[36px] shadow-[0_40px_80px_-44px_rgb(0_0_0/0.6)]"
                 >
-                  <Tilt max={5} className="h-full overflow-hidden rounded-[36px]">
-                    <Component
+                  {url ? (
+                    <motion.img
+                      src={url}
+                      alt={`${SCENE_LABEL[scene] ?? scene} ${brand.name}`}
+                      className={`block h-full w-full object-cover ${index === 0 ? 'min-h-[420px] lg:min-h-[640px]' : 'aspect-[4/5]'}`}
+                      whileHover={reduce ? undefined : { scale: 1.05 }}
+                      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                  ) : Vector ? (
+                    <Vector
                       brand={brand}
                       palette={palette}
-                      className={`@container h-full min-h-[320px] !rounded-[36px] ${index === 0 ? 'aspect-square' : 'aspect-[4/5]'}`}
+                      className={`@container h-full !rounded-[36px] ${index === 0 ? 'min-h-[420px]' : 'aspect-[4/5]'}`}
                     />
-                  </Tilt>
-                  <figcaption className="absolute bottom-4 left-4 -rotate-2 rounded-full bg-surface/90 px-4 py-1.5 text-sm font-medium shadow-sm">
-                    {label}
-                  </figcaption>
-                </motion.figure>
-              ))}
+                  ) : null}
+                </Tilt>
+                <figcaption className="absolute bottom-4 left-4 flex -rotate-2 items-center gap-1.5 rounded-full bg-surface px-4 py-1.5 text-sm font-medium shadow-sm">
+                  {SCENE_LABEL[scene]}
+                  {url ? (
+                    <span className="rounded-full bg-elevated px-2 py-0.5 text-[11px] text-ink-2">
+                      photo
+                    </span>
+                  ) : null}
+                </figcaption>
+              </motion.figure>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1278,11 +1288,14 @@ function FinalCta() {
   const [loading, setLoading] = useState(false);
   const ring = WALL.slice(0, 20);
   return (
-    <section className="relative overflow-hidden px-4 py-32 text-center">
+    // The arc lives in its own band under the content (pb): ring of 960 px whose centre sits 120 px below the
+    // section, logos on a 46 % radius → the highest logo stays about 320 px above the bottom, under the band's
+    // top edge (bottom padding 420 px), so it never reaches the button or the line under it.
+    <section className="relative overflow-clip px-4 pb-[420px] pt-32 text-center">
       <div
         aria-hidden
         data-decorative
-        className="pointer-events-none absolute left-1/2 top-[84%] h-[960px] w-[960px] -translate-x-1/2 sm:top-[82%]"
+        className="pointer-events-none absolute -bottom-[600px] left-1/2 h-[960px] w-[960px] -translate-x-1/2 [mask-image:linear-gradient(to_bottom,black_30%,transparent_42%)]"
       >
         <div className="spin-slow relative h-full w-full">
           {ring.map((logo, index) => {
