@@ -31,6 +31,7 @@ main (5d95f32, = origin/main)
                                                    └─ fix/robust-logo-analysis  banc du corpus, extraction et monochrome robustes (A–D), verify vert
                                                       └─ ticket/T-019-analyze-events  partie 1 : journal project_events, flux SSE, asset.status ; verify vert
                                                          └─ proto/studio-prototype  maquette navigable (prototypes/studio), gates vertes
+                                                            └─ fix/mono-structure  variantes monochromes : structure, séparation, évidements, tonal ; écran Démarrer structuré ; verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -52,7 +53,11 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    kit XIAS) ; décisions du propriétaire attendues (§5 : animation, gel de la landing, thème).
    **Maquette** (2026-10-19, demande du propriétaire) : `prototypes/studio/` (README), hors `pnpm verify`, ses propres
    contrôles (`node scripts/gates.mjs`). Avis du propriétaire attendu avant T-020.
-   **Défauts moteur trouvés par la maquette (à corriger)** :
+   **Mockups photo gratuits** : `npm run` → `node scripts/gen-mockups-hf.mjs` (FLUX.1 Kontext sur Hugging Face, reprise
+   possible) ; quota anonyme ≈ 2 images, à étendre avec un jeton HF gratuit (`HF_TOKEN` dans `prototypes/studio/.env.local`).
+   Serveur MCP officiel Hugging Face installé (portée utilisateur). Entrées et polices : note
+   `journal/research/2026-10-19-entrees-et-polices.md` (étapes E1–E7).
+   **Défauts moteur trouvés par la maquette** (le monochrome est corrigé sur `fix/mono-structure`) :
    - resvg panique (`geom.rs:27`, unwrap sur None) sur 4 des 7 SVG extraits des chartes PDF (clipPath nombreux) :
      ces uploads finiraient `RASTER_FAILED`. Reproduire avec `charters/cfdt/cfdt.svg` du corpus privé.
    - Variante blanche d'un logo à forme de fond (Instacart) : la forme de fond est peinte dans la couleur cible,
