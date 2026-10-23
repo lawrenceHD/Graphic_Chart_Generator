@@ -172,6 +172,28 @@ export const projectEvents = pgTable(
   (table) => [index('project_events_project_id').on(table.projectId, table.id)],
 );
 
+// Analysis runs (decision T-019 part 2): one row per POST /projects/:id/analyze. The Idempotency-Key makes a
+// retried request return the same run; the run id is the job's singleton key. `step` is the last step done.
+export const analysisStatus = pgEnum('analysis_status', ['pending', 'running', 'done', 'failed']);
+export const analysisRuns = pgTable(
+  'analysis_runs',
+  {
+    id: uuid('id').primaryKey(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id),
+    logoAssetId: uuid('logo_asset_id')
+      .notNull()
+      .references(() => assets.id),
+    idempotencyKey: text('idempotency_key').notNull(),
+    status: analysisStatus('status').notNull().default('pending'),
+    step: integer('step').notNull().default(0),
+    errorCode: text('error_code'),
+    createdAt: createdAt(),
+  },
+  (table) => [unique('analysis_runs_project_key').on(table.projectId, table.idempotencyKey)],
+);
+
 export const chatMessages = pgTable(
   'chat_messages',
   {

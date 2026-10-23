@@ -13,7 +13,10 @@ const QUEUE_OPTIONS = {
 } as const;
 
 // A job out of attempts is moved to its dead-letter queue, whose handler records the failure for the user.
-const DEAD_LETTERS = new Map<string, string>([['asset.scan', 'asset.scan.failed']]);
+const DEAD_LETTERS = new Map<string, string>([
+  ['asset.scan', 'asset.scan.failed'],
+  ['project.analyze', 'project.analyze.failed'],
+]);
 
 export interface JobRunner extends JobQueue {
   /** Runs `handler` for each job; `attempt` counts from 0. A rejection fails the attempt (retried). */

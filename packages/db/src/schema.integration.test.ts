@@ -65,6 +65,7 @@ describe.runIf(adminUrl !== '')('schema and migrations against PostgreSQL (T-014
     );
     expect(tables.rows.map((row) => row.table_name)).toEqual([
       'account',
+      'analysis_runs',
       'assets',
       'audit_log',
       'chat_messages',
