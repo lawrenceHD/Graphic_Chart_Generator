@@ -19,6 +19,7 @@ import { inkOn } from '../lib/color';
 import { EMBEDDING_TEXT, readFontFile, type FontInfo } from '../lib/font-file';
 import { softSpring, spring } from '../lib/motion';
 import { useReduce } from '../lib/motion-pref';
+import { ThemeSwitch } from '../lib/theme-pref';
 import { navigate } from '../router';
 
 // Structured entry (research note 2026-10-19, E7): identity, logo and the user's own variants, universe
@@ -146,6 +147,7 @@ export function Start() {
           <ArrowLeft className="h-5 w-5" aria-hidden /> Accueil
         </button>
         <span className="font-display text-lg font-bold tracking-tight">Charta</span>
+        <ThemeSwitch />
       </header>
       <main className="mx-auto grid max-w-6xl gap-8 px-4 pb-28 pt-4 lg:grid-cols-[1.1fr_0.9fr] lg:pt-10">
         <div>

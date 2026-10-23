@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, type PanInfo } from 'motion/react';
 import { useReduce } from '../lib/motion-pref';
+import { ThemeSwitch } from '../lib/theme-pref';
 import {
   ArrowLeft,
   ArrowUp,
@@ -274,6 +275,7 @@ function TopBar(props: {
         <IconButton label="Partager">
           <Share2 className="h-5 w-5" />
         </IconButton>
+        <ThemeSwitch className="ml-1" />
       </div>
       <motion.button
         type="button"
@@ -722,7 +724,7 @@ function PaletteEditor({
               className="flex w-full items-center gap-3 p-2 text-left"
             >
               <motion.span
-                className="h-9 w-9 rounded-[8px] border border-white/10"
+                className="h-9 w-9 rounded-[8px] border border-ink/10"
                 animate={{ backgroundColor: hex }}
                 style={{ background: hex }}
               />
@@ -782,7 +784,7 @@ function PaletteEditor({
                               `${label} : ${color.hex}`,
                             )
                           }
-                          className="grid h-9 w-9 place-items-center rounded-[8px] border border-white/15"
+                          className="grid h-9 w-9 place-items-center rounded-[8px] border border-ink/15"
                           style={{ background: color.hex }}
                         >
                           {color.hex === hex && (
