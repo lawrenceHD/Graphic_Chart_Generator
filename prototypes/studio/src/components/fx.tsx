@@ -186,24 +186,29 @@ export function Reveal({
   );
 }
 
-/** Words rising one after the other from behind a mask. Screen readers get the plain sentence. */
+/** Words rising one after the other from behind a mask. Screen readers get the plain sentence.
+ *  `onMount` plays a CSS animation from the first frame instead of waiting for the observer: above the fold,
+ *  a busy main thread could otherwise leave the headline masked for more than a second. */
 export function SplitWords({
   text,
   className = '',
   delay = 0,
   step = 0.06,
+  onMount = false,
 }: {
   text: string;
   className?: string;
   delay?: number;
   step?: number;
+  onMount?: boolean;
 }) {
-  const [ref, shown] = useRevealed<HTMLSpanElement>();
+  const [ref, revealed] = useRevealed<HTMLSpanElement>();
+  const shown = onMount || revealed;
   const words = text.split(' ');
   return (
     <span
       ref={ref}
-      className={`${shown ? 'is-in' : ''} ${className}`}
+      className={`${onMount ? 'words-now' : shown ? 'is-in' : ''} ${className}`}
       aria-label={text}
       role="text"
     >

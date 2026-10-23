@@ -250,6 +250,22 @@ body {
 .is-in .word {
   transform: none;
 }
+/* Above the fold: keyframes start with the first style pass, no observer involved. */
+@keyframes word-in {
+  from {
+    transform: translate3d(0, 112%, 0) rotate(4deg);
+  }
+  to {
+    transform: none;
+  }
+}
+.words-now .word {
+  transform: none;
+  animation: word-in 1s var(--ease-out-expo) var(--d, 0s) backwards;
+}
+[data-motion='off'] .words-now .word {
+  animation: none;
+}
 [data-motion='off'] .reveal,
 [data-motion='off'] .word {
   transform: none;

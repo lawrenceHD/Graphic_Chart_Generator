@@ -44,25 +44,51 @@ const B0 = BRANDS[0]!;
 const CARD = 'rounded-[36px]';
 
 export function Landing() {
+  // The hero paints first; the rest of the page (≈12 000 px, a hundred images, scroll-linked sections whose
+  // first measure forces a layout of the whole page) mounts after that first frame. Mounting it all at once
+  // kept the headline off screen for about a second after load.
+  const [rest, setRest] = useState(false);
+  useEffect(() => {
+    let timer = 0;
+    const frame = requestAnimationFrame(() => {
+      timer = window.setTimeout(() => setRest(true));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, []);
   return (
     <div className="theme-paper min-h-dvh overflow-x-clip">
       <Nav />
       <main>
         <Hero />
-        <LogoWall />
-        <Metrics />
-        <Manifesto />
-        <FlowGraph />
-        <Journey />
-        <Hanging />
-        <Inside />
-        <MockupShowcase />
-        <Faq />
-        <FinalCta />
+        {rest && <BelowTheFold />}
       </main>
-      <Footer />
-      <BackToTop />
+      {rest && (
+        <>
+          <Footer />
+          <BackToTop />
+        </>
+      )}
     </div>
+  );
+}
+
+function BelowTheFold() {
+  return (
+    <>
+      <LogoWall />
+      <Metrics />
+      <Manifesto />
+      <FlowGraph />
+      <Journey />
+      <Hanging />
+      <Inside />
+      <MockupShowcase />
+      <Faq />
+      <FinalCta />
+    </>
   );
 }
 
@@ -284,11 +310,11 @@ function Hero() {
         palettes calculées par le vrai moteur
       </motion.p>
       <h1 className="relative m-0 text-center font-display text-[clamp(44px,12vw,128px)] font-extrabold leading-[0.88] tracking-[-0.04em]">
-        <SplitWords text="Votre logo," />
+        <SplitWords text="Votre logo," onMount />
         <br />
-        <SplitWords text="votre" delay={0.12} /> <WordPill />
+        <SplitWords text="votre" delay={0.12} onMount /> <WordPill />
         <br />
-        <SplitWords text="en direct." delay={0.24} />
+        <SplitWords text="en direct." delay={0.24} onMount />
       </h1>
       <motion.p
         initial={{ opacity: 0 }}
