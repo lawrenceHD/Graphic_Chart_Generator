@@ -245,6 +245,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@app/color-engine':
+        specifier: workspace:*
+        version: link:../../packages/color-engine
       '@app/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -254,6 +257,9 @@ importers:
       '@app/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@app/logo-kit':
+        specifier: workspace:*
+        version: link:../../packages/logo-kit
       '@app/storage':
         specifier: workspace:*
         version: link:../../packages/storage

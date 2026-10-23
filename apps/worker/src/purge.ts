@@ -1,5 +1,6 @@
 import type { ObjectStorage } from '@app/contracts';
 import {
+  analysisRuns,
   and,
   assets,
   chatMessages,
@@ -54,6 +55,7 @@ async function purgeProject(deps: PurgeDeps, projectId: string): Promise<void> {
     await tx.delete(exports).where(eq(exports.projectId, projectId));
     await tx.delete(chatMessages).where(eq(chatMessages.projectId, projectId));
     await tx.delete(projectEvents).where(eq(projectEvents.projectId, projectId));
+    await tx.delete(analysisRuns).where(eq(analysisRuns.projectId, projectId));
     await tx.delete(revisions).where(eq(revisions.projectId, projectId));
     await tx.delete(documents).where(eq(documents.projectId, projectId));
     await tx.delete(assets).where(eq(assets.projectId, projectId));

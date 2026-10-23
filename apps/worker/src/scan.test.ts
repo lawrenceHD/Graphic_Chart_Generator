@@ -1,11 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { ObjectStorage } from '@app/contracts';
 import { assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
-import { err, ok, uuidV7 } from '@app/kernel';
+import { uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { memoryStorage } from './memory-storage.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
 
 const adminUrl = integrationDatabaseUrl();
@@ -14,31 +14,6 @@ const encode = (text: string): Uint8Array => new TextEncoder().encode(text);
 const sha256 = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
 const TRIANGLE =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10 10 L90 10 L50 90 Z" fill="#1F4BFF"/></svg>';
-
-/** In-memory stand-in for R2 honouring the port's size limit; the scan logic itself stays real. */
-function memoryStorage(objects: Map<string, Uint8Array>): ObjectStorage {
-  return {
-    presignPut: () => Promise.reject(new Error('not used by the worker')),
-    presignGet: () => Promise.reject(new Error('not used by the worker')),
-    head: (key) => {
-      const bytes = objects.get(key);
-      return Promise.resolve(bytes === undefined ? null : { bytes: bytes.length });
-    },
-    get: (key, maxBytes) => {
-      const bytes = objects.get(key);
-      if (bytes === undefined) return Promise.resolve(err('NOT_FOUND'));
-      return Promise.resolve(bytes.length > maxBytes ? err('TOO_LARGE') : ok(bytes));
-    },
-    put: (key, bytes) => {
-      objects.set(key, bytes);
-      return Promise.resolve();
-    },
-    delete: (key) => {
-      objects.delete(key);
-      return Promise.resolve();
-    },
-  };
-}
 
 describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to SEC-15)', () => {
   let test: TestDatabase;

@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { ObjectStorage } from '@app/contracts';
 import {
+  analysisRuns,
   assets,
   documents,
   eq,
@@ -81,11 +82,19 @@ describe.runIf(adminUrl !== '')('purge (03_DATA_MODEL.md §6, AC-01.2)', () => {
       data: { seq: 1 },
       createdAt: hoursAgo(25),
     });
+    const assetIds: string[] = [];
     for (const name of ['original', 'sanitized']) {
       const storageKey = `projects/${projectId}/assets/${projectId}/${name}`;
       objects.add(storageKey);
-      await orm.insert(assets).values({ id: id(), projectId, kind: 'logo_original', storageKey });
+      const assetId = id();
+      assetIds.push(assetId);
+      await orm
+        .insert(assets)
+        .values({ id: assetId, projectId, kind: 'logo_original', storageKey });
     }
+    await orm
+      .insert(analysisRuns)
+      .values({ id: id(), projectId, logoAssetId: assetIds[1] ?? '', idempotencyKey: 'k' });
     return projectId;
   }
   const exists = async (projectId: string) =>

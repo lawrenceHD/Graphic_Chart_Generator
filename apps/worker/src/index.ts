@@ -3,6 +3,7 @@ import { createDatabase } from '@app/db';
 import { startJobQueue } from '@app/db/queue';
 import { createR2Storage } from '@app/storage';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
+import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { createLogger, errorSummary } from './logger.js';
 import { purge } from './purge.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
@@ -52,6 +53,24 @@ await queue.work('asset.scan', async ({ assetId }, attempt) => {
 await queue.work('asset.scan.failed', async ({ assetId }) => {
   await rejectTimedOut(database.orm, assetId);
   logger.warn({ event: 'asset_scan_timed_out', assetId });
+});
+await queue.work('project.analyze', async ({ analysisId }, attempt) => {
+  try {
+    await analyzeProject(scanDeps, analysisId);
+    logger.info({ event: 'project_analyzed', analysisId, attempt });
+  } catch (error) {
+    logger.error({
+      event: 'project_analyze_failed',
+      analysisId,
+      attempt,
+      error: errorSummary(error),
+    });
+    throw error;
+  }
+});
+await queue.work('project.analyze.failed', async ({ analysisId }) => {
+  await failTimedOutAnalysis(database.orm, analysisId);
+  logger.warn({ event: 'project_analyze_timed_out', analysisId });
 });
 await queue.work('maintenance.purge', async () => {
   const report = await purge({
