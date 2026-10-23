@@ -220,3 +220,33 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - **À trancher par le chef de projet** : l'IoU d'une variante séparée descend à 0,85–0,99 (les filets retirent de
   l'encre) ; la règle « ≥ 0,97 validée » de §5.3 doit s'appliquer au tracé non séparé, ou être remplacée par
   « structure ≥ 0,9 et IoU ≥ 0,85 » pour une variante séparée.
+
+## Moteurs : défauts trouvés par la maquette (délégation, 2026-10-23) — à reporter dans `docs/05_ENGINES.md` §3.7 et §5.2
+- **resvg 2.6.2** panique (`geom.rs:27`, le processus enfant meurt) quand un groupe découpé, masqué ou translucide a
+  tout son contenu hors du canevas : 6 des 8 chartes du corpus finissaient `RASTER_FAILED`. Aucune version stable
+  plus récente (seulement des alpha, refusées par ADR-002). Contournement dans `child.ts` : si le contenu déborde
+  du viewBox, rendu sur un canevas élargi de pixels entiers aux échelles de resvg (par axe), puis découpe ; pixels
+  identiques à un rendu normal (test au pixel près), plafond 16 M pixels au-delà duquel on revient au rendu normal.
+- **Fond de présentation** (`withoutBackdrop`, `logo-kit`) : les premières formes peintes, d'une couleur unie claire
+  (luminance ≥ 0,6) et non vive (chroma OKLCH < 0,10, seuil de la décision B), sans contour, qui couvrent seules
+  ≥ 99 % du canevas, sont retirées avant les variantes monochromes. Restent : tuile arrondie (≈ 96 %), aplat vif,
+  pastille sombre, surface claire peinte après l'encre (évidement), logo fait seulement de telles formes.
+
+## T-019 partie 2a (délégation, 2026-10-23) — à reporter dans `docs/03_DATA_MODEL.md`, `docs/04_API_CONTRACTS.md` §3, §7, §8
+- **Découpage** : 2a = route, idempotence, job étapes 1–2 ; 2b = étape 3 sans IA et étape 4 (document initial,
+  `analysis.done { seq }`). Motif : limite de 400 lignes hors tests.
+- **Table `analysis_runs`** (migration `0002`) : `id`, `project_id`, `logo_asset_id`, `idempotency_key` (unique par
+  projet), `status` (`pending|running|done|failed`), `step` (dernière étape faite), `error_code`. Purgée avec le projet.
+- **`POST /projects/:id/analyze`** : action `project:write` (l'invité analyse, limite 5/h) ; en-tête
+  `Idempotency-Key` obligatoire (ASCII visible, 1–255) sinon `400 IDEMPOTENCY_KEY_INVALID` ; même clé → `200` et
+  la même analyse (job renvoyé si encore `pending`) ; nouvelle clé → `202 { analysis: { id, status, step,
+  errorCode } }`. Sans logo `clean` → `409 LOGO_NOT_READY`, sans consommer la limite. On analyse le dernier
+  `logo_sanitized` propre. Limites : 5/h invité, 30/jour compte, 30/jour par IP (§7 « par identité et par IP »).
+- **Job `project.analyze`** (`{ analysisId }`, clé singleton = id, lettre morte `project.analyze.failed` →
+  `ANALYSIS_TIMEOUT` sur l'étape en cours) : étape 1, palette (rendu 400 px ou PNG normalisé, `extractPalette`,
+  `brandClusters`, `assignRoles`) dans `meta.palette` du `logo_sanitized` ; étape 2, variantes noire et blanche
+  (`monochromeVariant`) en assets `logo_variant` (`meta` : `logoAssetId`, `variant`, `drawing`, `structure`,
+  `warnings`), clés de stockage déterministes. Logo matriciel ou dessin à masque/filtre : étape 2 `done` avec
+  `code: VARIANTS_NEED_VECTOR` (vectorisation, T-011). Chaque étape valide son résultat, `step` et son événement
+  dans une transaction : une reprise repart après la dernière étape faite. Erreur métier (`EMPTY_IMAGE`,
+  `LOGO_UNREADABLE`…) → analyse `failed` et `analysis.step { state: 'failed', code }`.

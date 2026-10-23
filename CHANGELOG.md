@@ -6,7 +6,17 @@ Modifications notables du projet, par ticket. Format inspiré de
 
 ## [Unreleased]
 
+### Ajouté
+- **T-019 partie 2a** (2026-10-23) : `POST /projects/:id/analyze` (idempotent par `Idempotency-Key`, limites §7),
+  table `analysis_runs`, job `project.analyze` : palette (étape 1) et variantes noire et blanche (étape 2),
+  événements `analysis.step`, reprise après la dernière étape faite, lettre morte.
+
 ### Corrigé
+- **svg-engine** (2026-10-23) : resvg 2.6.2 tuait le processus de rendu sur les SVG issus de PDF (groupe découpé
+  hors du canevas) : 6 chartes sur 8 en `RASTER_FAILED` ; rendu sur canevas élargi puis découpé, pixels identiques.
+- **logo-kit** (2026-10-23) : la variante blanche d'un logo extrait avec son fond de présentation devenait un pavé
+  (Instacart) : `withoutBackdrop` retire la page et le panneau clairs qui couvrent tout le canevas.
+- **tests** (2026-10-23) : délais portés à 30 s là où l'on rastérise (un processus isolé par rendu, SEC-15).
 - **color-engine** (2026-10-18) : un logo transparent dont le dessin touche les bords perdait sa couleur, prise
   pour un fond (`EMPTY_IMAGE` pour 45 % des logos plats de l'échantillon) : pourtour jugé en entier (décision D) ;
   fond JPEG toléré (ΔE_OK 0,03) et halo de compression retiré (décision A) ; centre recalculé après fusion
