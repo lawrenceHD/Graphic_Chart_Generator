@@ -77,7 +77,9 @@ for (const brand of BRANDS) {
     unwrap(await logoKit.monochromeVariant(svg, target, rasterizer), 'mono');
   const black = await mono('#000000');
   const white = await mono('#FFFFFF');
-  const tonal = unwrap(logoKit.tonalSvg(svg, '#000000'), 'tonal');
+  // Without the presentation backdrop of a PDF extraction, as monochromeVariant does.
+  const bare = unwrap(await logoKit.withoutBackdrop(svg, rasterizer), 'backdrop');
+  const tonal = unwrap(logoKit.tonalSvg(bare, '#000000'), 'tonal');
   const { file: _file, note: _note, ...meta } = brand;
   brands.push({
     ...meta,

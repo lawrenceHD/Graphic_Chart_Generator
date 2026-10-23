@@ -17,5 +17,6 @@ export {
   structureScore,
   type RgbaRaster,
 } from './fidelity.js';
+export { withoutBackdrop } from './backdrop.js';
 export { LIGHT_LUMINANCE } from './paint.js';
 export { monochromeVariant, SEPARATION, STRUCTURE_THRESHOLD, type MonoChoice } from './variant.js';

@@ -1,5 +1,6 @@
 import type { RasterError, Rasterizer } from '@app/contracts';
 import { ok, type Result } from '@app/kernel';
+import { withoutBackdrop } from './backdrop.js';
 import { exteriorLoss, structureScore } from './fidelity.js';
 import {
   monochromeSvg,
@@ -44,12 +45,15 @@ export async function monochromeVariant(
   target: MonoTarget,
   rasterizer: Rasterizer,
 ): Promise<Result<MonoChoice, MonoError | RasterError>> {
-  const plain = monochromeSvg(svg, target);
+  // A presentation backdrop painted in the target colour would turn the variant into a block.
+  const logo = await withoutBackdrop(svg, rasterizer);
+  if (!logo.ok) return logo;
+  const plain = monochromeSvg(logo.value, target);
   if (!plain.ok) return plain;
   if (plain.value.path !== 'structural') {
     return ok({ ...plain.value, drawing: 'plain', separated: false, structure: null });
   }
-  const plainScore = await structureScore(svg, plain.value.svg, rasterizer);
+  const plainScore = await structureScore(logo.value, plain.value.svg, rasterizer);
   if (!plainScore.ok) return plainScore;
   let best: MonoChoice = {
     ...plain.value,
@@ -60,18 +64,18 @@ export async function monochromeVariant(
   if (plainScore.value >= STRUCTURE_THRESHOLD) return ok(best);
 
   for (const candidate of ALTERNATIVES) {
-    const variant = monochromeSvg(svg, target, candidate.options);
+    const variant = monochromeSvg(logo.value, target, candidate.options);
     if (!variant.ok) return variant;
     // Too many segments for this drawing, or nothing changed: the next one may still do.
     if (variant.value.path !== 'structural' || variant.value.svg === plain.value.svg) continue;
     // Knockouts remove whole surfaces: refuse them when a removed surface opens onto the outside. Separation
     // gaps reach the edge by design and only remove a line.
     if (candidate.drawing === 'knockout') {
-      const loss = await exteriorLoss(svg, variant.value.svg, rasterizer);
+      const loss = await exteriorLoss(logo.value, variant.value.svg, rasterizer);
       if (!loss.ok) return loss;
       if (loss.value > MAX_EXTERIOR_LOSS) continue;
     }
-    const score = await structureScore(svg, variant.value.svg, rasterizer);
+    const score = await structureScore(logo.value, variant.value.svg, rasterizer);
     if (!score.ok) return score;
     const choice: MonoChoice = {
       ...variant.value,
