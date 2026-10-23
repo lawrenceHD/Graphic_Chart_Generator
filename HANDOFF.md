@@ -4,7 +4,7 @@
 > Si ce fichier contredit Git, **Git fait foi** : corriger ce fichier avant toute autre action.
 
 ## Agent actif
-- **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-18
+- **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-23
 - **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 en cours : T-019 partie 1 faite (événements SSE) ; suite T-019 partie 2 (job d'analyse).
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
@@ -32,6 +32,8 @@ main (5d95f32, = origin/main)
                                                       └─ ticket/T-019-analyze-events  partie 1 : journal project_events, flux SSE, asset.status ; verify vert
                                                          └─ proto/studio-prototype  maquette navigable (prototypes/studio), gates vertes
                                                             └─ fix/mono-structure  variantes monochromes : structure, séparation, évidements, tonal ; écran Démarrer structuré ; verify vert
+                                                               └─ fix/engine-defects  panique resvg hors canevas, fond de présentation des variantes ; verify vert
+                                                                  └─ ticket/T-019-analyze-job  T-019 partie 2a : POST /analyze, analysis_runs, job étapes 1–2 ; verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -45,10 +47,10 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    Le classifieur de Claude Code refuse que l'agent écrive dans `.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`.
 
 ## Prochaines actions (ordre recommandé)
-1. **T-019 partie 2** : job `project.analyze` (palette `color-engine` avec `brandClusters`, variantes `logo-kit` depuis
-   `logo_sanitized`, sans IA), `POST /projects/:id/analyze` (`Idempotency-Key`), événements `analysis.step` et
-   `analysis.done`. Partie 1 faite : table `project_events`, `GET /projects/:id/events`, `asset.status`
-   (décisions dans `journal/OWNER_DECISIONS.md`).
+1. **T-019 partie 2b** : étape 3 sans IA, étape 4 (document initial composé depuis la palette et les variantes,
+   `analysis.done { seq }`). Partie 2a faite (`journal/OWNER_DECISIONS.md` § T-019 partie 2a). Review impeccable de la
+   maquette (2026-10-23) : P1 bandeau « animations réduites » qui masque les CTA, grille de mockups (libellés,
+   tuile orpheline), studio bleu générique ; défaut préexistant : traits parasites des variantes de Basecamp.
    **Interface** : note `journal/research/2026-10-19-interface-studio.md` (ancien front, inspirations, modèle Stitch,
    kit XIAS) ; décisions du propriétaire attendues (§5 : animation, gel de la landing, thème).
    **Maquette** (2026-10-19, demande du propriétaire) : `prototypes/studio/` (README), hors `pnpm verify`, ses propres
@@ -57,12 +59,8 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    possible) ; quota anonyme ≈ 2 images, à étendre avec un jeton HF gratuit (`HF_TOKEN` dans `prototypes/studio/.env.local`).
    Serveur MCP officiel Hugging Face installé (portée utilisateur). Entrées et polices : note
    `journal/research/2026-10-19-entrees-et-polices.md` (étapes E1–E7).
-   **Défauts moteur trouvés par la maquette** (le monochrome est corrigé sur `fix/mono-structure`) :
-   - resvg panique (`geom.rs:27`, unwrap sur None) sur 4 des 7 SVG extraits des chartes PDF (clipPath nombreux) :
-     ces uploads finiraient `RASTER_FAILED`. Reproduire avec `charters/cfdt/cfdt.svg` du corpus privé.
-   - Variante blanche d'un logo à forme de fond (Instacart) : la forme de fond est peinte dans la couleur cible,
-     la variante devient un pavé plein. `logo-kit` mono doit écarter une forme de fond couvrant la zone du logo.
-2. Limite « analyse » du §7 (5/h invité, 30/jour compte) à brancher sur `rate-limiter.ts` avec T-019. Les limites
+   **Défauts moteur trouvés par la maquette** : **corrigés** sur `fix/engine-defects` (2026-10-23) — panique resvg
+   (6 chartes sur 8 rendues à nouveau) et fond de présentation des variantes (Instacart).
    d'upload et de session invitée sont faites.
 3. ~~Worker : lettres mortes~~ fait. ~~Corpus de 20 logos~~ fait (`packages/svg-engine/fixtures/corpus/`, test
    `logo-kit/src/corpus.test.ts`) ; **validation visuelle du propriétaire attendue** (page « Corpus de 20 logos »).
@@ -117,3 +115,4 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 - Ne pas chercher le dépôt « ECCC » : c'est `affaan-m/ECC` (commit `76aaa77`).
 - Ne pas copier la bibliothèque de logos de `logo-design-skill` (marques déposées).
 - `proxy.ts` est la bonne convention en Next.js 16 (l'analyse du 2026-10-12 se trompait).
+2. ~~Limite « analyse » du §7~~ faite avec T-019 partie 2a. Les limites d'upload et de session invitée sont faites.
