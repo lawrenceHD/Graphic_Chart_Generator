@@ -89,6 +89,42 @@ describe('rasterize in an isolated child process (T-008, SEC-15)', () => {
       value: { svg: completed.value },
     });
   });
+
+  // resvg 2.6.2 panics (geom.rs:27) and kills the child when a clipped, masked or translucent group has
+  // all its content outside the canvas: PDF exports are full of them (6 of the 8 corpus charters).
+  it('renders groups lying outside the viewBox like the same logo without them', async () => {
+    const shape = '<rect x="3.3" y="2.7" width="9.1" height="6.4" fill="#C0392B"/>';
+    const offCanvas = [
+      '<g clip-path="url(#c)"><rect x="-500" y="2" width="20" height="20"/></g>',
+      '<g mask="url(#m)"><rect x="300" y="400" width="20" height="20"/></g>',
+      '<g opacity="0.5"><rect x="-40" y="-60" width="20" height="20"/></g>',
+    ].join('');
+    const defs =
+      '<defs><clipPath id="c"><rect x="-900" y="-900" width="2000" height="2000"/></clipPath>' +
+      '<mask id="m"><rect x="-900" y="-900" width="2000" height="2000" fill="#FFFFFF"/></mask></defs>';
+    const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="1.5 0.5 15 10">';
+    const expected = await rasterizer.rasterize(sanitized(`${open}${shape}</svg>`), 77);
+    const result = await rasterizer.rasterize(
+      sanitized(`${open}${defs}${offCanvas}${shape}</svg>`),
+      77,
+    );
+    if (!expected.ok) throw new Error(expected.error.reason);
+    if (!result.ok) throw new Error(result.error.reason);
+
+    expect([result.value.width, result.value.height]).toEqual([
+      expected.value.width,
+      expected.value.height,
+    ]);
+    expect(Buffer.from(result.value.rgba).equals(Buffer.from(expected.value.rgba))).toBe(true);
+    const probes: [number, number][] = [
+      [20, 20],
+      [0, 0],
+      [10, 13],
+    ];
+    for (const [x, y] of probes) {
+      expect(await pixel(result.value.png, x, y)).toEqual(await pixel(expected.value.png, x, y));
+    }
+  });
 });
 
 describe('child confinement (SEC-15)', () => {
