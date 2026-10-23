@@ -668,8 +668,13 @@ function CoverPreview({
   return (
     <div>
       <p className="m-0 mb-3 text-sm text-ink-3">Aperçu de la couverture</p>
+      {/* Mirrors the form (name, slogan, logo): hidden from assistive tech, which already reads the fields.
+          axe misreads its animated background as the page canvas, hence data-decorative (scripts/gates.mjs). */}
       <motion.div
+        aria-hidden
+        data-decorative
         className="@container relative aspect-[210/297] w-full overflow-hidden rounded-[28px] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.8)]"
+        initial={false}
         animate={{ backgroundColor: bg }}
         transition={{ duration: 0.6 }}
         style={{ background: bg, color: ink }}

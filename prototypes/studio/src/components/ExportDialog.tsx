@@ -92,7 +92,7 @@ export function ExportDialog({
               ))}
             </ul>
             <p className="mb-0 mt-4 text-xs text-ink-3">
-              Maquette : les exports réels arrivent avec T-028 et T-029.
+              Aperçu : les fichiers réels arriveront avec la version complète du studio.
             </p>
           </motion.div>
         </motion.div>

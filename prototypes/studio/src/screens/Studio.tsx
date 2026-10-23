@@ -31,6 +31,7 @@ import {
   stepProgress,
   useAnalysisStream,
   type AnalysisState,
+  type StreamEvent,
 } from '../lib/stream';
 import { navigate, useMediaQuery } from '../router';
 import { Burst } from '../components/Burst';
@@ -191,7 +192,7 @@ export function Studio({ slug }: { slug: string | undefined }) {
                 onPause={() => setPaused((p) => !p)}
                 onReplay={replay}
               />
-              <EventLog analysis={analysis} />
+              <EventLog analysis={analysis} brand={brand} />
               <Prompt suggestions={suggestions} disabled={!analysis.done} />
             </aside>
             <Canvas {...shared} />
@@ -447,33 +448,79 @@ function StepRow({
   );
 }
 
-function EventLog({ analysis }: { analysis: AnalysisState }) {
+const family = (font: string): string => font.replace(/ Variable$/, '');
+
+/** What the stream just said, in the viewer's words, with the time since the upload. */
+function describe(event: StreamEvent, brand: Brand): string {
+  if (event.type === 'asset.status')
+    return event.data.status === 'quarantined'
+      ? 'Fichier reçu, contrôle de sécurité en cours'
+      : 'Fichier sûr : aucun script ni lien externe';
+  if (event.type === 'analysis.done') return 'Charte prête, toutes les pages sont modifiables';
+  if (event.data.state === 'running') return `Début : ${STEP_SHORT[event.data.step].toLowerCase()}`;
+  const contrasts = brand.contrast.filter((pair) => pair.level !== 'fail').length;
+  const done: Record<1 | 2 | 3 | 4, string> = {
+    1: brand.mono.separated ? 'Logo lu, formes séparées pour les variantes' : 'Logo lu',
+    2: `${String(brand.extracted.length)} couleurs trouvées, ${String(contrasts)} paires de contraste valides`,
+    3: `Typographie : ${family(brand.fonts.display)} et ${family(brand.fonts.text)}`,
+    4: 'Pages assemblées',
+  };
+  return done[event.data.step];
+}
+
+function EventLog({ analysis, brand }: { analysis: AnalysisState; brand: Brand }) {
   const end = useRef<HTMLLIElement>(null);
+  const [raw, setRaw] = useState(false);
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'nearest' });
-  }, [analysis.events.length]);
+  }, [analysis.events.length, raw]);
+  // The "running" events only restate the step list above: the journal keeps what each step found.
+  const shown = analysis.events.filter(
+    (event) => event.type !== 'analysis.step' || event.data.state === 'done',
+  );
   return (
-    <section
-      tabIndex={0}
-      className="min-h-0 flex-1 overflow-y-auto p-4"
-      aria-label="Flux d'événements"
-    >
-      <h2 className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-3">
-        Flux en direct · SSE
-      </h2>
-      <ol className="m-0 list-none space-y-1 p-0 font-mono text-[11px] leading-relaxed">
+    <section tabIndex={0} className="min-h-0 flex-1 overflow-y-auto p-4" aria-label="Journal">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="m-0 text-sm font-semibold">Journal</h2>
+        <button
+          type="button"
+          aria-pressed={raw}
+          onClick={() => setRaw((value) => !value)}
+          className="h-8 rounded-full px-3 text-xs text-ink-3 hover:bg-elevated hover:text-ink"
+        >
+          {raw ? 'Vue lisible' : 'Événements bruts'}
+        </button>
+      </div>
+      <ol
+        className={`m-0 list-none p-0 ${raw ? 'space-y-1 font-mono text-[11px] leading-relaxed' : 'space-y-2 text-sm'}`}
+      >
         <AnimatePresence initial={false}>
-          {analysis.events.map((event) => (
+          {(raw ? analysis.events : shown).map((event) => (
             <motion.li
-              key={event.id}
+              key={`${raw ? 'raw' : 'say'}-${String(event.id)}`}
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={fade}
-              className="flex gap-2 text-ink-2"
+              className={raw ? 'flex gap-2 text-ink-2' : 'flex items-baseline gap-3'}
             >
-              <span className="text-ink-3 tabular">#{event.id}</span>
-              <span className="text-accent">{event.type}</span>
-              <span className="truncate">{JSON.stringify(event.data)}</span>
+              {raw ? (
+                <>
+                  <span className="tabular text-ink-3">#{event.id}</span>
+                  <span className="text-ink">{event.type}</span>
+                  <span className="truncate">{JSON.stringify(event.data)}</span>
+                </>
+              ) : (
+                <>
+                  <span className="tabular w-11 shrink-0 text-right text-xs text-ink-3">
+                    {(event.at / 1000).toLocaleString('fr-FR', {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}{' '}
+                    s
+                  </span>
+                  <span className="text-ink-2">{describe(event, brand)}</span>
+                </>
+              )}
             </motion.li>
           ))}
         </AnimatePresence>
