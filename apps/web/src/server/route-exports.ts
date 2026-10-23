@@ -1,5 +1,6 @@
 // Single import point for route files.
 export {
+  getAnalysisHandlers,
   getAssetHandlers,
   getDocumentHandlers,
   getEventHandlers,

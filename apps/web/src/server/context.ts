@@ -6,6 +6,7 @@ import { errorSummary } from '../lib/error-summary';
 import { appLogger } from '../logger';
 import { getDatabase } from '../lib/database';
 import { getRuntimeEnv } from '../lib/runtime-env';
+import { analysisHandlers } from './analysis-routes';
 import { assetHandlers } from './asset-routes';
 import { actorFromSession, createAuth, type Auth } from './auth';
 import { documentHandlers } from './document-routes';
@@ -98,6 +99,18 @@ const lazyQueue: JobQueue = {
   },
 };
 let assetRoutes: ReturnType<typeof assetHandlers> | undefined;
+let analysisRoutes: ReturnType<typeof analysisHandlers> | undefined;
+
+export function getAnalysisHandlers(): ReturnType<typeof analysisHandlers> {
+  analysisRoutes ??= analysisHandlers({
+    orm: getDatabase().orm,
+    appUrl: getRuntimeEnv().APP_URL,
+    resolveActor,
+    queue: lazyQueue,
+    limiter: getRateLimiter(),
+  });
+  return analysisRoutes;
+}
 
 export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
   const env = getRuntimeEnv();
