@@ -49,8 +49,10 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 ## Prochaines actions (ordre recommandé)
 1. **T-019 partie 2b** : étape 3 sans IA, étape 4 (document initial composé depuis la palette et les variantes,
    `analysis.done { seq }`). Partie 2a faite (`journal/OWNER_DECISIONS.md` § T-019 partie 2a). Review impeccable de la
-   maquette (2026-10-23) : P1 bandeau « animations réduites » qui masque les CTA, grille de mockups (libellés,
-   tuile orpheline), studio bleu générique ; défaut préexistant : traits parasites des variantes de Basecamp.
+   maquette (2026-10-23, 23/40, `.impeccable/critique/`) : corrigés sur `proto/studio-themes` — hero masqué au
+   chargement, thèmes jour/nuit/système du studio (décision du propriétaire), journal lisible à la place du JSON SSE.
+   Reste : logo en premier dans Démarrer, états d'erreur, cibles 44 px et `h1` du studio, bandeau « animations
+   réduites », canevas sous-utilisé ; défaut préexistant : traits parasites des variantes de Basecamp.
    **Interface** : note `journal/research/2026-10-19-interface-studio.md` (ancien front, inspirations, modèle Stitch,
    kit XIAS) ; décisions du propriétaire attendues (§5 : animation, gel de la landing, thème).
    **Maquette** (2026-10-19, demande du propriétaire) : `prototypes/studio/` (README), hors `pnpm verify`, ses propres
