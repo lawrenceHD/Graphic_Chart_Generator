@@ -61,7 +61,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    `journal/research/2026-10-19-entrees-et-polices.md` (étapes E1–E7).
    **Défauts moteur trouvés par la maquette** : **corrigés** sur `fix/engine-defects` (2026-10-23) — panique resvg
    (6 chartes sur 8 rendues à nouveau) et fond de présentation des variantes (Instacart).
-   d'upload et de session invitée sont faites.
+2. ~~Limite « analyse » du §7~~ faite avec T-019 partie 2a. Les limites d'upload et de session invitée sont faites.
 3. ~~Worker : lettres mortes~~ fait. ~~Corpus de 20 logos~~ fait (`packages/svg-engine/fixtures/corpus/`, test
    `logo-kit/src/corpus.test.ts`) ; **validation visuelle du propriétaire attendue** (page « Corpus de 20 logos »).
    Ensuite T-011 sur ce corpus et sur `corpus-reel/` (logos réels déposés en vrac par le propriétaire, à trier).
@@ -115,4 +115,3 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 - Ne pas chercher le dépôt « ECCC » : c'est `affaan-m/ECC` (commit `76aaa77`).
 - Ne pas copier la bibliothèque de logos de `logo-design-skill` (marques déposées).
 - `proxy.ts` est la bonne convention en Next.js 16 (l'analyse du 2026-10-12 se trompait).
-2. ~~Limite « analyse » du §7~~ faite avec T-019 partie 2a. Les limites d'upload et de session invitée sont faites.
