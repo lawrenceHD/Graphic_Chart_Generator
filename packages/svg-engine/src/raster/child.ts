@@ -88,34 +88,153 @@ interface Margins {
   readonly bottom: number;
 }
 
-// Whole-pixel margins from the image out to the content's bounding box, or undefined when the content
-// stays inside (or would need too large a canvas).
+// Whole-pixel margins from the image out to the content's bounding box; 'inside' when the content stays
+// inside, 'too-large' when reaching it would exceed MAX_CANVAS.
 function overflow(
   svg: string,
   viewBox: readonly number[],
   width: number,
   place: Fit,
-): Margins | undefined {
+): Margins | 'inside' | 'too-large' {
   const [x = 0, y = 0] = viewBox;
   const box = new resvg.Resvg(svg, OPTIONS).getBBox();
-  if (box === undefined) return undefined;
+  if (box === undefined) return 'inside';
   const left = Math.ceil(Math.max(0, (x - box.x) * place.scaleX));
   const top = Math.ceil(Math.max(0, (y - box.y) * place.scaleY));
   const right = Math.ceil(Math.max(0, (box.x + box.width - x) * place.scaleX - width));
   const bottom = Math.ceil(Math.max(0, (box.y + box.height - y) * place.scaleY - place.height));
-  if (left + top + right + bottom === 0) return undefined;
+  if (left + top + right + bottom === 0) return 'inside';
   const area = (width + left + right) * (place.height + top + bottom);
-  return area <= MAX_CANVAS ? { left, top, right, bottom } : undefined;
+  return area <= MAX_CANVAS ? { left, top, right, bottom } : 'too-large';
+}
+
+// Tags of the canonical sanitizeSvg output: no comment, no CDATA, attribute values escape <, > and ".
+const TAG = /<(\/?)([A-Za-z][\w:.-]*)([^<>]*?)(\/?)>/g;
+// Content of these elements is not drawn where it stands.
+const NOT_RENDERED = new Set([
+  'defs',
+  'clipPath',
+  'mask',
+  'pattern',
+  'symbol',
+  'marker',
+  'linearGradient',
+  'radialGradient',
+  'filter',
+]);
+const ISOLATION = /\s(?:clip-path|mask|opacity)="[^"]*"/g;
+
+interface Candidate {
+  readonly start: number;
+  readonly end: number;
+  readonly ancestors: readonly string[];
+}
+
+/**
+ * Drops the clipped, masked, translucent or use elements whose content lies wholly outside the viewBox: they
+ * paint no pixel, but resvg 2.6.2 panics on them when the canvas cannot be widened up to them. Elements
+ * with a filter are kept (a blur may bleed into the canvas), as is anything resvg cannot measure.
+ */
+function withoutOffCanvasGroups(svg: string, viewBox: readonly number[]): string {
+  const [x = 0, y = 0, w = 0, h = 0] = viewBox;
+  // Strokes are not in the bounding box: keep what comes within 5 % of the canvas
+  const slack = Math.max(w, h) * 0.05;
+  const rootOpen = /^<svg [^>]*>/.exec(svg)?.[0];
+  if (rootOpen === undefined) return svg;
+  const stack: { name: string; open: string; start: number; hidden: boolean }[] = [];
+  const definitions: string[] = [];
+  const candidates: Candidate[] = [];
+  for (const match of svg.matchAll(TAG)) {
+    const [tag, closing, name = '', , selfClosing] = match;
+    const start = match.index;
+    if (closing === '/') {
+      const element = stack.pop();
+      if (element === undefined) return svg;
+      const end = start + tag.length;
+      if (element.name === 'defs' && !stack.some((parent) => parent.hidden)) {
+        definitions.push(svg.slice(element.start, end));
+      }
+      if (!element.hidden && stack.length > 0 && isCandidate(element.open)) {
+        const slice = svg.slice(element.start, end);
+        if (!slice.includes(' filter="')) {
+          candidates.push({
+            start: element.start,
+            end,
+            ancestors: stack.slice(1).map((e) => e.open),
+          });
+        }
+      }
+      continue;
+    }
+    const hidden = NOT_RENDERED.has(name) || stack.some((parent) => parent.hidden);
+    if (selfClosing === '/') {
+      if (!hidden && stack.length > 0 && isCandidate(tag) && !tag.includes(' filter="')) {
+        candidates.push({
+          start,
+          end: start + tag.length,
+          ancestors: stack.slice(1).map((e) => e.open),
+        });
+      }
+      continue;
+    }
+    stack.push({ name, open: tag, start, hidden });
+  }
+
+  const dropped: Candidate[] = [];
+  for (const candidate of candidates.sort((a, b) => a.start - b.start)) {
+    if (dropped.some((outer) => candidate.start >= outer.start && candidate.end <= outer.end))
+      continue;
+    const element = svg
+      .slice(candidate.start, candidate.end)
+      .replace(/^<[^>]*>/, (open) => open.replace(ISOLATION, ''));
+    const opens = candidate.ancestors.map((open) => open.replace(ISOLATION, ''));
+    const closes = candidate.ancestors
+      .map((open) => `</${/^<([\w:.-]+)/.exec(open)?.[1] ?? 'g'}>`)
+      .reverse();
+    const alone = `${rootOpen}${definitions.join('')}${opens.join('')}${element}${closes.join('')}</svg>`;
+    let box: { x: number; y: number; width: number; height: number } | undefined;
+    try {
+      box = new resvg.Resvg(alone, OPTIONS).getBBox();
+    } catch {
+      continue;
+    }
+    const outside =
+      box === undefined ||
+      box.x > x + w + slack ||
+      box.y > y + h + slack ||
+      box.x + box.width < x - slack ||
+      box.y + box.height < y - slack;
+    if (outside) dropped.push(candidate);
+  }
+  let pruned = svg;
+  for (const { start, end } of dropped.sort((a, b) => b.start - a.start)) {
+    pruned = pruned.slice(0, start) + pruned.slice(end);
+  }
+  return pruned;
+}
+
+// Isolated groups, and use elements: resvg renders each one as a group of its own.
+function isCandidate(open: string): boolean {
+  return (
+    open.startsWith('<use ') || / (?:clip-path|mask)="/.test(open) || / opacity="(?!1")/.test(open)
+  );
 }
 
 // resvg 2.6.2 panics (geom.rs:27, the child dies) when a clipped, masked or translucent group has all its
 // content off the canvas, as PDF exports often do. Render on a canvas widened by whole pixels up to that
 // content, with the same scales and pixel grid, then cut the image back out: the pixels of a plain render.
-function render(svg: string, width: number): ChildResponse {
-  const viewBox = /^<svg [^>]*viewBox="([^"]+)"/.exec(svg)?.[1]?.split(' ').map(Number) ?? [];
+// When even that canvas would be too large (a whole PDF page around the logo), the groups lying wholly
+// outside are dropped first: they paint nothing.
+function render(original: string, width: number): ChildResponse {
+  const viewBox = /^<svg [^>]*viewBox="([^"]+)"/.exec(original)?.[1]?.split(' ').map(Number) ?? [];
   const place = fit(viewBox, width);
-  const margins = viewBox.length === 4 ? overflow(svg, viewBox, width, place) : undefined;
-  if (margins === undefined) {
+  let svg = original;
+  let margins = viewBox.length === 4 ? overflow(svg, viewBox, width, place) : 'inside';
+  if (margins === 'too-large') {
+    svg = withoutOffCanvasGroups(svg, viewBox);
+    margins = overflow(svg, viewBox, width, place);
+  }
+  if (typeof margins === 'string') {
     const image = new resvg.Resvg(svg, {
       ...OPTIONS,
       fitTo: { mode: 'width', value: width },

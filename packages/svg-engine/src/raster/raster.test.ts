@@ -125,6 +125,51 @@ describe('rasterize in an isolated child process (T-008, SEC-15)', () => {
       expect(await pixel(result.value.png, x, y)).toEqual(await pixel(expected.value.png, x, y));
     }
   });
+
+  // A PDF page around the logo puts such groups far away: widening the canvas up to them would exceed
+  // its cap at mockup widths (BlaBlaCar at 1600 px, Porto at 3000 px). They are dropped instead.
+  it('renders far off-canvas groups at a large width without crashing', async () => {
+    const shape = '<rect x="3.3" y="2.7" width="9.1" height="6.4" fill="#C0392B"/>';
+    const farAway = [
+      '<g clip-path="url(#c)"><rect x="-50000" y="2" width="20" height="20"/></g>',
+      '<g transform="translate(90000 0)"><g opacity="0.5"><rect x="0" y="0" width="20" height="20"/></g></g>',
+      '<g clip-path="url(#c)"><g mask="url(#m)"><rect x="5" y="40000" width="20" height="20"/></g></g>',
+      // Glyphs of a PDF caption: resvg turns each use into a group (Porto at 3000 px)
+      '<g clip-path="url(#c)"><rect x="2" y="1" width="1" height="1" fill="#C0392B" opacity="0"/>' +
+        '<use href="#glyph" transform="matrix(7,0,0,-7,-40000,-18000)"/></g>',
+    ].join('');
+    const defs =
+      '<defs><clipPath id="c"><rect x="-90000" y="-90000" width="200000" height="200000"/></clipPath>' +
+      '<mask id="m"><rect x="-90000" y="-90000" width="200000" height="200000" fill="#FFFFFF"/></mask>' +
+      '<path id="glyph" d="M0 0H.5V.7H0Z"/></defs>';
+    const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="1.5 0.5 15 10">';
+    const expected = await rasterizer.rasterize(sanitized(`${open}${shape}</svg>`), 1600);
+    const result = await rasterizer.rasterize(
+      sanitized(`${open}${defs}${farAway}${shape}</svg>`),
+      1600,
+    );
+    if (!expected.ok) throw new Error(expected.error.reason);
+    if (!result.ok) throw new Error(result.error.reason);
+
+    expect(Buffer.from(result.value.rgba).equals(Buffer.from(expected.value.rgba))).toBe(true);
+  });
+
+  it('keeps a translucent group that reaches into the viewBox', async () => {
+    const open = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">';
+    const far = '<g clip-path="url(#c)"><rect x="-90000" y="0" width="20" height="20"/></g>';
+    const defs =
+      '<defs><clipPath id="c"><rect x="-90000" y="-90000" width="200000" height="200000"/></clipPath></defs>';
+    const visible =
+      '<g opacity="0.5"><rect x="-90000" y="0" width="90005" height="10" fill="#000000"/></g>';
+    const result = await rasterizer.rasterize(
+      sanitized(`${open}${defs}${far}${visible}</svg>`),
+      100,
+    );
+    if (!result.ok) throw new Error(result.error.reason);
+
+    expect((await pixel(result.value.png, 20, 50))[3]).toBe(128);
+    expect((await pixel(result.value.png, 80, 50))[3]).toBe(0);
+  });
 });
 
 describe('child confinement (SEC-15)', () => {
