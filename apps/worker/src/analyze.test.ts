@@ -1,5 +1,15 @@
 import { randomBytes } from 'node:crypto';
-import { analysisRuns, and, assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
+import {
+  analysisRuns,
+  and,
+  assets,
+  documents,
+  eq,
+  guestSessions,
+  projects,
+  readProjectEvents,
+} from '@app/db';
+import { BrandDocumentSchema } from '@app/document';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
@@ -23,9 +33,10 @@ const LOGO = sanitized(
   '<path d="M10 10 L90 10 L50 90 Z" fill="#1F4BFF"/><circle cx="50" cy="35" r="12" fill="#FF7A00"/>',
 );
 
-describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.md §5.2)', () => {
+describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.md §5.2)', () => {
   let test: TestDatabase;
   let projectId = '';
+  let guestId = '';
   const objects = new Map<string, Uint8Array>();
   const rasterizer = createNodeRasterizer();
   const run = (analysisId: string) =>
@@ -36,7 +47,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
 
   beforeAll(async () => {
     test = await createTestDatabase(adminUrl);
-    const guestId = id();
+    guestId = id();
     await test.database.orm
       .insert(guestSessions)
       .values({ id: guestId, tokenHash: guestId, expiresAt: new Date() });
@@ -88,14 +99,27 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
     (await readProjectEvents(test.database.orm, projectId, cursor, 100)).events;
   const lastEventId = async () =>
     (await readProjectEvents(test.database.orm, projectId, 0, 1000)).cursor;
+  const documentRow = async () =>
+    (await test.database.orm.select().from(documents).where(eq(documents.projectId, projectId)))[0];
+  // Steps 3 (no AI yet: explicit defaults) and 4 (initial document) of a run on this project.
+  const lastSteps = (code: string) => [
+    { type: 'analysis.step', data: { step: 3, state: 'running' } },
+    { type: 'analysis.step', data: { step: 3, state: 'done', code: 'AI_NOT_CONFIGURED' } },
+    { type: 'analysis.step', data: { step: 4, state: 'running' } },
+    {
+      type: 'analysis.step',
+      data: code === '' ? { step: 4, state: 'done' } : { step: 4, state: 'done', code },
+    },
+    { type: 'analysis.done', data: { seq: 0 } },
+  ];
 
-  it('stores the palette, writes the black and white variants and reports each step', async () => {
+  it('stores the palette and the variants, composes the document and reports each step', async () => {
     const cursor = await lastEventId();
     const analysisId = await start(LOGO, 'image/svg+xml');
     await run(analysisId);
 
     const done = await runRow(analysisId);
-    expect(done).toMatchObject({ status: 'done', step: 2, errorCode: null });
+    expect(done).toMatchObject({ status: 'done', step: 4, errorCode: null });
     const [logo] = await test.database.orm
       .select()
       .from(assets)
@@ -117,7 +141,27 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
       { type: 'analysis.step', data: { step: 1, state: 'done' } },
       { type: 'analysis.step', data: { step: 2, state: 'running' } },
       { type: 'analysis.step', data: { step: 2, state: 'done' } },
+      ...lastSteps(''),
     ]);
+    const stored = await documentRow();
+    expect(stored?.seq).toBe(0);
+    const document = BrandDocumentSchema.parse(stored?.body);
+    expect(document.tokens.colors.primary).toEqual({ hex: '#1F4BFF', source: 'extracted' });
+    expect(document.brand.name).toBe('Logo');
+    const byVariant = new Map(
+      made.map((row) => [Reflect.get(Object(row.meta), 'variant'), row.id] as const),
+    );
+    expect(document.assets).toMatchObject({
+      logoSanitizedId: done?.logoAssetId,
+      variants: [
+        { assetId: done?.logoAssetId, kind: 'color', needsReview: false },
+        { assetId: byVariant.get('black'), kind: 'mono-black' },
+        { assetId: byVariant.get('white'), kind: 'mono-white' },
+      ],
+    });
+    expect(
+      await test.database.orm.select().from(projects).where(eq(projects.id, projectId)),
+    ).toMatchObject([{ sceneCategory: 'generic', status: 'ready' }]);
 
     // A redelivered job finds the run done: nothing is redone or announced again.
     const after = await lastEventId();
@@ -130,10 +174,14 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
     const cursor = await lastEventId();
     const analysisId = await start(LOGO, 'image/svg+xml', 1);
     await run(analysisId);
-    expect((await eventsAfter(cursor)).map((stored) => stored.event.data)).toEqual([
-      { step: 2, state: 'running' },
-      { step: 2, state: 'done' },
+    // The project already has a document, which the user may have edited: it is kept as it is.
+    const before = await documentRow();
+    expect((await eventsAfter(cursor)).map((stored) => stored.event)).toEqual([
+      { type: 'analysis.step', data: { step: 2, state: 'running' } },
+      { type: 'analysis.step', data: { step: 2, state: 'done' } },
+      ...lastSteps('DOCUMENT_KEPT'),
     ]);
+    expect(await documentRow()).toEqual(before);
   });
 
   it('analyses a raster logo; its variants wait for vectorisation', async () => {
@@ -143,9 +191,9 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
     const analysisId = await start(image.value.png, 'image/png');
     await run(analysisId);
 
-    expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 2 });
+    expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
     expect(await variants((await runRow(analysisId))?.logoAssetId ?? '')).toEqual([]);
-    expect((await eventsAfter(cursor)).at(-1)?.event.data).toEqual({
+    expect((await eventsAfter(cursor)).map((stored) => stored.event.data)).toContainEqual({
       step: 2,
       state: 'done',
       code: 'VARIANTS_NEED_VECTOR',
@@ -163,6 +211,48 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–2 (02_ARCHITECTURE.m
       state: 'failed',
       code: 'EMPTY_IMAGE',
     });
+  });
+
+  it('fails step 4 with a stable code when a variant no longer reads back', async () => {
+    projectId = id();
+    const { orm } = test.database;
+    await orm.insert(projects).values({ id: projectId, guestSessionId: guestId, title: 'Autre' });
+    const analysisId = await start(LOGO, 'image/svg+xml', 2);
+    const logoId = (await runRow(analysisId))?.logoAssetId ?? '';
+    const roles = {
+      primary: { hex: '#1F4BFF', source: 'extracted' },
+      accent: { hex: '#FF7A00', source: 'extracted' },
+      neutralLight: { hex: '#F4F4FC', source: 'derived' },
+      neutralDark: { hex: '#15151F', source: 'derived' },
+      extra: [],
+    };
+    await orm
+      .update(assets)
+      .set({ meta: { palette: { roles } } })
+      .where(eq(assets.id, logoId));
+    await orm.insert(assets).values({
+      id: id(),
+      projectId,
+      kind: 'logo_variant',
+      status: 'clean',
+      storageKey: `projects/${projectId}/assets/${id()}/black`,
+      mime: 'image/svg+xml',
+      bytes: 1,
+      meta: { logoAssetId: logoId, variant: 'black' },
+    });
+    const cursor = await lastEventId();
+    await run(analysisId);
+
+    expect(await runRow(analysisId)).toMatchObject({
+      status: 'failed',
+      errorCode: 'VARIANT_META_INVALID',
+    });
+    expect((await eventsAfter(cursor)).at(-1)?.event.data).toEqual({
+      step: 4,
+      state: 'failed',
+      code: 'VARIANT_META_INVALID',
+    });
+    expect(await documentRow()).toBeUndefined();
   });
 
   it('dead letter: a run out of attempts fails on the step it was on', async () => {
