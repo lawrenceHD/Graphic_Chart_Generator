@@ -23,7 +23,7 @@ const TOOL = (process.env.IMAGE_TOOL_URL ?? 'http://localhost:3333').replace(/\/
 const HEADERS = process.env.IMAGE_TOOL_TOKEN
   ? { Authorization: `Bearer ${process.env.IMAGE_TOOL_TOKEN}` }
   : {};
-// Tool preset → prototype scene key (src/lib/photos.ts). The tool has no office scene yet.
+// Tool preset → prototype scene key (src/lib/photos.ts).
 const PRESET_TO_SCENE = {
   'business-card': 'cards',
   'shop-sign': 'store',
@@ -31,6 +31,7 @@ const PRESET_TO_SCENE = {
   't-shirt-folded': 'tee',
   'laptop-screen': 'phone',
   'framed-poster': 'billboard',
+  'reception-wall': 'office',
 };
 const LOGO_WIDTH = 1600;
 
