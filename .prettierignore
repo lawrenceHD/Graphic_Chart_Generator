@@ -9,6 +9,12 @@ coverage/
 # Specifications and third-party agent material are edited by hand
 docs/
 .claude/
+.agent/
+.gemini/
+.impeccable/
+.github/agents/
+.github/hooks/
+.github/skills/
 *.md
 # Written in the workspace by the Gitleaks action and by the CI verify step
 results.sarif

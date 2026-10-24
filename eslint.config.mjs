@@ -53,6 +53,14 @@ export default tseslint.config(
       'prototypes/**',
       // Private corpus (separate repository): research tools, not project code.
       '.cache/**',
+      // Agent skills and hooks installed by their vendors (third-party material, as .prettierignore).
+      '.claude/**',
+      '.agent/**',
+      '.gemini/**',
+      '.impeccable/**',
+      '.github/agents/**',
+      '.github/hooks/**',
+      '.github/skills/**',
     ],
   },
   ...tseslint.configs.strictTypeChecked,
