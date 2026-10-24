@@ -1,5 +1,11 @@
 export { apply, applyInverse, type ApplyResult, type CommandError } from './commands.js';
 export { CommandSchema, type ApplyInput, type Command } from './command-schema.js';
+export {
+  composeInitialDocument,
+  type ComposeColor,
+  type ComposeError,
+  type ComposeInput,
+} from './compose.js';
 export { migrate, type MigrationError } from './migrate.js';
 export {
   BrandDocumentSchema,
