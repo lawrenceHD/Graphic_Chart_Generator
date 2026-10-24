@@ -1177,7 +1177,7 @@ function MockupShowcase() {
         </h2>
         <p className="mt-4 max-w-lg text-ink-2">
           Choisissez une marque : tous les supports changent en même temps.
-          {photos ? ' Les photographies sont générées à partir du vrai logo.' : ''}
+          {photos ? ' Le vrai logo est projeté sur des photographies, jamais redessiné.' : ''}
         </p>
         <div className="mt-6">
           <BrandChips group="mockups" value={slug} onChange={setSlug} />
@@ -1186,10 +1186,16 @@ function MockupShowcase() {
           {scenes.map((scene, index) => {
             const url = photoOf(brand.slug, scene);
             const Vector = VECTOR_FOR[SCENE_VECTOR[scene] ?? 'cards'];
+            // Three columns after the 2 × 2 lead tile: a last tile alone on its row spans it, panoramic.
+            const wide = index === scenes.length - 1 && (scenes.length - 3) % 3 === 1;
+            const shape =
+              index === 0
+                ? 'min-h-[420px] lg:min-h-[640px]'
+                : `aspect-[4/5] ${wide ? 'lg:aspect-[16/7]' : ''}`;
             return (
               <motion.figure
                 key={`${brand.slug}-${scene}`}
-                className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''}`}
+                className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''} ${wide ? 'lg:col-span-3' : ''}`}
                 initial={reduce ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={reduce ? { duration: 0.1 } : { ...softSpring, delay: index * 0.07 }}
@@ -1202,7 +1208,7 @@ function MockupShowcase() {
                     <motion.img
                       src={url}
                       alt={`${SCENE_LABEL[scene] ?? scene} ${brand.name}`}
-                      className={`block h-full w-full object-cover ${index === 0 ? 'min-h-[420px] lg:min-h-[640px]' : 'aspect-[4/5]'}`}
+                      className={`block h-full w-full object-cover ${shape}`}
                       whileHover={reduce ? undefined : { scale: 1.05 }}
                       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                     />
@@ -1210,7 +1216,7 @@ function MockupShowcase() {
                     <Vector
                       brand={brand}
                       palette={palette}
-                      className={`@container h-full !rounded-[36px] ${index === 0 ? 'min-h-[420px]' : 'aspect-[4/5]'}`}
+                      className={`@container h-full !rounded-[36px] ${shape}`}
                     />
                   ) : null}
                 </Tilt>
