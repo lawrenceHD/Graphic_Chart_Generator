@@ -15,6 +15,7 @@ const here = new URL('../', import.meta.url);
 if (existsSync(new URL('.env.local', here))) loadEnvFile(new URL('.env.local', here));
 const repo = new URL('../../', here);
 const raster = await import(new URL('packages/svg-engine/dist/raster/index.js', repo).href);
+const logoKit = await import(new URL('packages/logo-kit/dist/index.js', repo).href);
 const sharp = createRequire(new URL('packages/svg-engine/package.json', repo))('sharp');
 const rasterizer = raster.createNodeRasterizer();
 
@@ -78,7 +79,9 @@ let failed = 0;
 for (const brand of brands.filter((b) => only.length === 0 || only.includes(b.slug))) {
   const dir = new URL(`src/data/mockups/${brand.slug}/`, here);
   await mkdir(dir, { recursive: true });
-  const logo = await rasterizer.rasterize(brand.logo, LOGO_WIDTH);
+  // Printed on the support: without the presentation backdrop of a PDF extraction (logo-kit)
+  const bare = await logoKit.withoutBackdrop(brand.logo, rasterizer);
+  const logo = await rasterizer.rasterize(bare.ok ? bare.value : brand.logo, LOGO_WIDTH);
   if (!logo.ok) {
     console.warn(`${brand.slug}: logo not rasterized (${logo.error.reason})`);
     failed += 1;
