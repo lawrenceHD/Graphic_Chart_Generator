@@ -1,6 +1,7 @@
 # Prototype du studio (Charta)
 
 Maquette navigable du produit, jetable :
+
 - accueil ;
 - démarrage ;
 - espace de travail « façon Stitch » qui construit la charte en direct.
@@ -21,12 +22,14 @@ npm run dev                # http://localhost:5180, et l'adresse réseau pour le
 ## Ce qui est réel, ce qui est simulé
 
 **Réel** :
+
 - palettes, rôles, échelles, contrastes ;
 - variantes noir et blanc, zone de protection, favicon, interdits.
 
 Ils sont calculés par les moteurs du dépôt. Dans l'inspecteur, les contrastes sont recalculés par `color-engine` à chaque modification.
 
 **Simulé** :
+
 - le flux SSE : il rejoue exactement les événements de `GET /projects/:id/events` (T-019) sur une minuterie ;
 - l'envoi du fichier ;
 - le copilote : les puces exécutent des commandes locales ;
@@ -39,6 +42,7 @@ Ils sont calculés par les moteurs du dépôt. Dans l'inspecteur, les contrastes
 ## Mockups photoréalistes (Nano Banana)
 
 `npm run mockups` génère, pour chaque marque de démo, 7 photographies :
+
 - cartes de visite, devanture, tote bag, t-shirt, application, affichage, signalétique ;
 - réalisées avec Gemini à partir du **vrai logo** ;
 - écrites dans `src/data/mockups/` (ignoré par git).
@@ -46,14 +50,30 @@ Ils sont calculés par les moteurs du dépôt. Dans l'inspecteur, les contrastes
 L'accueil les affiche automatiquement à la place des mockups vectoriels.
 
 La clé se trouve dans `prototypes/studio/.env.local` (`GEMINI_API_KEY=…`, ignoré par git), et le script ne l'affiche jamais. Pour une reprise :
+
 - `GEN_SCENES=cards,store` limite le passage à certaines scènes ;
 - `GEN_MODEL=…` impose un modèle.
 
 **Prérequis** : la facturation doit être activée sur le projet Google de la clé. En formule gratuite, le quota des modèles d'image est de 0 (`limit: 0`).
 
+## Mockups sans IA sur le logo (outil d'images local)
+
+`npm run mockups:local` projette le **vrai logo** de chaque marque sur les scènes vierges de l'outil
+`MCP-IMAGE-GENERATION` (dossier voisin du dépôt), comme le fera `mockup-engine` (ADR-008). C'est gratuit et sans quota.
+
+1. Dans l'outil : copier `.env.charta-dev.example` vers `.env`, puis lancer `npm start`.
+2. Créer une scène par type (carte de visite, écran, affiche…), puis placer ses 4 coins dans
+   http://localhost:3333/scene-editor.html.
+3. Ici : `npm run mockups:local`. Le script prend la dernière scène prête de chaque type et écrit
+   `src/data/mockups/<marque>/<scène>.webp`. Les fichiers existants sont gardés.
+
+Variables : `IMAGE_TOOL_URL` (par défaut `http://localhost:3333`), `IMAGE_TOOL_TOKEN` si l'outil a un `API_TOKEN`,
+`GEN_SCENES=cards,phone` pour limiter les scènes.
+
 ## Contrôles
 
 `node scripts/gates.mjs` contrôle 3 écrans, en 320, 390 et 1440 px, avec et sans réduction des animations :
+
 - axe (WCAG 2.2 AA) ;
 - débordement horizontal ;
 - cibles ≥ 24 px ;
