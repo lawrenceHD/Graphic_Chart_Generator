@@ -5,7 +5,7 @@
 
 ## Agent actif
 - **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-23
-- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 en cours : T-019 partie 1 faite (événements SSE) ; suite T-019 partie 2 (job d'analyse).
+- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 : **T-019 terminé** (2026-10-24, `sortie tikets/T-019.md`). Suite : T-020 (dépendance i18n à autoriser) ou T-026 (`mockup-engine`, sans dépendance).
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
 ## Branches (empilées, poussées sur origin le 2026-10-18)
@@ -36,6 +36,8 @@ main (5d95f32, = origin/main)
                                                                   └─ ticket/T-019-analyze-job  T-019 partie 2a : POST /analyze, analysis_runs, job étapes 1–2 ; verify vert
                                                                      └─ proto/studio-themes  revue impeccable : hero, thèmes jour/nuit/système, journal lisible
                                                                         └─ proto/local-mockups  `npm run mockups:local` : logos projetés sur les scènes de l'outil d'images local
+                                                                           └─ fix/raster-far-offcanvas  logos sur page PDF entière rasterisés jusqu'à 4 096 px ; galerie mockups 7/7 photos ; verify vert
+                                                                              └─ ticket/T-019-analyze-document  T-019 partie 2b : étapes 3 (sans IA) et 4 (document initial) ; verify vert
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -49,7 +51,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    Le classifieur de Claude Code refuse que l'agent écrive dans `.claude/`, `CLAUDE.md`, `AGENTS.md`, `.mcp.json`.
 
 ## Prochaines actions (ordre recommandé)
-1. **T-019 partie 2b** : étape 3 sans IA, étape 4 (document initial composé depuis la palette et les variantes,
+1. ~~**T-019 partie 2b**~~ **fait le 2026-10-24** (décisions : `journal/OWNER_DECISIONS.md` § T-019 partie 2b). Ancien texte : étape 3 sans IA, étape 4 (document initial composé depuis la palette et les variantes,
    `analysis.done { seq }`). Partie 2a faite (`journal/OWNER_DECISIONS.md` § T-019 partie 2a). Review impeccable de la
    maquette (2026-10-23, 23/40, `.impeccable/critique/`) : corrigés sur `proto/studio-themes` — hero masqué au
    chargement, thèmes jour/nuit/système du studio (décision du propriétaire), journal lisible à la place du JSON SSE.
