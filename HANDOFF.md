@@ -34,6 +34,8 @@ main (5d95f32, = origin/main)
                                                             └─ fix/mono-structure  variantes monochromes : structure, séparation, évidements, tonal ; écran Démarrer structuré ; verify vert
                                                                └─ fix/engine-defects  panique resvg hors canevas, fond de présentation des variantes ; verify vert
                                                                   └─ ticket/T-019-analyze-job  T-019 partie 2a : POST /analyze, analysis_runs, job étapes 1–2 ; verify vert
+                                                                     └─ proto/studio-themes  revue impeccable : hero, thèmes jour/nuit/système, journal lisible
+                                                                        └─ proto/local-mockups  `npm run mockups:local` : logos projetés sur les scènes de l'outil d'images local
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -63,6 +65,12 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
    `journal/research/2026-10-19-entrees-et-polices.md` (étapes E1–E7).
    **Défauts moteur trouvés par la maquette** : **corrigés** sur `fix/engine-defects` (2026-10-23) — panique resvg
    (6 chartes sur 8 rendues à nouveau) et fond de présentation des variantes (Instacart).
+1 bis. **Outil de scènes** `../MCP-IMAGE-GENERATION` (branche `feat/charta-profile`, 2026-10-24, 90 tests verts) :
+   profil `TOOL_PROFILE=charta`, catégories `SceneCategory`, droits par modèle (FLUX.2 klein 9B = dev seulement),
+   revue du propriétaire (3 logos), checklist §6.3, `index.json`, profils `.env.charta-dev` / `.env.charta-prod`,
+   `npm run check:charta`. Scènes de dev → `.cache/scenes-dev` ; catalogue → `assets/scenes`. **À faire par le
+   propriétaire** : générer les 3 scènes du MVP, placer les coins, faire la revue. À reporter dans `docs/06` : format de
+   `assets/scenes/index.json` (`id`, `category`, `usage`, `reviewed`) et formule `flat` pondérée par l'alpha du logo.
 2. ~~Limite « analyse » du §7~~ faite avec T-019 partie 2a. Les limites d'upload et de session invitée sont faites.
 3. ~~Worker : lettres mortes~~ fait. ~~Corpus de 20 logos~~ fait (`packages/svg-engine/fixtures/corpus/`, test
    `logo-kit/src/corpus.test.ts`) ; **validation visuelle du propriétaire attendue** (page « Corpus de 20 logos »).
