@@ -250,3 +250,27 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   `code: VARIANTS_NEED_VECTOR` (vectorisation, T-011). Chaque étape valide son résultat, `step` et son événement
   dans une transaction : une reprise repart après la dernière étape faite. Erreur métier (`EMPTY_IMAGE`,
   `LOGO_UNREADABLE`…) → analyse `failed` et `analysis.step { state: 'failed', code }`.
+
+## T-019 partie 2b (délégation, 2026-10-24) — à reporter dans `docs/07_AI_COPILOT.md` §3.3, `docs/03_DATA_MODEL.md` §4 et `docs/04_API_CONTRACTS.md` §5
+- **Étape 3 sans IA** (jusqu'à T-030) : `analysis.step { step: 3, state: 'done', code: 'AI_NOT_CONFIGURED' }` ;
+  `projects.scene_category` prend le repli `generic` s'il est vide. Rien n'est deviné.
+- **Valeurs par défaut explicites** (§3.3 point 3), via `composeInitialDocument` (`packages/document`) :
+  mission, vision, descriptions des valeurs et exemples de ton **vides** ; étiquettes des valeurs « Valeur 1 » à
+  « Valeur 4 » (« Value 1… » en anglais), car le schéma refuse une étiquette vide ; axes de ton à 50 ; archétype
+  `everyman` (le schéma l'impose et n'a pas de valeur « inconnu ») ; couple `modern-geometric` (« moderne,
+  polyvalent », `09_DESIGN_SYSTEM.md` §8) ; logo 0,25 / 24 px / 12 mm (`05_ENGINES.md` §5.5) ; nom = titre du
+  projet, ou « Ma marque » / « My brand ».
+- **Pages** : celles de `01_PRODUCT_MVP.md` §4 dans l'ordre, ids stables `page-<type>`, positions fractionnaires ;
+  **pas de page mockup** avant `mockup-engine` (T-026). Titres dans la langue du projet (`fr` par défaut).
+- **Variantes du document** : `color` = le logo assaini ; `mono-black` et `mono-white` = assets `logo_variant`,
+  `fidelity` = score de structure, `needsReview` si avertissement ou structure < 0,9. Logo matriciel : `color` seul.
+- **Étape 4** : document inséré en `seq = 0`, sans révision ; projet `ready` ; `analysis.done { seq }`. Un projet
+  qui a **déjà** un document le garde (`code: 'DOCUMENT_KEPT'`) : une nouvelle analyse n'écrase jamais les
+  modifications de l'utilisateur.
+
+## Rasterisation des logos sur une page entière (délégation, 2026-10-24) — à reporter dans `docs/05_ENGINES.md` §3.7
+- Quand le canevas élargi du contournement resvg dépasserait 16 M pixels (un logo extrait avec sa page PDF, aux
+  largeurs des mockups), les éléments découpés, masqués, translucides et les `use` **entièrement hors du viewBox**
+  (marge 5 %) sont retirés avant le rendu : ils ne peignent rien. Les éléments avec filtre sont gardés.
+  BlaBlaCar échouait dès 1 600 px, Porto dès 3 000 px ; tous les logos de démo passent jusqu'à 4 096 px.
+  Limite : BlaBlaCar à 4 096 px prend 5,3 s, au-delà du délai de 5 s ; 3 000 px suffisent aux mockups (§4.4).
