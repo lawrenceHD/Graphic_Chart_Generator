@@ -10,6 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@app/contracts": "workspace:*",
+    "@app/kernel": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "6.0.3",
     "vitest": "5.0.3"
