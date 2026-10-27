@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@app/color-engine": "workspace:*",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -23,11 +24,14 @@
     "@app/document": "workspace:*",
     "@app/kernel": "workspace:*",
     "@app/storage": "workspace:*",
+    "@tailwindcss/postcss": "4.3.3",
     "better-auth": "1.7.7",
     "next": "16.4.0",
+    "next-intl": "4.14.9",
     "pino": "10.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
     "zod": "4.6.5"
   }
 }

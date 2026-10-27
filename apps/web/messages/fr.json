@@ -1,0 +1,40 @@
+{
+  "common": {
+    "appName": "Charta",
+    "skipToContent": "Aller au contenu",
+    "preferences": "Préférences d'affichage",
+    "description": "Charte graphique générée à partir de votre logo : palette, contrastes et règles d’usage.",
+    "saveFailed": "Préférence non enregistrée. Réessayez."
+  },
+  "theme": {
+    "label": "Thème",
+    "system": "Système",
+    "light": "Jour",
+    "dark": "Nuit"
+  },
+  "locale": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "status": {
+    "success": "Succès",
+    "warning": "Attention",
+    "danger": "Erreur",
+    "info": "Information",
+    "separator": " : "
+  },
+  "home": {
+    "title": "Votre charte graphique, à partir de votre logo",
+    "lead": "Déposez un logo : Charta en extrait la palette, vérifie les contrastes et assemble une charte prête à partager.",
+    "preview": "Fondations de l'interface : {count, plural, one {# thème} other {# thèmes}} et deux langues."
+  },
+  "analysis": {
+    "steps": {
+      "read": "Lecture du logo et vérification du fichier…",
+      "palette": "Extraction de la palette et calcul des contrastes…",
+      "write": "Rédaction du manifeste et choix typographique…",
+      "assemble": "Assemblage de la charte…"
+    }
+  }
+}

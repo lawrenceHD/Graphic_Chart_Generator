@@ -5,7 +5,12 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "resolveJsonModule": true
   },
   "include": ["src/**/*", "next.config.ts", "next-env.d.ts", ".next/types/**/*.ts"]
 }

@@ -1,0 +1,40 @@
+{
+  "common": {
+    "appName": "Charta",
+    "skipToContent": "Skip to content",
+    "preferences": "Display preferences",
+    "description": "Brand guidelines generated from your logo: palette, contrast and usage rules.",
+    "saveFailed": "Preference not saved. Please try again."
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Day",
+    "dark": "Night"
+  },
+  "locale": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "status": {
+    "success": "Success",
+    "warning": "Warning",
+    "danger": "Error",
+    "info": "Information",
+    "separator": ": "
+  },
+  "home": {
+    "title": "Your brand guidelines, from your logo",
+    "lead": "Drop a logo: Charta extracts its palette, checks contrast and assembles brand guidelines ready to share.",
+    "preview": "Interface foundations: {count, plural, one {# theme} other {# themes}} and two languages."
+  },
+  "analysis": {
+    "steps": {
+      "read": "Reading the logo and checking the file…",
+      "palette": "Extracting the palette and computing contrast…",
+      "write": "Writing the manifesto and choosing typography…",
+      "assemble": "Assembling the brand guidelines…"
+    }
+  }
+}
