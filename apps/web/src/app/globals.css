@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+@import '../styles/tokens.css';
+
+/* Tailwind utilities read the interface tokens (09_DESIGN_SYSTEM §2): no raw colour in components. */
+@theme {
+  --color-*: initial;
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-preview: var(--bg-preview);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--accent-contrast);
+  --color-focus: var(--focus-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --spacing: 4px;
+  --radius-*: initial;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --text-*: initial;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+}
+
+@layer base {
+  body {
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  /* Visible focus on every interactive element: 2 px ring, 2 px offset (§5). */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}

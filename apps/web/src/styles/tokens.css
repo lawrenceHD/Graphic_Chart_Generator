@@ -1,0 +1,42 @@
+/*
+ * Interface tokens (09_DESIGN_SYSTEM §2). Each colour is light-dark(day, night): the theme follows the
+ * system unless <html data-theme> forces one (owner decision 2026-10-23). Starting values come from the
+ * studio prototype reviewed by the owner; contrast is checked in CI (design-tokens.contrast.test.ts).
+ * Only opaque oklch() values inside light-dark(), so the test can read them.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg-canvas: light-dark(oklch(0.965 0.008 85), oklch(0.16 0.008 60));
+  --bg-surface: light-dark(oklch(0.99 0.004 85), oklch(0.2 0.009 60));
+  --bg-elevated: light-dark(oklch(0.925 0.012 85), oklch(0.25 0.011 60));
+  --bg-preview: light-dark(oklch(0.9 0 0), oklch(0.31 0 0)); /* neutral preview background (§1.1) */
+  --border-subtle: light-dark(
+    oklch(0.84 0.01 85),
+    oklch(0.32 0.01 60)
+  ); /* decorative separators only */
+  --border-strong: light-dark(oklch(0.45 0.01 85), oklch(0.58 0.012 60));
+
+  --text-primary: light-dark(oklch(0.2 0.01 60), oklch(0.96 0.008 85));
+  --text-secondary: light-dark(oklch(0.38 0.01 60), oklch(0.8 0.01 80));
+  --text-muted: light-dark(oklch(0.46 0.01 60), oklch(0.68 0.01 80));
+
+  --accent: light-dark(oklch(0.2 0.01 60), oklch(0.95 0.012 85));
+  --accent-contrast: light-dark(
+    oklch(0.975 0.008 85),
+    oklch(0.18 0.01 60)
+  ); /* only text on --accent */
+  --focus-ring: light-dark(oklch(0.5 0.2 268), oklch(0.8 0.13 268));
+
+  --success: light-dark(oklch(0.5 0.14 150), oklch(0.76 0.16 150));
+  --warning: light-dark(oklch(0.55 0.14 70), oklch(0.82 0.14 80));
+  --danger: light-dark(oklch(0.55 0.2 25), oklch(0.7 0.19 25));
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
