@@ -4,8 +4,8 @@
 > Si ce fichier contredit Git, **Git fait foi** : corriger ce fichier avant toute autre action.
 
 ## Agent actif
-- **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-23
-- **Tâche** : avancement du projet sous délégation du propriétaire. Phase 2 : **T-019 terminé** (2026-10-24, `sortie tikets/T-019.md`). Suite : T-020 (dépendance i18n à autoriser) ou T-026 (`mockup-engine`, sans dépendance).
+- **Agent** : Claude Code (Opus 5.5) — **Poste** : PC Windows du propriétaire (KURO) — **Date** : 2026-10-27
+- **Tâche** : Phase 2/3. **T-026 et T-020 terminés** le 2026-10-27 (`sortie tikets/T-026.md`, `T-020.md`). Suite : direction visuelle du studio (exemples fournis par le propriétaire), puis T-021/T-022 et T-027.
 - **Session** : [`journal/sessions/2026-10-18-claude-realignement-outillage.md`](journal/sessions/2026-10-18-claude-realignement-outillage.md)
 
 ## Branches (empilées, poussées sur origin le 2026-10-18)
@@ -38,6 +38,8 @@ main (5d95f32, = origin/main)
                                                                         └─ proto/local-mockups  `npm run mockups:local` : logos projetés sur les scènes de l'outil d'images local
                                                                            └─ fix/raster-far-offcanvas  logos sur page PDF entière rasterisés jusqu'à 4 096 px ; galerie mockups 7/7 photos ; verify vert
                                                                               └─ ticket/T-019-analyze-document  T-019 partie 2b : étapes 3 (sans IA) et 4 (document initial) ; verify vert
+                                                                                 └─ ticket/T-026-mockup-homography  homographie, placement, schéma de scène ; verify vert
+                                                                                    └─ ticket/T-020-ui-foundations  i18n fr/en, thèmes système/jour/nuit, tokens, composants de base ; verify vert hors test de démarrage (serveur dev actif)
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
@@ -95,7 +97,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 4. T-016, reste à faire :
    - envoi d'e-mails (vérification, réinitialisation) : fournisseur à choisir ;
    - variables Google.
-5. T-020 : i18n. `next-intl` est cité comme candidat dans `02_ARCHITECTURE.md` ; dépendance à autoriser.
+5. ~~T-020~~ fait (next-intl, Tailwind v4). Hooks `tools/agent-hooks` activés dans `.claude/settings.json` (2026-10-27). Corpus de 20 logos jugé « vilain, pas de vrais logos » par le propriétaire (2026-10-27) : à refaire.
 6. Chef de projet : reporter dans `docs/` les décisions de `journal/OWNER_DECISIONS.md` (T-005, T-007, T-013, T-014,
    T-018), dont `packages/storage` dans AGENTS.md §5.
 7. CI : chaque branche poussée est vérifiée ; diagnostic sans jeton via les annotations (voir `ci.yml`).
