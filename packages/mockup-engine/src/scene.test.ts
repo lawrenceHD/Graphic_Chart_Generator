@@ -39,7 +39,7 @@ describe('parseScene — validation at load time (06_MOCKUP_ENGINE §3, §5)', (
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.code).toBe('SCENE_INVALID');
-    expect(result.error.issues).toContain('schemaVersion');
+    expect(result.error.issues.some((issue) => issue.startsWith('schemaVersion: '))).toBe(true);
   });
 
   it('refuses a well-formed scene whose quad is not a convex, unmirrored quad', () => {

@@ -15,7 +15,7 @@ export function parseScene(input: unknown): Result<LoadedScene, SceneError> {
   if (!parsed.success) {
     return err({
       code: 'SCENE_INVALID',
-      issues: parsed.error.issues.map((issue) => issue.path.map(String).join('.')),
+      issues: parsed.error.issues.map((issue) => `${issue.path.map(String).join('.')}: ${issue.message}`),
     });
   }
   const homographies = new Map<string, Homography>();

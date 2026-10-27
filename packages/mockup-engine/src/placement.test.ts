@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { computeHomography, type Quad } from './homography.js';
-import { logoRasterSize, placeLogo } from './placement.js';
+import { logoRasterSize, placeLogo as placeLogoResult, type LogoRect } from './placement.js';
+
+const placeLogo = (...args: Parameters<typeof placeLogoResult>): LogoRect => {
+  const placed = placeLogoResult(...args);
+  if (!placed.ok) throw new Error(placed.error.code);
+  return placed.value;
+};
+
+const rasterSize = (...args: Parameters<typeof logoRasterSize>) => {
+  const size = logoRasterSize(...args);
+  if (!size.ok) throw new Error(size.error.code);
+  return size.value;
+};
 
 const close = (actual: number, expected: number, tolerance = 1e-9): void => {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
@@ -59,7 +71,7 @@ describe('logoRasterSize — rasterise at destination resolution (§4.2)', () =>
     const h = computeHomography(quad);
     if (!h.ok) throw new Error('quad should be valid');
     const full = { u0: 0, v0: 0, u1: 1, v1: 1 };
-    const size = logoRasterSize(h.value, full, 1.75);
+    const size = rasterSize(h.value, full, 1.75);
     // Top edge (1210,640)→(2480,705) is the longest horizontal edge: ≈ 1271.66 px.
     expect(size.width).toBe(Math.ceil(1.5 * Math.hypot(1270, 65)));
     expect(size.height).toBe(Math.ceil(size.width / 1.75));
@@ -69,9 +81,34 @@ describe('logoRasterSize — rasterise at destination resolution (§4.2)', () =>
     const h = computeHomography(quad);
     if (!h.ok) throw new Error('quad should be valid');
     const tall = placeLogo({ aspect: 1.75, fit: 'contain', paddingRatio: 0 }, 0.25);
-    const size = logoRasterSize(h.value, tall, 0.25);
+    const size = rasterSize(h.value, tall, 0.25);
     // The left/right projected edges are ≈ 680–685 px high: height must cover 1.5 × that.
     expect(size.height).toBeGreaterThanOrEqual(Math.ceil(1.5 * 680));
     expect(Math.abs(size.width / size.height - 0.25)).toBeLessThan(0.01);
+  });
+});
+
+describe('placement — refusals instead of NaN', () => {
+  const box = { aspect: 1.75, fit: 'contain' as const, paddingRatio: 0.18 };
+
+  it('refuses a logo aspect that is not a finite positive number', () => {
+    for (const aspect of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(placeLogoResult(box, aspect)).toEqual({
+        ok: false,
+        error: { code: 'INVALID_LOGO_ASPECT' },
+      });
+      expect(
+        logoRasterSize([1, 0, 0, 0, 1, 0, 0, 0, 1], { u0: 0, v0: 0, u1: 1, v1: 1 }, aspect),
+      ).toEqual({
+        ok: false,
+        error: { code: 'INVALID_LOGO_ASPECT' },
+      });
+    }
+  });
+
+  it('reports a logo corner projected to infinity', () => {
+    // w = 1 − u: the right edge of the unit square lies on the vanishing line.
+    const result = logoRasterSize([1, 0, 0, 0, 1, 0, -1, 0, 1], { u0: 0, v0: 0, u1: 1, v1: 1 }, 1);
+    expect(result).toEqual({ ok: false, error: { code: 'POINT_AT_INFINITY' } });
   });
 });
