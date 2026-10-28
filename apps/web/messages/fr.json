@@ -27,7 +27,8 @@
   "home": {
     "title": "Votre charte graphique, à partir de votre logo",
     "lead": "Déposez un logo : Charta en extrait la palette, vérifie les contrastes et assemble une charte prête à partager.",
-    "preview": "Fondations de l'interface : {count, plural, one {# thème} other {# thèmes}} et deux langues."
+    "preview": "Fondations de l'interface : {count, plural, one {# thème} other {# thèmes}} et deux langues.",
+    "cta": "Démarrer ma charte"
   },
   "analysis": {
     "steps": {
@@ -78,6 +79,40 @@
       "ASSET_SVG_TOO_COMPLEX": "Ce SVG est trop complexe. Simplifiez ou fusionnez les tracés, puis réessayez.",
       "ASSET_DECODE_FAILED": "Ce fichier semble endommagé. Exportez-le à nouveau depuis votre logiciel de dessin.",
       "ASSET_SCAN_TIMEOUT": "La vérification a pris trop de temps. Réessayez dans un instant."
+    },
+    "liveText": {
+      "title": "Ce SVG contient du texte non vectorisé.",
+      "titleFonts": "Ce SVG contient du texte non vectorisé (polices : {fonts}).",
+      "advice": "Charta ne garde que des tracés, pour que votre logo s'affiche à l'identique partout. Le mieux : exportez-le à nouveau avec le texte vectorisé (Illustrator : Texte › Vectoriser). Sinon, convertissez-le ici en image haute définition avec les polices installées sur cet ordinateur.",
+      "convert": "Convertir en image HD",
+      "converting": "Conversion…",
+      "other": "Choisir un autre fichier",
+      "missing": "Polices absentes de cet ordinateur : {fonts}. Une conversion ici dessinerait une police de remplacement : exportez plutôt le SVG avec le texte vectorisé.",
+      "convertAnyway": "Convertir quand même"
     }
+  },
+  "start": {
+    "metaTitle": "Démarrer",
+    "title": "Quelle marque on habille aujourd'hui ?",
+    "lead": "Le nom et le logo suffisent. Plus vous en dites, plus la charte vous ressemble.",
+    "name": "Nom de la marque",
+    "namePlaceholder": "Ex. : La Mèza",
+    "logo": "Logo",
+    "chosen": "Logo choisi : {name}",
+    "change": "Changer",
+    "brief": "Univers de la marque (facultatif)",
+    "briefHint": "Mission, public, valeurs, ton… Collez votre brief : Gemini s'en sert pour rédiger le manifeste et le ton de voix.",
+    "submit": "Créer ma charte",
+    "creating": "Création du projet…",
+    "needName": "Indiquez le nom de la marque.",
+    "needLogo": "Déposez votre logo.",
+    "coverLabel": "Aperçu de la couverture",
+    "coverKicker": "Charte graphique · {year}",
+    "coverName": "Votre marque",
+    "darkBackground": "Logo clair détecté : il est présenté sur fond sombre.",
+    "network": "La connexion a été interrompue. Vérifiez votre réseau, puis réessayez.",
+    "turnstile": "La vérification anti-robot n'a pas abouti. Réessayez.",
+    "rateLimited": "Trop de projets créés en peu de temps. Patientez quelques minutes, puis réessayez.",
+    "refused": "La création a été refusée (code {code}). Réessayez dans un instant."
   }
 }

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { FakeEventSource } from './fake-event-source';
 import { frMessages, renderFr } from './intl-test-utils';
+import { holdLogo } from './pending-logo';
 import { StudioStart } from './studio-start';
 
 const PROJECT = '0190a0b0-0000-7000-8000-00000000000a';
@@ -106,6 +107,19 @@ describe('StudioStart (US-02 then US-04)', () => {
     expect(screen.getByTestId('analysis-live').textContent).toBe(t.analysis.steps.palette);
     emit('analysis.done', { seq: 4 });
     expect(screen.getByText(t.analysis.ready)).toBeDefined();
+  });
+
+  it('sends the logo chosen on "Démarrer" by itself, once', async () => {
+    holdLogo(PROJECT, PNG);
+    const { calls } = harness();
+    await waitFor(() => {
+      expect(calls).toHaveLength(3);
+    });
+    expect(calls[0]?.url).toBe(`/api/v1/projects/${PROJECT}/assets/uploads`);
+    cleanup();
+    const again = harness();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(again.calls).toHaveLength(0);
   });
 
   it('shows the scan rejection on the dropzone and starts nothing', async () => {

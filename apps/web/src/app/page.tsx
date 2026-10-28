@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { StatusMessage } from '../components/status-message';
 import { THEME_PREFERENCES } from '../theme/preference';
 
@@ -11,6 +12,12 @@ export default async function HomePage() {
         {t('title')}
       </h1>
       <p className="text-lg text-ink-2">{t('lead')}</p>
+      <Link
+        href="/start"
+        className="inline-flex min-h-12 w-fit items-center rounded-full bg-accent px-7 text-lg font-medium text-on-accent hover:opacity-90"
+      >
+        {t('cta')}
+      </Link>
       <StatusMessage tone="info">{t('preview', { count: THEME_PREFERENCES.length })}</StatusMessage>
     </div>
   );

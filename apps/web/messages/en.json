@@ -27,7 +27,8 @@
   "home": {
     "title": "Your brand guidelines, from your logo",
     "lead": "Drop a logo: Charta extracts its palette, checks contrast and assembles brand guidelines ready to share.",
-    "preview": "Interface foundations: {count, plural, one {# theme} other {# themes}} and two languages."
+    "preview": "Interface foundations: {count, plural, one {# theme} other {# themes}} and two languages.",
+    "cta": "Start my guidelines"
   },
   "analysis": {
     "steps": {
@@ -78,6 +79,40 @@
       "ASSET_SVG_TOO_COMPLEX": "This SVG is too complex. Simplify or merge its paths, then try again.",
       "ASSET_DECODE_FAILED": "This file looks damaged. Export it again from your design software.",
       "ASSET_SCAN_TIMEOUT": "Checking took too long. Try again in a moment."
+    },
+    "liveText": {
+      "title": "This SVG contains live text.",
+      "titleFonts": "This SVG contains live text (fonts: {fonts}).",
+      "advice": "Charta keeps outlines only, so your logo looks the same everywhere. Best: export it again with text converted to outlines (Illustrator: Type › Create Outlines). Otherwise, convert it here into a high-definition image drawn with the fonts installed on this computer.",
+      "convert": "Convert to an HD image",
+      "converting": "Converting…",
+      "other": "Choose another file",
+      "missing": "Fonts missing on this computer: {fonts}. Converting here would draw a substitute font: export the SVG with text converted to outlines instead.",
+      "convertAnyway": "Convert anyway"
     }
+  },
+  "start": {
+    "metaTitle": "Start",
+    "title": "Which brand are we dressing today?",
+    "lead": "A name and a logo are enough. The more you tell us, the more the guidelines look like you.",
+    "name": "Brand name",
+    "namePlaceholder": "E.g. La Mèza",
+    "logo": "Logo",
+    "chosen": "Chosen logo: {name}",
+    "change": "Change",
+    "brief": "Brand world (optional)",
+    "briefHint": "Mission, audience, values, tone… Paste your brief: Gemini uses it to write the manifesto and tone of voice.",
+    "submit": "Create my guidelines",
+    "creating": "Creating the project…",
+    "needName": "Enter the brand name.",
+    "needLogo": "Drop your logo.",
+    "coverLabel": "Cover preview",
+    "coverKicker": "Brand guidelines · {year}",
+    "coverName": "Your brand",
+    "darkBackground": "Light logo detected: it is shown on a dark background.",
+    "network": "The connection was interrupted. Check your network, then try again.",
+    "turnstile": "The anti-bot check did not complete. Try again.",
+    "rateLimited": "Too many projects created in a short time. Wait a few minutes, then try again.",
+    "refused": "The request was refused (code {code}). Try again in a moment."
   }
 }

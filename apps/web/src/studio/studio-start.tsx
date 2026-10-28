@@ -6,6 +6,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { Button } from '../components/button';
 import { AnalysisTimeline } from './analysis-timeline';
 import { LogoDropzone } from './logo-dropzone';
+import { takeLogo } from './pending-logo';
 import { subscribeProjectEvents, type EventSourceLike, type StreamState } from './project-stream';
 import {
   INITIAL_TIMELINE,
@@ -133,6 +134,16 @@ export function StudioStart({
       setPhase('idle');
     }
   };
+
+  const latestSend = useRef(send);
+  useEffect(() => {
+    latestSend.current = send;
+  });
+  // Logo chosen on "Démarrer": sent once the stream above is subscribed (effects run in order).
+  useEffect(() => {
+    const pending = takeLogo(projectId);
+    if (pending !== undefined) void latestSend.current(pending);
+  }, [projectId]);
 
   const status = timelineStatus(timeline);
   const busy =
