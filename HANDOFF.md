@@ -47,7 +47,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 ## Mode compétition GDG Fest (depuis le 2026-10-28)
 - Présélection le **2026-11-09**. Plan et consignes de scènes Flow : `journal/research/2026-10-28-plan-gdg-fest.md` ; règles : `journal/OWNER_DECISIONS.md` § Mode compétition.
 - `main` = pile complète (8479eba). Branche en cours : `comp/j1-local-dev` (J1 fait : `R2_ENDPOINT`, Chromium Playwright installé dans `%LOCALAPPDATA%\ms-playwright`).
-- Docker Desktop inutilisable (WSL absent) ; MinIO à télécharger par le propriétaire, ou bucket R2 / Google Cloud Storage.
+- Docker Desktop inutilisable (WSL absent) ; MinIO archivé (410 Gone). Stockage de dev : `pnpm dev:storage` (émulateur S3 local, `R2_ENDPOINT=http://127.0.0.1:9000` dans `.env.example`). En ligne : Google Cloud Storage via `R2_ENDPOINT`.
 
 ## Reprise rapide (sauvegarde du 2026-10-28, demandée par le propriétaire)
 - **Dernière branche** : `ticket/T-021-dropzone-timeline` (poussée, `pnpm verify` vert serveur dev arrêté). Rien en cours, rien de non commité hors fichiers préexistants (`.gemini/settings.json`, outillage impeccable non suivi : ne pas toucher).
