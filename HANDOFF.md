@@ -44,6 +44,18 @@ main (5d95f32, = origin/main)
 ```
 Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la pile (chaque branche contient la précédente).
 
+## Reprise rapide (sauvegarde du 2026-10-28, demandée par le propriétaire)
+- **Dernière branche** : `ticket/T-021-dropzone-timeline` (poussée, `pnpm verify` vert serveur dev arrêté). Rien en cours, rien de non commité hors fichiers préexistants (`.gemini/settings.json`, outillage impeccable non suivi : ne pas toucher).
+- **Voir l'écran T-021** : lancer le serveur web avec les valeurs factices (Git Bash, depuis la racine) :
+  `set -a; . ./.env.example; unset DATABASE_URL; set +a; cd apps/web && pnpm.cmd dev` (le premier lancement s'arrête sur l'avertissement de sécurité Next.js : relancer).
+  Puis ouvrir `http://localhost:3000/studio/0190a0b0-0000-7000-8000-00000000000a`. `/` n'affiche que la page de fondations T-020 (landing gelée) et `/studio` sans identifiant donne 404 : c'est normal.
+  Le dépôt d'un logo échoue tant qu'il n'y a ni projet réel, ni session, ni valeurs `R2_*`.
+- **Maquette** : `cd prototypes/studio && npm run dev` → `http://localhost:5180`.
+- **Décisions attendues du propriétaire** :
+  1. Prochain ticket proposé : écran « Démarrer » (session invitée + Turnstile, création du projet, redirection vers `/studio/<id>`) — maillon manquant pour atteindre le studio.
+  2. Valeurs `R2_*` d'un bucket de dev dans `.env.local` (jamais affichées).
+  3. Mise à jour de sécurité de Next.js 16.4.0 sur une branche séparée : oui / non.
+
 ## Étape en cours
 1. Fait le 2026-10-18 :
    - relais et configuration Gemini ;
