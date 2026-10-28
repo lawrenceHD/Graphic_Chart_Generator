@@ -13,7 +13,8 @@
     "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run deps:check",
     "logos:fetch": "node tools/logo-library/fetch.mjs",
     "corpus:fetch": "node tools/corpus/fetch-private.mjs",
-    "dev:storage": "node tools/dev-storage/server.mjs"
+    "dev:storage": "node tools/dev-storage/server.mjs",
+    "db:migrate": "node --env-file-if-exists=.env.local tools/db/migrate.mjs"
   },
   "devDependencies": {
     "dependency-cruiser": "18.5.0",
