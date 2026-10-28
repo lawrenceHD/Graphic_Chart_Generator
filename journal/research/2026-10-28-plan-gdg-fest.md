@@ -3,7 +3,7 @@
 | Jour | Livrable | État |
 |---|---|---|
 | J1 (28/10) | `main` à jour, navigateur Chromium, stockage S3 local ou Google Cloud (`R2_ENDPOINT`) | fait : MinIO n'est plus distribué (410 Gone) → émulateur S3 de dev `pnpm dev:storage` (`tools/dev-storage`, 127.0.0.1:9000, signatures non vérifiées, local seulement) |
-| J2-J3 | Écran Démarrer (session invitée, Turnstile de test, projet) ; La Mèza accepté (SVG à texte vivant → repli PNG ; logo blanc détecté) | à faire |
+| J2-J3 | Écran Démarrer (session invitée, Turnstile de test, projet) ; La Mèza accepté (SVG à texte vivant → repli PNG ; logo blanc détecté) | fait le 28/10 (`comp/j2-start`) : parcours réel vérifié dans Chromium jusqu'à « Charte prête » |
 | J3-J5 | Gemini (clé AI Studio gratuite) : lecture du logo et du brief, manifeste, valeurs, ton, expliqués dans le chat | à faire |
 | J5-J8 | Espace de travail trois colonnes, toile en direct : couverture, logo et variantes, palette, contrastes, typographie, ton ; paysage par défaut | à faire |
 | J8-J9 | Mockups : 6 à 8 scènes Flow recolorées à la palette, logo posé par calcul | à faire |
