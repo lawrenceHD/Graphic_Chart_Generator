@@ -17,8 +17,14 @@ if (!env.ok) {
   logger.fatal({ event: 'invalid_environment', variables: env.error.invalidVariables });
   process.exit(1);
 }
-const { DATABASE_URL, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET } =
-  env.value;
+const {
+  DATABASE_URL,
+  R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY,
+  R2_BUCKET,
+  R2_ENDPOINT,
+} = env.value;
 
 const database = createDatabase(env.value, (error) => {
   logger.error({ event: 'database_pool_error', error: errorSummary(error) });
@@ -34,6 +40,7 @@ const scanDeps = {
       accessKeyId: R2_ACCESS_KEY_ID,
       secretAccessKey: R2_SECRET_ACCESS_KEY,
       bucket: R2_BUCKET,
+      ...(R2_ENDPOINT === undefined ? {} : { endpoint: R2_ENDPOINT }),
     },
     () => new Date(),
   ),

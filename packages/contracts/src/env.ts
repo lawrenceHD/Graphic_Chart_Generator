@@ -22,6 +22,21 @@ function hasProtocol(value: string, protocols: readonly string[]): boolean {
   }
 }
 
+// Optional S3-compatible endpoint replacing R2 (local MinIO in development). It is interpolated into the CSP,
+// so only a bare origin is accepted, and plain http only on the local machine.
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+function isStorageOrigin(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const secure =
+      url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname));
+    return secure && url.origin === value;
+  } catch {
+    return false;
+  }
+}
+const storageEndpoint = z.string().refine(isStorageOrigin);
+
 const webUrl = z.url().refine((value) => hasProtocol(value, ['http:', 'https:']));
 const databaseUrl = z.url().refine((value) => hasProtocol(value, ['postgres:', 'postgresql:']));
 
@@ -31,6 +46,7 @@ export const Env = z.object({
   R2_ACCESS_KEY_ID: requiredText,
   R2_SECRET_ACCESS_KEY: requiredText,
   R2_BUCKET: requiredText,
+  R2_ENDPOINT: storageEndpoint.optional(),
   AI_PROVIDER: requiredText,
   AI_MODEL: requiredText,
   AI_API_KEY: requiredText,

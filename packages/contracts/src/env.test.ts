@@ -34,6 +34,28 @@ describe('loadEnv', () => {
     }
   });
 
+  it('accepts an optional storage endpoint: an origin, https or http on the local machine', () => {
+    const accepted = ['http://localhost:9000', 'http://127.0.0.1:9000', 'https://s3.example.com'];
+    for (const R2_ENDPOINT of accepted) {
+      const result = loadEnv({ ...validSource, R2_ENDPOINT });
+      expect(result.ok && result.value.R2_ENDPOINT).toBe(R2_ENDPOINT);
+    }
+    const refused = [
+      'http://s3.example.com',
+      'https://s3.example.com/bucket',
+      'https://user:pass@s3.example.com',
+      'https://s3.example.com/',
+      'https://s3.example.com; script-src *',
+      'ftp://localhost:9000',
+    ];
+    for (const R2_ENDPOINT of refused) {
+      expect(loadEnv({ ...validSource, R2_ENDPOINT })).toEqual({
+        ok: false,
+        error: { invalidVariables: ['R2_ENDPOINT'] },
+      });
+    }
+  });
+
   it('reports a missing variable by name without exposing values', () => {
     const source = Object.fromEntries(
       Object.entries(validSource).filter(([name]) => name !== 'DATABASE_URL'),

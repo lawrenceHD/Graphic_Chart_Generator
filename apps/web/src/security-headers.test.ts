@@ -28,6 +28,16 @@ describe('buildContentSecurityPolicy', () => {
     ]);
   });
 
+  it('allows a configured local storage endpoint instead of R2', () => {
+    const policy = buildContentSecurityPolicy('n', {
+      ...options,
+      storageEndpoint: 'http://localhost:9000',
+    });
+    expect(policy).toContain("connect-src 'self' http://localhost:9000");
+    expect(policy).toContain("img-src 'self' data: blob: http://localhost:9000");
+    expect(policy).not.toContain('r2.cloudflarestorage.com');
+  });
+
   it('never allows eval outside development', () => {
     expect(buildContentSecurityPolicy('n', options)).not.toContain('unsafe-eval');
     expect(buildContentSecurityPolicy('n', { ...options, development: true })).toContain(

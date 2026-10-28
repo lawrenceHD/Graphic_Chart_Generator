@@ -9,6 +9,8 @@ export interface R2Config {
   readonly accessKeyId: string;
   readonly secretAccessKey: string;
   readonly bucket: string;
+  /** S3-compatible origin replacing R2, such as a local MinIO (validated by `Env`). */
+  readonly endpoint?: string;
 }
 
 const PRESIGN_SECONDS = 300;
@@ -20,9 +22,10 @@ export function createR2Storage(
   now: () => Date,
   fetchImpl: typeof fetch = fetch,
 ): ObjectStorage {
+  const origin = config.endpoint ?? `https://${config.accountId}.r2.cloudflarestorage.com`;
   const objectUrl = (key: string): URL => {
     if (!KEY.test(key)) throw new RangeError('invalid object key');
-    return new URL(`https://${config.accountId}.r2.cloudflarestorage.com/${config.bucket}/${key}`);
+    return new URL(`${origin}/${config.bucket}/${key}`);
   };
   const signer = (method: string, url: URL, headers: Record<string, string>, signQuery: boolean) =>
     new AwsV4Signer({

@@ -124,6 +124,7 @@ export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
         accessKeyId: env.R2_ACCESS_KEY_ID,
         secretAccessKey: env.R2_SECRET_ACCESS_KEY,
         bucket: env.R2_BUCKET,
+        ...(env.R2_ENDPOINT === undefined ? {} : { endpoint: env.R2_ENDPOINT }),
       },
       () => new Date(),
     ),

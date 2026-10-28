@@ -85,6 +85,17 @@ describe('R2 storage adapter', () => {
     );
   });
 
+  it('targets a local S3-compatible endpoint in path style when one is configured', async () => {
+    const storage = createR2Storage({ ...config, endpoint: 'http://localhost:9000' }, now, unused);
+    const url = new URL((await storage.presignPut('projects/p1/assets/a1/original', 5)).url);
+    expect(`${url.origin}${url.pathname}`).toBe(
+      'http://localhost:9000/atelier-test/projects/p1/assets/a1/original',
+    );
+    expect(url.searchParams.get('X-Amz-Signature')).toBe(
+      expectedSignature(url, 'PUT', { 'content-length': '5' }),
+    );
+  });
+
   it('presigns a GET that forces type and disposition', async () => {
     const storage = createR2Storage(config, now, unused);
     const url = new URL(
