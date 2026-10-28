@@ -48,6 +48,7 @@ Ancien travail v4.0 : tags locaux `backup/pre-v4.1/*`. Fusion dans l'ordre de la
 - Présélection le **2026-11-09**. Plan et consignes de scènes Flow : `journal/research/2026-10-28-plan-gdg-fest.md` ; règles : `journal/OWNER_DECISIONS.md` § Mode compétition.
 - `main` = pile complète (8479eba). Branche en cours : `comp/j1-local-dev` (J1 fait : `R2_ENDPOINT`, Chromium Playwright installé dans `%LOCALAPPDATA%\ms-playwright`).
 - **Lancer le parcours complet** (Git Bash, racine) : `pnpm dev:storage` ; `. tools/dev-env.sh; cd apps/worker && pnpm start` ; `. tools/dev-env.sh; cd apps/web && pnpm.cmd dev` (relancer si l'avertissement de sécurité l'arrête). Migrations : `pnpm db:migrate`. Puis http://localhost:3000/start.
+- **Prochaine session (à la maison)** : construire le parcours studio complet selon `journal/research/2026-10-28-studio-flow-brief.md` (prompt prêt au §0, skills impeccable, décisions à demander au §7).
 - J2 fait (`comp/j2-start`). Suite : J3 Gemini (`AI_API_KEY` dans `.env.local`, modèle à choisir : `gemini-2.5-flash` retiré aux nouveaux comptes).
 - Docker Desktop inutilisable (WSL absent) ; MinIO archivé (410 Gone). Stockage de dev : `pnpm dev:storage` (émulateur S3 local, `R2_ENDPOINT=http://127.0.0.1:9000` dans `.env.example`). En ligne : Google Cloud Storage via `R2_ENDPOINT`.
 
