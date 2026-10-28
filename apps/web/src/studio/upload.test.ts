@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { uploadLogo } from './upload';
+import { startAnalysis, uploadLogo } from './upload';
 
 const PROJECT = '0190a0b0-0000-7000-8000-00000000000a';
 const ASSET = '0190a0b0-0000-7000-8000-000000000001';
@@ -125,6 +125,22 @@ describe('uploadLogo (04 §3: declare, presigned PUT, complete)', () => {
     expect(await uploadLogo(fetcher, PROJECT, file)).toEqual({
       ok: false,
       error: { kind: 'http', status: 201, code: 'INVALID_RESPONSE' },
+    });
+  });
+});
+
+describe('startAnalysis (04 §3, §8)', () => {
+  it('sends the idempotency key and passes the refusal code', async () => {
+    const { calls, fetcher } = server(
+      Response.json({ analysis: { id: ASSET, status: 'pending' } }, { status: 202 }),
+      problem(409, 'LOGO_NOT_READY'),
+    );
+    expect(await startAnalysis(fetcher, PROJECT, 'k1')).toEqual({ ok: true, value: undefined });
+    expect(calls[0]?.headers.get('idempotency-key')).toBe('k1');
+    expect(calls[0]?.url).toBe(`/api/v1/projects/${PROJECT}/analyze`);
+    expect(await startAnalysis(fetcher, PROJECT, 'k2')).toEqual({
+      ok: false,
+      error: { kind: 'http', status: 409, code: 'LOGO_NOT_READY' },
     });
   });
 });

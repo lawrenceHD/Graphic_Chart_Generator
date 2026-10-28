@@ -35,6 +35,49 @@
       "palette": "Extraction de la palette et calcul des contrastes…",
       "write": "Rédaction du manifeste et choix typographique…",
       "assemble": "Assemblage de la charte…"
+    },
+    "title": "Analyse",
+    "state": {
+      "pending": "En attente",
+      "running": "En cours",
+      "done": "Terminé",
+      "failed": "Échec"
+    },
+    "announce": {
+      "idle": "Analyse en attente du logo.",
+      "done": "Charte prête."
+    },
+    "failed": "Cette étape n'a pas abouti (code {code}). Votre logo est conservé : relancez l'analyse.",
+    "retry": "Relancer l'analyse",
+    "ready": "Charte prête : palette, contrastes et variantes sont calculés."
+  },
+  "studio": {
+    "startTitle": "Déposez votre logo",
+    "startLead": "Charta lit votre logo, en extrait la palette, vérifie les contrastes et assemble la charte.",
+    "sending": "Envoi de {name}…",
+    "scanning": "Vérification du fichier…",
+    "starting": "Lancement de l'analyse…",
+    "network": "La connexion a été interrompue. Vérifiez votre réseau, puis réessayez.",
+    "storage": "Le fichier n'a pas pu être enregistré. Réessayez dans un instant.",
+    "refused": "La demande a été refusée (code {code}). Réessayez dans un instant.",
+    "streamLost": "Suivi en direct interrompu : reconnexion…",
+    "rateLimited": "Trop d'analyses lancées en peu de temps. Patientez quelques minutes, puis relancez.",
+    "forbidden": "Ce projet n'est pas accessible avec votre session. Rechargez la page ou reconnectez-vous.",
+    "unexpected": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, rechargez la page.",
+    "streamClosed": "Le suivi en direct est impossible. Rechargez la page pour le reprendre."
+  },
+  "dropzone": {
+    "label": "Glissez votre logo ici",
+    "hint": "SVG, PNG, WebP ou JPEG. 5 Mo maximum pour un SVG, 10 Mo pour une image.",
+    "choose": "Choisir un fichier",
+    "errors": {
+      "ASSET_TOO_LARGE": "Ce fichier dépasse la limite : 5 Mo pour un SVG, 10 Mo et 8 192 px de côté pour une image. Réduisez-le, puis réessayez.",
+      "ASSET_TYPE_UNSUPPORTED": "Ce format n'est pas reconnu. Déposez un fichier SVG, PNG, WebP ou JPEG.",
+      "ASSET_SVG_FORBIDDEN_CONTENT": "Ce SVG contient des scripts ou des liens externes. Exportez-le à nouveau sans interactivité ni ressource liée.",
+      "ASSET_SVG_UNSUPPORTED_FEATURE": "Ce SVG contient des textes non convertis ou des éléments non pris en charge. Exportez-le avec les textes en contours.",
+      "ASSET_SVG_TOO_COMPLEX": "Ce SVG est trop complexe. Simplifiez ou fusionnez les tracés, puis réessayez.",
+      "ASSET_DECODE_FAILED": "Ce fichier semble endommagé. Exportez-le à nouveau depuis votre logiciel de dessin.",
+      "ASSET_SCAN_TIMEOUT": "La vérification a pris trop de temps. Réessayez dans un instant."
     }
   }
 }

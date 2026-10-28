@@ -35,6 +35,49 @@
       "palette": "Extracting the palette and computing contrast…",
       "write": "Writing the manifesto and choosing typography…",
       "assemble": "Assembling the brand guidelines…"
+    },
+    "title": "Analysis",
+    "state": {
+      "pending": "Waiting",
+      "running": "In progress",
+      "done": "Done",
+      "failed": "Failed"
+    },
+    "announce": {
+      "idle": "Analysis waiting for the logo.",
+      "done": "Brand guidelines ready."
+    },
+    "failed": "This step did not complete (code {code}). Your logo is kept: run the analysis again.",
+    "retry": "Run the analysis again",
+    "ready": "Brand guidelines ready: palette, contrast and variants are computed."
+  },
+  "studio": {
+    "startTitle": "Drop your logo",
+    "startLead": "Charta reads your logo, extracts its palette, checks contrast and assembles your brand guidelines.",
+    "sending": "Sending {name}…",
+    "scanning": "Checking the file…",
+    "starting": "Starting the analysis…",
+    "network": "The connection was interrupted. Check your network, then try again.",
+    "storage": "The file could not be saved. Try again in a moment.",
+    "refused": "The request was refused (code {code}). Try again in a moment.",
+    "streamLost": "Live tracking interrupted: reconnecting…",
+    "rateLimited": "Too many analyses started in a short time. Wait a few minutes, then try again.",
+    "forbidden": "This project is not available to your session. Reload the page or sign in again.",
+    "unexpected": "Something unexpected went wrong. Try again; if it persists, reload the page.",
+    "streamClosed": "Live tracking is unavailable. Reload the page to resume it."
+  },
+  "dropzone": {
+    "label": "Drag your logo here",
+    "hint": "SVG, PNG, WebP or JPEG. Up to 5 MB for an SVG, 10 MB for an image.",
+    "choose": "Choose a file",
+    "errors": {
+      "ASSET_TOO_LARGE": "This file is over the limit: 5 MB for an SVG, 10 MB and 8,192 px per side for an image. Make it smaller, then try again.",
+      "ASSET_TYPE_UNSUPPORTED": "This format is not recognised. Drop an SVG, PNG, WebP or JPEG file.",
+      "ASSET_SVG_FORBIDDEN_CONTENT": "This SVG contains scripts or external links. Export it again without interactivity or linked resources.",
+      "ASSET_SVG_UNSUPPORTED_FEATURE": "This SVG contains unconverted text or unsupported elements. Export it with text converted to outlines.",
+      "ASSET_SVG_TOO_COMPLEX": "This SVG is too complex. Simplify or merge its paths, then try again.",
+      "ASSET_DECODE_FAILED": "This file looks damaged. Export it again from your design software.",
+      "ASSET_SCAN_TIMEOUT": "Checking took too long. Try again in a moment."
     }
   }
 }

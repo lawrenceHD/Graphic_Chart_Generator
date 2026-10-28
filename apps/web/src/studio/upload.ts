@@ -112,3 +112,28 @@ export async function uploadLogo(
     throw error;
   }
 }
+
+const AnalysisAnswer = z.object({ analysis: z.object({ id: z.uuid() }) });
+
+/** POST /projects/:id/analyze (04 §8): a new key per attempt, the same key would return the same run. */
+export async function startAnalysis(
+  fetcher: Fetcher,
+  projectId: string,
+  idempotencyKey: string,
+): Promise<Result<undefined, UploadFailure>> {
+  try {
+    const response = await send(
+      fetcher,
+      `/api/v1/projects/${encodeURIComponent(projectId)}/analyze`,
+      {
+        method: 'POST',
+        headers: { 'idempotency-key': idempotencyKey },
+      },
+    );
+    const answer = await readAnswer(response, AnalysisAnswer);
+    return answer.ok ? ok(undefined) : answer;
+  } catch (error) {
+    if (error instanceof NetworkError) return err({ kind: 'network' });
+    throw error;
+  }
+}
