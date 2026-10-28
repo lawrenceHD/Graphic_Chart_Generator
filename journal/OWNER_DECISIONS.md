@@ -301,3 +301,7 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - **Google Flow** : pas d'automatisation (aucune API officielle, conditions de Google) ; le propriétaire génère
   les scènes à la main dans Flow, importées dans le catalogue. Nano Banana dans l'app via l'API officielle et les
   crédits Cloud de l'abonnement AI Pro, si le propriétaire les active.
+
+- **Scènes Flow manuelles annulées** (propriétaire, 2026-10-28) : aucune génération à la main. Les scènes de mockup
+  sont produites automatiquement par l'agent avec `MCP-IMAGE-GENERATION` (Cloudflare FLUX, gratuit) et les 7
+  scènes de `scenes_work/`.
