@@ -274,3 +274,16 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
   (marge 5 %) sont retirés avant le rendu : ils ne peignent rien. Les éléments avec filtre sont gardés.
   BlaBlaCar échouait dès 1 600 px, Porto dès 3 000 px ; tous les logos de démo passent jusqu'à 4 096 px.
   Limite : BlaBlaCar à 4 096 px prend 5,3 s, au-delà du délai de 5 s ; 3 000 px suffisent aux mockups (§4.4).
+
+## Cas de démonstration La Mèza (propriétaire, 2026-10-28)
+- **Nom officiel** : « La Mèza » (le brief « LA MEZA » et les fichiers « la maza » sont des écritures à abandonner).
+- **Droits** : logo créé par le propriétaire ; utilisation libre, y compris en démonstration publique.
+- **Fichiers** (`C:\Users\KURO\Documents\la maza\`) : `Fichier 3/4/5/7` sont des **variantes voulues** du logo
+  (combinaisons de pictogrammes), `Fichier 6` est le logo complet, `black and white` la version blanche ;
+  `correction/` contient les planches de recherche. Brief : `LA_MEZA_brief_identite_visuelle.md`.
+- **Constats moteur** : les 5 SVG contiennent du texte vivant (polices Anecor Gheroos et Eternalo) → refus
+  `ASSET_SVG_UNSUPPORTED_FEATURE` ; version blanche invisible en JPEG ; palette `#D88F7A` `#A6B49B` `#E3C884`
+  `#1D1D1B`, aucune couleur de marque lisible en texte sur blanc (2,58 / 2,18 / 1,63).
+- **Compétition** : le projet sera présenté au **GDG Fest** (prix du projet le plus innovant autour de l'IA).
+  Dates et règlement à fournir.
+- **Gemini** : pas de compte de facturation pour l'instant ; usage limité au niveau gratuit.
