@@ -287,3 +287,17 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - **Compétition** : le projet sera présenté au **GDG Fest** (prix du projet le plus innovant autour de l'IA).
   Dates et règlement à fournir.
 - **Gemini** : pas de compte de facturation pour l'instant ; usage limité au niveau gratuit.
+
+## Mode compétition GDG Fest (propriétaire, 2026-10-28)
+- **Présélection le 2026-11-09.** Plan J1 → J12 : `journal/research/2026-10-28-plan-gdg-fest.md`.
+- **Mode compétition validé** : tickets plus gros que 400 lignes autorisés jusqu'à la présélection. Restent
+  obligatoires : `pnpm verify` vert, tests et sabotage sur ce qui est calculé, zéro `any`, Zod aux frontières,
+  logo jamais redessiné par une IA, rendu vérifié dans un navigateur.
+- **Carte blanche** donnée à l'agent pour le nécessaire (fusion, outillage, choix techniques), hors dépenses.
+- **`main` avancé** sur la pile complète (5d95f32 → 8479eba, avance rapide, CI verte) ; travail sur `comp/*`.
+- **Espace de travail** (inspiration `C:\Users\KURO\Documents\Projects\inspi studio`, SETO) : chat Gemini à gauche,
+  toile centrale qui montre en direct la génération des pages et des mockups, chacun modifiable seul ; pages en
+  **paysage par défaut**, portrait possible par page.
+- **Google Flow** : pas d'automatisation (aucune API officielle, conditions de Google) ; le propriétaire génère
+  les scènes à la main dans Flow, importées dans le catalogue. Nano Banana dans l'app via l'API officielle et les
+  crédits Cloud de l'abonnement AI Pro, si le propriétaire les active.
