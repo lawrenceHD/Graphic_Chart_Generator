@@ -146,10 +146,11 @@ for (const file of logos) {
   }
   const tiles = [];
   // R5: versions, each on the background it is made for.
-  for (const spec of logoVersions(palette))
+  // A version whose drawing failed is reported in the notes and left out, never drawn from another.
+  for (const spec of logoVersions(palette).filter((v) => drawings[v.version]))
     tiles.push(await tile(drawings[spec.version], `${VERSION_FR[spec.key]}`, spec.background));
   // R9: usage on backgrounds, the photo ones shown on their representative tone.
-  for (const usage of backgroundBoard(palette, logoColours))
+  for (const usage of backgroundBoard(palette, logoColours).filter((u) => drawings[u.version]))
     tiles.push(
       await tile(
         drawings[usage.version],

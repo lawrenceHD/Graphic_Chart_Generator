@@ -84,6 +84,11 @@ describe('version on a background (R3, R9)', () => {
     expect(board.find(({ kind }) => kind === 'forbidden')?.background).not.toBe('#FCF3F1');
   });
 
+  it('does not keep a pale one-colour logo in colour on the light background (R3)', () => {
+    const board = backgroundBoard({ ...palette, neutralLight: '#FCF3F1' }, ['#FFD60A']);
+    expect(board.find(({ kind }) => kind === 'light')?.version).toBe('black');
+  });
+
   it('shows no forbidden case when no logo colour is known, and never the colour version', () => {
     const board = backgroundBoard(palette, []);
     expect(board.map(({ kind }) => kind)).not.toContain('forbidden');

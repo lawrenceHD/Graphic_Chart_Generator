@@ -32,7 +32,20 @@ describe('clear space plate (R6)', () => {
     expect(plate.value.svg).toContain('<clipPath');
     expect(plate.value.svg.match(/clip-path="url\(#charta-x-element\)"/g)).toHaveLength(4);
     // Left and right ghosts are turned a quarter so that their height spans the horizontal margin.
-    expect(plate.value.svg.match(/rotate\((-?90)\)/g)).toHaveLength(2);
+    // Ghost centres: x / 2 outside each side of the logo; left turned -90°, right +90°.
+    const ghosts = [
+      ...plate.value.svg.matchAll(/translate\(([-\d.]+) ([-\d.]+)\)( rotate\((-?90)\))?/g),
+    ]
+      .filter((match) => match[1] !== undefined && !match[1].startsWith('-1'))
+      .map((match) => [Number(match[1]), Number(match[2]), match[4] ?? '0']);
+    expect(ghosts).toEqual(
+      expect.arrayContaining([
+        [100, -5, '0'],
+        [100, 105, '0'],
+        [-5, 50, '-90'],
+        [205, 50, '90'],
+      ]),
+    );
   });
 
   it('draws the zone x around the logo and two dimension lines, labelled outside the SVG', () => {

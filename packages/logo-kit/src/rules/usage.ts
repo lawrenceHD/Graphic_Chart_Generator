@@ -72,9 +72,13 @@ export function backgroundBoard(
     ['photo-dark', PHOTO_TONES.dark],
   ];
   // The light background is the home of the colour version (R5 A): a multicolour mark keeps its pale
-  // colours there, as every charter shows it; its best-reading colour carries the shape.
+  // colours there, as every charter shows it, provided one colour reads at 3:1 and carries the shape. A
+  // one-colour logo gets no such exception (R3).
+  const home = (background: string): boolean =>
+    logoColours.length >= 2 &&
+    Math.max(...logoColours.map((colour) => contrastRatio(background, colour))) >= GRAPHIC_CONTRAST;
   const board: BackgroundUsage[] = backgrounds.map(([kind, background]) =>
-    kind === 'light' && logoColours.length > 0
+    kind === 'light' && home(background)
       ? {
           kind,
           background,

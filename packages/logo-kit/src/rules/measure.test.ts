@@ -119,4 +119,51 @@ describe('measureLogo (R6, R7)', () => {
       expect(measured.value.symbol).toBeUndefined();
     }
   });
+
+  it('finds the symbol even when a word space of the name is wider than the symbol gap', async () => {
+    // Symbol 0–40, gap 10, "Studio" 50–110, word space 25, "Nord" 135–175.
+    const word = (xs: number[]) =>
+      xs.map((x) => `<rect x="${String(x)}" y="45" width="8" height="25"/>`).join('');
+    const twoWords = svgOf(
+      '<rect x="0" y="20" width="40" height="70" fill="#1F4BFF"/>' +
+        word([50, 60, 70, 80, 90, 100]) +
+        word([135, 145, 155, 165]),
+    );
+    const measured = await measureLogo(twoWords, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.symbol?.width).toBeCloseTo(40, 0);
+  });
+
+  it('never takes a letter for a symbol ("I Love Paris")', async () => {
+    const word = (xs: number[]) =>
+      xs.map((x) => `<rect x="${String(x)}" y="40" width="8" height="25"/>`).join('');
+    const sentence = svgOf(word([0]) + word([25, 35, 45, 55]) + word([80, 90, 100, 110, 120]));
+    const measured = await measureLogo(sentence, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.symbol).toBeUndefined();
+  });
+
+  it('maps pixels back to user units for a viewBox that does not start at 0 0', async () => {
+    const shifted = svgOf(
+      '<rect x="60" y="30" width="60" height="80" fill="#1F4BFF"/>' +
+        '<rect x="140" y="60" width="20" height="30"/><rect x="170" y="60" width="20" height="30"/>' +
+        '<rect x="200" y="60" width="40" height="30"/>',
+      '50 20 200 100',
+    );
+    const measured = await measureLogo(shifted, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.bbox.x).toBeCloseTo(60, 0);
+    expect(measured.value.bbox.y).toBeCloseTo(30, 0);
+    expect(measured.value.clearSpace.element?.x).toBeCloseTo(140, 0);
+    expect(measured.value.symbol?.x).toBeCloseTo(60, 0);
+  });
+
+  it('refuses an empty logo and an SVG without a usable viewBox', async () => {
+    const empty = await measureLogo(
+      svgOf('<rect x="0" y="0" width="10" height="10" fill="none"/>'),
+      rasterizer,
+    );
+    expect(empty).toEqual({ ok: false, error: 'EMPTY_LOGO' });
+    expect(await measureLogo('<svg/>', rasterizer)).toEqual({ ok: false, error: 'INVALID_SVG' });
+  });
 });

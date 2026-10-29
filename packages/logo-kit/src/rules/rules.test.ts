@@ -225,6 +225,15 @@ describe("Do & Don't (§5.6, R8)", () => {
     expect(partial).toContain('#1F4BFF');
     expect(partial).not.toContain('#DAA500');
     expect(panel('shadow')).toContain('feDropShadow');
+    expect(panel('distort')).toContain('scale(1.4 1)');
+    expect(panel('squash')).toContain('scale(1 0.65)');
+    expect(panel('rotate')).toContain('rotate(-15)');
+    // Crowd: the stand-in text lines start right under the logo, inside its clear space.
+    const lines = [...panel('crowd').matchAll(/<rect [^>]*fill="#9AA0A6"[^>]*y="([\d.]+)"/g)].map(
+      (m) => Number(m[1]),
+    );
+    const panelSize = 60 * 1.6;
+    for (const y of lines) expect(y - (panelSize / 2 + 30)).toBeLessThan(60 * 0.25);
     expect(panel('busy-background')).toContain('<pattern');
   });
 

@@ -92,10 +92,18 @@ const MIN_GAP = 0.04;
 /** The name has at least this many pieces, the symbol at most half as many. */
 const MIN_NAME_PIECES = 3;
 
-// Splits the pieces at the widest empty band across one axis; the symbol is the side with few pieces
-// facing a name of several letters. A mark of equal pieces or a single piece has no separable symbol.
+/** A symbol stands taller than the letters of its name, by at least this factor. */
+const SYMBOL_STATURE = 1.2;
+
+const heightOf = (piece: Component): number => piece.bottom - piece.top;
+const lowerMedian = (values: readonly number[]): number | undefined =>
+  [...values].sort((a, b) => a - b)[Math.floor((values.length - 1) / 2)];
+
+// Every empty band across one axis splits the logo in two; from the widest band down, the first split
+// whose small side faces a name of several letters and stands taller than them is the symbol. A word
+// space wider than the symbol gap is thus skipped, and a lone letter ("I Love Paris") is never a symbol.
 function symbolOf(pieces: readonly Component[], pixelsHigh: number): Component[] | undefined {
-  let best: { gap: number; sides: [Component[], Component[]] } | undefined;
+  const splits: { gap: number; sides: [Component[], Component[]] }[] = [];
   for (const [start, end] of [
     ['left', 'right'],
     ['top', 'bottom'],
@@ -104,15 +112,21 @@ function symbolOf(pieces: readonly Component[], pixelsHigh: number): Component[]
     let reach = -Infinity;
     sorted.forEach((piece, index) => {
       const gap = piece[start] - reach;
-      if (index > 0 && gap >= pixelsHigh * MIN_GAP && gap > (best?.gap ?? 0))
-        best = { gap, sides: [sorted.slice(0, index), sorted.slice(index)] };
+      if (index > 0 && gap >= pixelsHigh * MIN_GAP)
+        splits.push({ gap, sides: [sorted.slice(0, index), sorted.slice(index)] });
       reach = Math.max(reach, piece[end]);
     });
   }
-  if (best === undefined) return undefined;
-  const [first, second] = best.sides;
-  const [symbol, name] = first.length <= second.length ? [first, second] : [second, first];
-  return name.length >= MIN_NAME_PIECES && symbol.length * 2 <= name.length ? symbol : undefined;
+  for (const { sides } of splits.sort((a, b) => b.gap - a.gap)) {
+    const [first, second] = sides;
+    const [symbol, name] = first.length <= second.length ? [first, second] : [second, first];
+    if (name.length < MIN_NAME_PIECES || symbol.length * 2 > name.length) continue;
+    const top = symbol.reduce((value, piece) => Math.min(value, piece.top), Infinity);
+    const bottom = symbol.reduce((value, piece) => Math.max(value, piece.bottom), -Infinity);
+    const letter = lowerMedian(name.map(heightOf)) ?? Infinity;
+    if (bottom - top >= letter * SYMBOL_STATURE) return symbol;
+  }
+  return undefined;
 }
 
 const halfUp = (value: number): number => Math.ceil(value * 2) / 2;
@@ -149,19 +163,16 @@ export async function measureLogo(
     width: (piece.right - piece.left) * sx,
     height: (piece.bottom - piece.top) * sy,
   });
-  const top = Math.min(...pieces.map((piece) => piece.top));
-  const bottom = Math.max(...pieces.map((piece) => piece.bottom));
-  const left = Math.min(...pieces.map((piece) => piece.left));
-  const right = Math.max(...pieces.map((piece) => piece.right));
+  // reduce, not Math.min(...): a halftone logo may have more pieces than the call stack takes arguments.
+  const extent = (group: readonly Component[]) => ({
+    left: group.reduce((value, piece) => Math.min(value, piece.left), Infinity),
+    top: group.reduce((value, piece) => Math.min(value, piece.top), Infinity),
+    right: group.reduce((value, piece) => Math.max(value, piece.right), -Infinity),
+    bottom: group.reduce((value, piece) => Math.max(value, piece.bottom), -Infinity),
+  });
+  const { left, top, right, bottom } = extent(pieces);
   const bbox = rect({ left, top, right, bottom, area: ink });
-  const span = (group: readonly Component[]): Rect =>
-    rect({
-      left: Math.min(...group.map((piece) => piece.left)),
-      top: Math.min(...group.map((piece) => piece.top)),
-      right: Math.max(...group.map((piece) => piece.right)),
-      bottom: Math.max(...group.map((piece) => piece.bottom)),
-      area: 0,
-    });
+  const span = (group: readonly Component[]): Rect => rect({ ...extent(group), area: 0 });
   const pixelsHigh = bottom - top;
 
   const significant = pieces.filter((piece) => piece.area >= ink * MIN_AREA);
