@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '../styles/tokens.css';
+@import '../styles/fonts.css';
+@import '../styles/motion.css';
+@import '../styles/print.css';
 
 /* Tailwind utilities read the interface tokens (09_DESIGN_SYSTEM §2): no raw colour in components. */
 @theme {
@@ -20,11 +23,17 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
 
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+
   --spacing: 4px;
   --radius-*: initial;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 
   --text-*: initial;
   --text-xs: 12px;
@@ -34,13 +43,32 @@
   --text-xl: 24px;
   --text-2xl: 32px;
   --text-3xl: 48px;
+  /* Display scale of the landing (DESIGN.md: display clamp(3rem, 9vw, 8rem), capped at 6rem by the floor). */
+  --text-4xl: clamp(2.5rem, 6vw, 4.5rem);
+  --text-5xl: clamp(3rem, 9vw, 6rem);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
   body {
     background: var(--bg-canvas);
     color: var(--text-primary);
+    font-family: var(--font-sans);
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    caret-color: var(--text-primary);
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--focus-ring) 28%, transparent);
+    color: var(--text-primary);
   }
 
   /* Visible focus on every interactive element: 2 px ring, 2 px offset (§5). */
@@ -49,7 +77,25 @@
     outline-offset: 2px;
   }
 
+  a {
+    text-underline-offset: 0.2em;
+  }
+
+  /* Thin warm scrollbars: the browser default belongs to no design system. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+  }
+
+  input[type='range'] {
+    accent-color: var(--text-primary);
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
     *,
     *::before,
     *::after {
@@ -57,4 +103,21 @@
       animation-duration: 0ms !important;
     }
   }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Dotted drafting grid of the studio canvas. */
+@utility drafting {
+  background-image: radial-gradient(var(--border-subtle) 1px, transparent 1px);
+  background-size: 22px 22px;
 }

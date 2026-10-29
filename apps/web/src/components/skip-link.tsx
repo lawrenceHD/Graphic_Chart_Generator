@@ -1,6 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 
-export const MAIN_ID = 'contenu';
+import { MAIN_ID } from './skip-link-id';
+
+export { MAIN_ID };
 
 export async function SkipLink() {
   const t = await getTranslations('common');

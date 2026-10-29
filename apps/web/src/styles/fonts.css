@@ -1,0 +1,23 @@
+/*
+ * Self-hosted fonts (09_DESIGN_SYSTEM §8: never from a third-party CDN). The interface uses Bricolage Grotesque,
+ * Geist and Geist Mono; the guideline pages use the closed pairing catalogue (src/brand/pairings.ts). Every face
+ * is split by unicode range, so the browser downloads only the faces and ranges a page actually renders.
+ */
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource-variable/source-sans-3';
+@import '@fontsource-variable/plus-jakarta-sans';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/work-sans';
+@import '@fontsource-variable/cormorant-garamond';
+@import '@fontsource-variable/montserrat';
+@import '@fontsource/dm-serif-display';
+@import '@fontsource-variable/dm-sans';
+@import '@fontsource/libre-baskerville';
+@import '@fontsource/libre-baskerville/700.css';
+@import '@fontsource/lato';
+@import '@fontsource/lato/700.css';

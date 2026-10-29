@@ -1,0 +1,231 @@
+/*
+ * Motion vocabulary (09_DESIGN_SYSTEM §4, DESIGN.md): exponential ease-out, transform, opacity, clip-path and
+ * blur only. Scroll reveals are CSS transitions started by one shared IntersectionObserver (src/ui/reveal.tsx):
+ * a JavaScript animation started on scroll reads the DOM and makes scrolling stutter. Everything falls back to
+ * an instant, already-visible state under prefers-reduced-motion.
+ */
+
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Skeleton shimmer: opacity only. */
+.skeleton {
+  background: var(--bg-elevated);
+  animation: pulse-soft 1.4s linear infinite;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 1s var(--ease-out-expo),
+    filter 0.9s var(--ease-out-expo);
+  transition-delay: var(--d, 0s);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Split headline: each word rises from behind its own line. */
+.word-mask {
+  display: inline-block;
+  overflow: clip;
+  overflow-clip-margin: 0.12em;
+  vertical-align: bottom;
+  padding-bottom: 0.06em;
+}
+
+.word {
+  display: inline-block;
+  transform: translate3d(0, 112%, 0) rotate(4deg);
+  transition: transform 1s var(--ease-out-expo);
+  transition-delay: var(--d, 0s);
+}
+
+.is-in .word {
+  transform: none;
+}
+
+@keyframes word-in {
+  from {
+    transform: translate3d(0, 112%, 0) rotate(4deg);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+/* Above the fold: keyframes start with the first style pass, no observer involved. */
+.words-now .word {
+  transform: none;
+  animation: word-in 1s var(--ease-out-expo) var(--d, 0s) backwards;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee {
+  animation: marquee 70s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--r, 0deg));
+  }
+
+  50% {
+    transform: translate3d(0, -10px, 0) rotate(calc(var(--r, 0deg) + 1.5deg));
+  }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.flow-dash {
+  stroke-dasharray: 6 14;
+  animation: flow-dash 1.6s linear infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.8);
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-slow {
+  animation: spin-slow 60s linear infinite;
+}
+
+/* Pinned pages swaying on their string. */
+@keyframes swing {
+  0%,
+  100% {
+    transform: rotate(var(--a, 3deg));
+  }
+
+  50% {
+    transform: rotate(calc(var(--a, 3deg) * -1));
+  }
+}
+
+.swing {
+  transform-origin: 50% 0;
+  animation: swing 4.5s ease-in-out infinite;
+}
+
+/* A sheet arriving on the canvas: it is laid down, slightly turned, then settles. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.97) rotate(var(--tilt, -1deg));
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.sheet-in {
+  animation: sheet-in 0.9s var(--ease-out-expo) var(--d, 0s) backwards;
+}
+
+/* Light sweep over a sheet being composed. */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.sweep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in oklch, var(--bg-surface) 55%, transparent) 50%,
+    transparent 70%
+  );
+  animation: sweep 1.6s var(--ease-out-expo) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-in,
+  .word,
+  .words-now .word {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+    transition: none;
+  }
+
+  .skeleton,
+  .marquee,
+  .float,
+  .flow-dash,
+  .pulse-dot,
+  .sheet-in,
+  .spin-slow,
+  .swing,
+  .sweep::after {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    backdrop-filter: none !important;
+    background: var(--bg-surface) !important;
+  }
+}
