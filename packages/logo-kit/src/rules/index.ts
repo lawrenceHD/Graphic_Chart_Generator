@@ -9,3 +9,15 @@ export {
   type PaletteHexes,
 } from './dos-donts.js';
 export { faviconSvg, type Favicon, type FaviconOptions, type FaviconWarning } from './favicon.js';
+export {
+  backgroundBoard,
+  chooseVersion,
+  logoVersions,
+  PHOTO_TONES,
+  type BackgroundKind,
+  type BackgroundUsage,
+  type LogoVersion,
+  type VersionChoice,
+  type VersionKey,
+  type VersionSpec,
+} from './usage.js';
