@@ -1,6 +1,6 @@
 # Suivi d'avancement
 
-> Dernière mise à jour : 2026-10-17 — Phase 0.
+> Dernière mise à jour : 2026-10-29 — mode compétition (ADR-027). `pnpm verify` vert : 574 tests.
 > **Trois statuts, et seulement trois** :
 > - **Spécifié** : décrit dans `docs/`, aucun code.
 > - **Implémenté** : code écrit, `pnpm verify` vert.
@@ -12,41 +12,36 @@
 
 | Phase | Objectif | Statut | Début | Fin |
 |---|---|---|---|---|
-| P0 — Fondations | Monorepo, CI, base, config, infra squelette, nom | En cours | 2026-10-07 | — |
-| P1 — Moteurs | Couleur, SVG, variantes, spikes | Non démarré | — | — |
-| P2 — Document et studio | Commandes, auth, upload, éditeur | Non démarré | — | — |
-| P3 — Livrables | Mockups, PDF, ZIP | Non démarré | — | — |
-| P4 — IA et copilote | Analyse, copilote, évaluation | Non démarré | — | — |
-| P5 — Bêta | Durcissement, juridique, bêta | Non démarré | — | — |
+| P0 — Fondations | Monorepo, CI, base, config | Implémenté | 2026-10-07 | 2026-10-17 |
+| P1 — Moteurs | Couleur, SVG, variantes | Implémenté (T-004 à T-009, T-012) | 2026-10-13 | 2026-10-19 |
+| P2 — Document et studio | Commandes, auth, upload, éditeur | En cours : serveur fait (T-013 à T-019), interface en cours (T-020, T-021, écran Démarrer) | 2026-10-18 | — |
+| P3 — Livrables | Mockups, PDF, ZIP | En cours : homographie (T-026) | 2026-10-24 | — |
+| P4 — IA et copilote | Analyse, copilote | Non démarré (`packages/ai` vide) | — | — |
+| P5 — Bêta | Durcissement, juridique | Non démarré | — | — |
+
+**Mode compétition GDG Fest** (ADR-027, présélection 2026-11-09) : plan `journal/research/2026-10-28-plan-gdg-fest.md`,
+parcours à construire `journal/research/2026-10-28-studio-flow-brief.md`.
 
 ## 2. Modules
 
-| Module | Package / zone | Spécifié | Implémenté | Vérifié | Remarque |
-|---|---|---|---|---|---|
-| Squelette du monorepo et CI (T-001) | racine, `packages/*`, `apps/*` | ✅ | ✅ | ❌ | `pnpm verify` vert le 2026-10-17. Non vérifié : rapport de sabotage T-001 absent ; exécution de la CI sur GitHub à confirmer par le propriétaire ; durcissement du 2026-10-17 à relire. |
-| Noyau `Result` | `kernel` | ✅ | — | ❌ | ADR-017 |
-| Conversions et WCAG | `color-engine` | ✅ | ❌ | ❌ | Vecteurs de référence prêts |
-| Extraction de palette | `color-engine` | ✅ | ❌ | ❌ | Corpus de 20 logos à constituer |
-| Échelles et matrice de contraste | `color-engine` | ✅ | ❌ | ❌ | |
-| CMJN indicatif (ICC) | `color-engine` | ✅ | ❌ | ❌ | Spike T-010 |
-| Assainisseur SVG | `svg-engine` | ✅ | ❌ | ❌ | Corpus d'attaque de 30 cas |
-| Rasterisation isolée | `svg-engine` | ✅ | ❌ | ❌ | |
-| Variantes de logo, favicon | `logo-kit` | ✅ | ❌ | ❌ | Spike T-011 pour le raster |
-| Clear space, Do/Don't | `logo-kit` | ✅ | ❌ | ❌ | |
-| Document et commandes | `document` | ✅ | ❌ | ❌ | |
-| Modèle de données | `db` | ✅ | ❌ | ❌ | |
-| Auth et sessions invitées | `apps/web` | ✅ | ❌ | ❌ | Spike T-013 |
-| Upload et scan | `apps/web`, `apps/worker` | ✅ | ❌ | ❌ | |
-| Éditeur de charte | `apps/web` | ✅ | ❌ | ❌ | Ancienne UI = référence visuelle seulement |
-| Moteur de mockups | `mockup-engine` | ✅ | ❌ | ❌ | Scènes à produire |
-| Scènes de mockup (3) | `assets/scenes` | ✅ | ❌ | ❌ | Production Blender |
-| Export PDF | `apps/worker` | ✅ | ❌ | ❌ | |
-| Export ZIP et tokens | `apps/worker` | ✅ | ❌ | ❌ | |
-| Adaptateur IA et analyse | `ai` | ✅ | ❌ | ❌ | |
-| Copilote | `ai`, `apps/web` | ✅ | ❌ | ❌ | |
-| Jeu d'évaluation IA (40 marques) | `ai/eval` | ✅ | ❌ | ❌ | |
-| Infra et déploiement | `infra/` | ✅ | ❌ | ❌ | |
-| Textes juridiques | `apps/web` | ✅ | ❌ | ❌ | Relecture par un juriste |
+| Module | Package / zone | Statut | Tickets | Remarque |
+|---|---|---|---|---|
+| Monorepo, CI, config | racine | Implémenté | T-001, T-002 | |
+| Noyau `Result` | `kernel` | Implémenté | T-003 | |
+| Document et commandes | `document` | Implémenté | T-003 | Format paysage/portrait à ajouter (ADR-027) |
+| Conversions, WCAG, palette, échelles, contrastes | `color-engine` | Implémenté | T-004 à T-006 | |
+| Assainisseur et rasterisation SVG | `svg-engine` | Implémenté | T-007, T-008 | |
+| Variantes, monochromes, règles du logo | `logo-kit` | Implémenté | T-009, T-012 | |
+| Auth, base, `can()`, projets, révisions | `apps/web`, `db` | Implémenté | T-013 à T-016 | |
+| Sessions invitées, upload, scan, analyse sans IA, SSE | `apps/web`, `apps/worker` | Implémenté | T-017 à T-019 | |
+| Fondations UI, dépôt, timeline, écran Démarrer | `apps/web` | Implémenté | T-020, T-021, J2 | |
+| Homographie et placement des mockups | `mockup-engine` | Implémenté | T-026 | Rendu navigateur à faire |
+| Studio : toile, pages, inspecteur | `apps/web` | À faire | T-022, T-023 | |
+| Landing (maquette) | `apps/web` | À faire | — | ADR-027 |
+| Export PDF, tokens | `apps/web`, `apps/worker` | À faire | T-028, T-029 | |
+| Adaptateur IA, analyse, copilote | `ai` | À faire | T-030 à T-032 | Gemini gratuit, mode démo rejouable |
+
+« Vérifié » au sens de l'en-tête (verdict GO consigné) : voir les rapports de `sortie tikets/`.
 
 ## 3. Contraintes transverses
 

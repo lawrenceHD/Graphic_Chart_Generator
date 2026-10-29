@@ -157,6 +157,20 @@
 **Conséquences** : une seule règle de session ; `AGENTS.md` n'est plus modifié par l'outillage ; les violations d'`AGENTS.md` sont refusées dès l'écriture une fois les hooks activés.
 **Alternatives rejetées** : imposer strictement une session par ticket (contraire à l'usage du propriétaire) ; installer ECC complet (coût en contexte, hooks inadaptés à Windows).
 
+## ADR-027 — Mode compétition GDG Fest et parcours de démonstration
+**Contexte** : le projet est présenté au GDG Fest (prix du projet le plus innovant autour de l'IA), présélection le 2026-11-09. Plusieurs décisions du propriétaire (2026-10-23 → 2026-10-29, `journal/OWNER_DECISIONS.md`) contredisent des documents normatifs : thème sombre par défaut et landing gelée (`09` §1), facturation de l'API imposée (`07` §2), limite de 400 lignes (`AGENTS.md` §7).
+**Décision** (jusqu'à la présélection, puis réexamen) :
+1. **Tickets** : plus de 400 lignes autorisés ; restent obligatoires `pnpm verify` vert, tests et sabotage sur ce qui est calculé, zéro `any`, Zod aux frontières, logo jamais redessiné par une IA, rendu vérifié dans Chromium. Branches `comp/*` depuis `main`, avance rapide.
+2. **Thèmes** : jour, nuit et système ; **système par défaut** (remplace `09` §1.2 ; clôt O-7).
+3. **Landing** : celle de la maquette `prototypes/studio` est portée dans `apps/web` (remplace `09` §1.5).
+4. **Une seule source de rendu des pages** : chaque page de la charte est un composant React pur du document ; le même code sert la toile du studio, `/print/[id]` et l'export PDF (Chromium du worker). Pages en **paysage 16:9 par défaut**, portrait par page (`PageOverrides.format`).
+5. **Génération en direct** : événement SSE `document.page` par page composée, en plus de `analysis.done`.
+6. **IA** : Gemini au **niveau gratuit** (texte et vision), adaptateur derrière `AiPort` avec sortie validée par Zod et adaptateur d'enregistrement/rejeu ; un **mode démo** rejoue une analyse enregistrée quand le quota ou le réseau manque. Toute action de l'IA passe par les commandes du document (annulable). Les choix de l'IA citent leurs preuves (mesures des moteurs, extraits du brief).
+7. **Hébergement de démo** : projet Google Cloud séparé, essai gratuit, alerte de budget à 5 $ ; jamais de facturation sur le projet de la clé Gemini.
+8. **Dépendances autorisées** : `motion`, `react-colorful`, `@google/genai`.
+**Conséquences** : `09` §1.2, §1.5 et `07` §2 (facturation) sont supersédés pendant la compétition ; les addenda « à reporter » de `journal/OWNER_DECISIONS.md` font foi jusqu'à leur report dans `docs/`, prévu après la présélection.
+**Alternatives rejetées** : rendus séparés pour la toile et le PDF (double maintenance, écarts visuels) ; génération d'images par l'IA pour les mockups (logo déformé, contraire au principe du produit) ; Gemini payant (pas de facturation pour l'instant).
+
 ---
 
 ## Décisions ouvertes

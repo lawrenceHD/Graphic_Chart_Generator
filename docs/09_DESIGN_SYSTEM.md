@@ -9,10 +9,10 @@ Un outil de précision pour créatifs : sobre, net, rapide. Références d'espri
 
 Principes :
 1. **Neutralité chromatique des zones d'aperçu** : le fond de toute prévisualisation de logo ou de palette est un gris neutre (OKLCH chroma 0). Un fond teinté fausse la perception des couleurs.
-2. **Thème sombre par défaut**, thème clair au backlog. Les composants sont écrits avec des tokens pour que le thème clair ne soit qu'un jeu de variables.
+2. **Thèmes jour, nuit et système, système par défaut** (ADR-027, remplace « thème sombre par défaut »). Les composants sont écrits avec des tokens : un thème n'est qu'un jeu de variables.
 3. **Effets de verre : sobriété.** Au plus **3 surfaces en verre dépoli visibles** simultanément, jamais sous du texte de contenu (seulement navigation et barres flottantes). Désactivés sous `prefers-reduced-transparency`, ou lorsque la fluidité mesurée passe sous 50 images par seconde : fond opaque de remplacement.
 4. **Densité maîtrisée** : une action principale par écran, hiérarchie par la taille et le poids, pas par les effets.
-5. **La landing est gelée** (voir `12_WORKFLOW_ROADMAP.md` §7) : aucun nouveau travail visuel avant la bêta.
+5. **Landing** : celle de la maquette `prototypes/studio`, portée dans `apps/web` (ADR-027, remplace « landing gelée »).
 
 ## 2. Tokens
 

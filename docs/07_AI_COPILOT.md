@@ -17,7 +17,7 @@ L'IA **rédige, classe et propose**. Elle ne calcule rien de ce que les moteurs 
 
 ## 2. Compte, modèle, coûts
 
-- **L'abonnement grand public à Gemini sert à coder. Le produit appelle l'API** avec une clé dédiée (Google AI Studio ou Google Cloud), **facturation activée**. Ce sont deux comptes de coûts distincts. Les conditions d'usage commercial, de conservation et d'entraînement du palier payant sont à **relire avant la bêta** (la politique de confidentialité du produit en dépend).
+- **L'abonnement grand public à Gemini sert à coder. Le produit appelle l'API** avec une clé dédiée (Google AI Studio ou Google Cloud), **facturation activée** (pendant la compétition : niveau gratuit, ADR-027). Ce sont deux comptes de coûts distincts. Les conditions d'usage commercial, de conservation et d'entraînement du palier payant sont à **relire avant la bêta** (la politique de confidentialité du produit en dépend).
 - Le modèle est donné par `AI_MODEL` (jamais en dur). Les noms de modèles et leurs quotas changent souvent : tout est vérifié à la date de mise en production.
 - Tous les appels passent par le port :
 
