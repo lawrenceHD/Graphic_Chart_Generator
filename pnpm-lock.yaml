@@ -311,13 +311,29 @@ importers:
         version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.3(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/ai:
+    dependencies:
+      '@app/color-engine':
+        specifier: workspace:*
+        version: link:../color-engine
+      '@app/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@app/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
       typescript:
         specifier: 6.0.3
         version: 6.0.3
       vitest:
         specifier: 5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.3(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.3(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/color-engine:
     dependencies:

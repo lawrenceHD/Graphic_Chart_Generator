@@ -9,7 +9,7 @@ const ALLOWED = {
   'mockup-engine': ['kernel', 'contracts'],
   db: ['kernel', 'contracts'],
   storage: ['kernel', 'contracts'],
-  ai: ['kernel', 'contracts', 'document'],
+  ai: ['kernel', 'contracts', 'document', 'color-engine'],
 };
 
 const PURE_PACKAGES = ['kernel', 'color-engine', 'document', 'logo-kit', 'svg-engine'];
