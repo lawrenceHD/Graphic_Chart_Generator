@@ -1,0 +1,52 @@
+{
+  "id": "shop-sign-20261024-3a8c",
+  "schemaVersion": 1,
+  "category": "signage",
+  "size": {
+    "width": 3840,
+    "height": 2160
+  },
+  "surfaces": [
+    {
+      "id": "front",
+      "quad": [
+        [
+          1290,
+          645
+        ],
+        [
+          2805,
+          198
+        ],
+        [
+          2820,
+          1425
+        ],
+        [
+          1287,
+          1440
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.8,
+        "fit": "contain",
+        "paddingRatio": 0.18
+      },
+      "baseTint": [
+        0.689,
+        0.602,
+        0.511
+      ],
+      "light": {
+        "direction": [
+          -0.722,
+          0,
+          0.692
+        ]
+      },
+      "finishes": [
+        "flat"
+      ]
+    }
+  ]
+}

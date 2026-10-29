@@ -1,0 +1,52 @@
+{
+  "id": "tote-bag-20261024-64fd",
+  "schemaVersion": 1,
+  "category": "generic",
+  "size": {
+    "width": 3840,
+    "height": 2160
+  },
+  "surfaces": [
+    {
+      "id": "front",
+      "quad": [
+        [
+          1500,
+          990
+        ],
+        [
+          2310,
+          990
+        ],
+        [
+          2310,
+          1680
+        ],
+        [
+          1500,
+          1680
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.17,
+        "fit": "contain",
+        "paddingRatio": 0.15
+      },
+      "baseTint": [
+        0.817,
+        0.803,
+        0.776
+      ],
+      "light": {
+        "direction": [
+          0,
+          -0.722,
+          0.692
+        ]
+      },
+      "finishes": [
+        "flat"
+      ]
+    }
+  ]
+}

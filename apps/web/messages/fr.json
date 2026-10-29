@@ -113,7 +113,13 @@
     "network": "La connexion a été interrompue. Vérifiez votre réseau, puis réessayez.",
     "turnstile": "La vérification anti-robot n'a pas abouti. Réessayez.",
     "rateLimited": "Trop de projets créés en peu de temps. Patientez quelques minutes, puis réessayez.",
-    "refused": "La création a été refusée (code {code}). Réessayez dans un instant."
+    "refused": "La création a été refusée (code {code}). Réessayez dans un instant.",
+    "logoHint": "Seul champ indispensable avec le nom",
+    "briefPlaceholder": "Ex. : La Mèza réunit des inconnus autour d’une même table pour des dîners conviviaux…",
+    "after": "Vous arrivez dans le studio : la charte se compose sous vos yeux, page après page.",
+    "coverLead": "Le brief donne le ton de la couverture.",
+    "coverNote": "Aperçu : la couverture finale prend les couleurs mesurées dans votre logo.",
+    "home": "Accueil"
   },
   "logo": {
     "dont": {
@@ -129,6 +135,312 @@
       "busy-background": "Pas de fond chargé",
       "crop": "Ne pas recadrer",
       "crowd": "Respecter la zone de protection"
+    }
+  },
+  "workspace": {
+    "metaTitle": "Studio",
+    "home": "Retour à l'accueil",
+    "guideline": "Charte graphique",
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "export": "Exporter",
+    "untitled": "Nouvelle marque",
+    "copilot": "Copilote",
+    "copilotNote": "Chaque proposition est annulable",
+    "thread": "Analyse et conversation",
+    "unknown": "Je ne sais pas encore faire ça ici. Essayez par exemple : « accent plus sombre », « principale #1F6F5C », « autre police », « échange principale et accent » ou, sur une page choisie, « portrait ».",
+    "failedReply": "La modification n'a pas été enregistrée : la charte est restée telle quelle.",
+    "applied": "Fait : {change}. Annulable avec le bouton Annuler.",
+    "promptLabel": "Demander une modification",
+    "prompt": "Demander une modification…",
+    "promptWaiting": "Disponible quand la charte est prête…",
+    "send": "Envoyer",
+    "canvas": "Toile de la charte",
+    "dropTitle": "Déposez votre logo",
+    "dropLead": "Charta lit votre logo, en extrait la palette, vérifie les contrastes et compose la charte sous vos yeux.",
+    "composing": "Composition…",
+    "waitingStep": "En attente de l'étape {step}",
+    "mockups": "En situation",
+    "mockupsLead": "Votre vrai fichier, projeté sur des photographies par calcul de perspective : le logo n’est jamais redessiné.",
+    "mockupAlt": "{brand} sur : {scene}",
+    "zoomOut": "Dézoomer",
+    "zoomIn": "Zoomer",
+    "fit": "Vue d'ensemble",
+    "retry": "Relancer",
+    "dismiss": "Fermer le message",
+    "streamLost": "Suivi en direct interrompu : reconnexion…",
+    "panels": "Panneaux du studio",
+    "progress": {
+      "ready": "Charte prête",
+      "step": "Étape {done} sur 4",
+      "checking": "Vérification du fichier",
+      "loading": "Chargement",
+      "waiting": "En attente du logo"
+    },
+    "steps": {
+      "at": "{seconds} s"
+    },
+    "insight": {
+      "palette": "J'ai trouvé {found, plural, one {# couleur} other {# couleurs}} dans votre logo. La principale et l'accent :",
+      "contrast": "{text} sur {background} :",
+      "fix": "{role} sur {against}, ce n’est pas lisible en texte :",
+      "fixProposal": "Même teinte, luminosité ajustée par le moteur de couleur :",
+      "apply": "Appliquer",
+      "typography": "Couple typographique choisi dans le catalogue libre (SIL OFL) :",
+      "review": "Une variante monochrome est à vérifier : le moteur a dû simplifier des formes. Regardez la page Logo.",
+      "textsBrief": "Le manifeste et le ton de voix seront rédigés par l’IA à partir de votre brief. En attendant, vous pouvez les écrire dans l’inspecteur.",
+      "textsNoBrief": "Sans brief, je n’invente pas de manifeste : écrivez la mission et la vision dans l’inspecteur, ou ajoutez un brief au projet.",
+      "fromBrief": "Votre brief définit déjà la mission et la vision. Je peux les reprendre telles quelles dans la charte :",
+      "fromBriefApply": "Reprendre dans la charte"
+    },
+    "roles": {
+      "primary": "Principale",
+      "accent": "Accent",
+      "neutralLight": "Neutre clair",
+      "neutralDark": "Neutre sombre"
+    },
+    "levels": {
+      "aaa": "AAA",
+      "aa": "AA",
+      "large-ui": "Grand texte",
+      "fail": "Échec"
+    },
+    "reply": {
+      "color-set": "{role} remplacée par",
+      "color-darker": "{role} assombrie :",
+      "color-lighter": "{role} éclaircie :",
+      "color-warmer": "{role} réchauffée :",
+      "color-cooler": "{role} refroidie :",
+      "swap": "Principale et accent échangées.",
+      "typeface": "Nouveau couple typographique :",
+      "format": "Page passée en {format}.",
+      "title": "Titre de la page : « {title} »."
+    },
+    "format": {
+      "landscape": "Paysage",
+      "portrait": "Portrait"
+    },
+    "suggestions": {
+      "swap": "Échanger principale et accent",
+      "complementary": "Accent complémentaire",
+      "typeface": "Autre police",
+      "darker-primary": "Principale plus profonde"
+    },
+    "pageTypes": {
+      "cover": "Couverture",
+      "manifesto": "Manifeste",
+      "logo": "Logo",
+      "clear-space": "Zone d'exclusion",
+      "do-dont": "À faire, à éviter",
+      "palette": "Palette",
+      "contrast": "Contrastes",
+      "typography": "Typographie",
+      "tone-of-voice": "Ton de voix",
+      "mockup": "Mockup",
+      "tokens": "Tokens"
+    },
+    "scenes": {
+      "business-card": "Carte de visite",
+      "shop-sign": "Enseigne",
+      "tote-bag": "Tote bag",
+      "t-shirt-folded": "T-shirt",
+      "reception-wall": "Mur d'accueil",
+      "framed-poster": "Affiche encadrée",
+      "laptop-screen": "Écran"
+    },
+    "inspector": {
+      "label": "Inspecteur",
+      "empty": "Les réglages apparaissent quand la charte est prête.",
+      "page": "Page",
+      "mockup": "Mockup calculé : le fichier du logo est projeté tel quel sur la surface photographiée, puis ombré par la scène. Changez la palette ou le logo : la scène suit.",
+      "palette": "Palette",
+      "typography": "Typographie",
+      "logo": "Règles du logo",
+      "texts": "Textes de la marque",
+      "hex": "Code hexadécimal",
+      "hexInvalid": "Saisissez un code comme #E24329 ou E24329.",
+      "hue": "Teinte",
+      "lightness": "Luminosité",
+      "found": "Couleurs de la marque",
+      "use": "Utiliser {hex}",
+      "clearSpace": "Zone de protection",
+      "minPx": "Taille minimale écran",
+      "minMm": "Taille minimale impression",
+      "measured": "Valeurs mesurées sur votre logo à l’analyse ; vous pouvez les ajuster.",
+      "mission": "Mission",
+      "vision": "Vision",
+      "title": "Titre de la page",
+      "format": "Format",
+      "background": "Fond de la page",
+      "reset": "Réinitialiser",
+      "useBackground": "Fond {hex}",
+      "note": "Chaque modification est une commande enregistrée et annulable. Les contrastes sont recalculés par le moteur de couleur."
+    },
+    "announce": {
+      "ready": "Charte prête : toutes les pages sont modifiables.",
+      "analysing": "Analyse en cours."
+    },
+    "failure": {
+      "network": "La connexion a été interrompue. Vérifiez votre réseau, puis réessayez.",
+      "storage": "Le fichier n'a pas pu être enregistré. Réessayez dans un instant.",
+      "unexpected": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, rechargez la page.",
+      "command": "Cette modification n'est pas possible sur la charte actuelle.",
+      "conflict": "La charte a changé ailleurs entre-temps : la dernière version est affichée, refaites la modification.",
+      "rateLimited": "Trop de demandes en peu de temps. Patientez un instant, puis réessayez.",
+      "forbidden": "Ce projet n'est pas accessible avec votre session. Rechargez la page.",
+      "notFound": "Ce projet n'existe pas ou a été supprimé.",
+      "refused": "La demande a été refusée. Réessayez dans un instant."
+    },
+    "tabs": {
+      "copilot": "Copilote",
+      "pages": "Pages",
+      "inspector": "Réglages"
+    },
+    "exporting": {
+      "title": "Exporter la charte",
+      "lead": "Les fichiers sont produits à partir de la charte telle que vous la voyez.",
+      "close": "Fermer",
+      "pdf": "Charte en PDF",
+      "pdfDetail": "Toutes les pages, en paysage 16:9 ou en A4 portrait.",
+      "pdfAction": "Imprimer en PDF",
+      "logos": "Fichiers du logo",
+      "logosDetail": "Couleur, noir, blanc et favicon.",
+      "logo": {
+        "color": "Couleur",
+        "mono-black": "Noir",
+        "mono-white": "Blanc",
+        "favicon": "Favicon"
+      },
+      "css": "Variables CSS",
+      "cssDetail": "Couleurs, échelle, polices et règles du logo.",
+      "figma": "Design tokens",
+      "figmaDetail": "Format W3C (DTCG), importable dans Figma.",
+      "note": "Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF »."
+    },
+    "oneColumn": "Une page par ligne",
+    "twoColumns": "Deux pages par ligne",
+    "working": "J’applique…"
+  },
+  "landing": {
+    "metaTitle": "Charta · Votre charte graphique, en direct, à partir de votre logo",
+    "nav": {
+      "label": "Navigation principale",
+      "how": "Fonctionnement",
+      "guideline": "La charte",
+      "mockups": "Mockups",
+      "faq": "Questions",
+      "try": "Essayer"
+    },
+    "hero": {
+      "badge": "Exemple réel plus bas : la charte de La Mèza",
+      "line1": "Votre logo,",
+      "line2": "votre",
+      "line3": "en direct.",
+      "words": "charte|palette|typo|identité",
+      "lead": "Déposez votre logo : Charta mesure ses couleurs, vérifie chaque contraste, compose une charte graphique complète et la met en situation. Ensuite, vous ajustez page par page, à la main ou en parlant au copilote.",
+      "start": "Créer ma charte",
+      "example": "Voir un exemple",
+      "reassure": "Sans compte pour essayer · votre logo reste privé · rien n’est redessiné",
+      "chipContrast": "{ratio}:1 · texte lisible",
+      "chipFont": "Fraunces + Work Sans",
+      "chipPages": "10 pages"
+    },
+    "facts": {
+      "label": "Ce que Charta produit",
+      "pages": "pages de charte composées à partir du logo",
+      "steps": "étapes d’analyse suivies en direct",
+      "scenes": "mises en situation photographiques",
+      "pairings": "couples typographiques libres de droits"
+    },
+    "manifesto": {
+      "line1": "Une charte,",
+      "line2": "pas un moodboard.",
+      "lead": "Des règles mesurées sur votre logo : ratios de contraste calculés, zone de protection, tailles minimales, interdits montrés avec votre propre fichier.",
+      "stickers": "WCAG 2.2|Logo jamais redessiné|Annulable|Design tokens|CMJN indicatif"
+    },
+    "system": {
+      "title": "Un logo, tout un système.",
+      "lead": "Chaque valeur vient d’un moteur déterministe ; l’IA lit, explique et propose.",
+      "palette": "Palette",
+      "type": "Typographie",
+      "contrast": "Contrastes",
+      "mockups": "Mockups",
+      "rules": "Règles",
+      "tokens": "Tokens"
+    },
+    "journey": {
+      "label": "Fonctionnement en trois temps",
+      "dropTitle": "Déposez",
+      "dropText": "SVG, PNG, WebP ou JPEG. Le fichier est vérifié et assaini avant toute lecture ; l’original reste privé.",
+      "watchTitle": "Regardez",
+      "watchText": "Quatre étapes en direct : lecture du logo, palette et contrastes, typographie, assemblage. Les pages se posent sur la table au fur et à mesure.",
+      "editTitle": "Ajustez",
+      "editText": "Une couleur, une police, un format de page, ou une phrase au copilote : chaque modification est une commande que vous pouvez annuler.",
+      "checked": "Fichier vérifié",
+      "steps": "Lecture du logo|Palette et contrastes|Typographie|Assemblage"
+    },
+    "pages": {
+      "title": "Des pages qui tiennent la comparaison.",
+      "lead": "Les pages de La Mèza, telles que Charta les compose. Attrapez-en une.",
+      "caption": "{page} · La Mèza"
+    },
+    "inside": {
+      "title": "Tout ce que contient la charte.",
+      "lead": "Exemple : La Mèza, composée par Charta puis ajustée dans le studio (mission, valeurs et ton repris de son brief).",
+      "paletteTitle": "Palette extraite du logo",
+      "paletteNote": "Rôles attribués par le moteur : principale, accent, neutres.",
+      "contrastTitle": "Contrastes mesurés",
+      "contrastNote": "Ratio WCAG 2.2, avec une icône et un libellé à chaque niveau.",
+      "typeTitle": "Typographie",
+      "typeNote": "Un couple choisi dans un catalogue libre (SIL OFL).",
+      "rulesTitle": "Règles du logo",
+      "rulesNote": "Zone de protection et tailles minimales, mesurées sur le logo.",
+      "clearSpace": "Zone de protection",
+      "minScreen": "Écran",
+      "minPrint": "Impression",
+      "pass": "lisible",
+      "fail": "trop faible"
+    },
+    "mockups": {
+      "title": "Votre marque,",
+      "highlight": "en situation",
+      "lead": "Le vrai fichier du logo, projeté par calcul de perspective sur des photographies. Il n’est jamais redessiné par une IA.",
+      "computed": "calculé",
+      "alt": "{brand} sur : {scene}"
+    },
+    "faq": {
+      "title": "Vos questions.",
+      "q1": "Quels fichiers puis-je déposer ?",
+      "a1": "SVG, PNG, WebP ou JPEG, jusqu’à 10 Mo (5 Mo pour un SVG). Le fichier est vérifié et assaini avant toute lecture ; l’original reste privé.",
+      "q2": "Les couleurs viennent-elles vraiment de mon logo ?",
+      "a2": "Oui : la palette est extraite des pixels du logo, puis chaque couleur reçoit un rôle. Une couleur complétée par le moteur est marquée « dérivée ».",
+      "q3": "Mon logo est-il modifié ?",
+      "a3": "Jamais. Les variantes sont calculées à partir de votre fichier, et les mockups le projettent tel quel sur la photographie.",
+      "q4": "Les contrastes sont-ils fiables ?",
+      "a4": "Ils sont calculés selon WCAG 2.2 sur la valeur exacte. Quand une couleur ne se lit pas en texte, le copilote propose la luminosité la plus proche qui passe, avec le ratio obtenu.",
+      "q5": "Puis-je tout modifier ?",
+      "a5": "Couleurs, polices, textes, format et fond de chaque page : chaque modification est une commande enregistrée, que vous pouvez annuler ou rétablir.",
+      "q6": "Que contient l’export ?",
+      "a6": "La charte en PDF, les fichiers du logo, les variables CSS et Tailwind, et les design tokens au format W3C, importables dans Figma.",
+      "q7": "Je suis designer : qu’est-ce que j’y gagne ?",
+      "a7": "La part systématique d’une charte (palette, contrastes, déclinaisons, règles, mockups, fichiers) est faite en quelques minutes. Votre temps va au jugement : vous reprenez chaque page à la main."
+    },
+    "final": {
+      "title": "À vous de jouer.",
+      "cta": "Créer ma charte",
+      "note": "Sans compte pour essayer · votre logo reste privé"
+    },
+    "footer": {
+      "tagline": "Des chartes graphiques composées en direct à partir d’un logo, et modifiables page par page.",
+      "product": "Produit",
+      "start": "Créer une charte",
+      "example": "Voir l’exemple",
+      "mockups": "Mockups",
+      "faq": "Questions",
+      "project": "Projet",
+      "gdg": "Présenté au GDG Fest 2026",
+      "rights": "© 2026 Charta",
+      "top": "Revenir en haut de la page"
     }
   }
 }

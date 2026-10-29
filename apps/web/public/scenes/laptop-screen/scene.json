@@ -1,0 +1,52 @@
+{
+  "id": "laptop-screen-20261023-12f5",
+  "schemaVersion": 1,
+  "category": "digital",
+  "size": {
+    "width": 3840,
+    "height": 2160
+  },
+  "surfaces": [
+    {
+      "id": "front",
+      "quad": [
+        [
+          1194,
+          594
+        ],
+        [
+          2724,
+          594
+        ],
+        [
+          2730,
+          1560
+        ],
+        [
+          1194,
+          1560
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.6,
+        "fit": "contain",
+        "paddingRatio": 0.3
+      },
+      "baseTint": [
+        0.739,
+        0.745,
+        0.75
+      ],
+      "light": {
+        "direction": [
+          0,
+          -0.722,
+          0.692
+        ]
+      },
+      "finishes": [
+        "flat"
+      ]
+    }
+  ]
+}

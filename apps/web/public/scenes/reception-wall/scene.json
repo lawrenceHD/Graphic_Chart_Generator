@@ -1,0 +1,52 @@
+{
+  "id": "reception-wall-20261024-29fc",
+  "schemaVersion": 1,
+  "category": "signage",
+  "size": {
+    "width": 3840,
+    "height": 2160
+  },
+  "surfaces": [
+    {
+      "id": "front",
+      "quad": [
+        [
+          660,
+          300
+        ],
+        [
+          2760,
+          300
+        ],
+        [
+          2760,
+          1290
+        ],
+        [
+          660,
+          1290
+        ]
+      ],
+      "logoBox": {
+        "aspect": 2.12,
+        "fit": "contain",
+        "paddingRatio": 0.22
+      },
+      "baseTint": [
+        0.842,
+        0.846,
+        0.846
+      ],
+      "light": {
+        "direction": [
+          -0.511,
+          -0.511,
+          0.692
+        ]
+      },
+      "finishes": [
+        "flat"
+      ]
+    }
+  ]
+}
