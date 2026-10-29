@@ -16,7 +16,7 @@
 | P1 — Moteurs | Couleur, SVG, variantes | Implémenté (T-004 à T-009, T-012) | 2026-10-13 | 2026-10-19 |
 | P2 — Document et studio | Commandes, auth, upload, éditeur | En cours : serveur fait (T-013 à T-019), interface en cours (T-020, T-021, écran Démarrer) | 2026-10-18 | — |
 | P3 — Livrables | Mockups, PDF, ZIP | En cours : homographie (T-026) | 2026-10-24 | — |
-| P4 — IA et copilote | Analyse, copilote | Non démarré (`packages/ai` vide) | — | — |
+| P4 — IA et copilote | Analyse, copilote | En cours : recherche de références, lecture du logo, polices (ADR-028), **non branchés** au worker ; copilote non démarré | — | — |
 | P5 — Bêta | Durcissement, juridique | Non démarré | — | — |
 
 **Mode compétition GDG Fest** (ADR-027, présélection 2026-11-09) : plan `journal/research/2026-10-28-plan-gdg-fest.md`,
