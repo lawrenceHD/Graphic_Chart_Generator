@@ -17,6 +17,8 @@ export interface Favicon {
 export interface FaviconOptions {
   /** Plain background with rounded corners; transparent when absent. */
   readonly background?: string;
+  /** Clip the artwork to `bbox`: the symbol of a lockup without its name (R5 E). */
+  readonly crop?: boolean;
 }
 
 /**
@@ -34,8 +36,24 @@ export function faviconSvg(
   const size = Math.max(bbox.width, bbox.height) / LOGO_SHARE;
   const dx = (size - bbox.width) / 2 - bbox.x;
   const dy = (size - bbox.height) / 2 - bbox.y;
+  const clip = 'charta-favicon-crop';
+  const drawn = options.crop
+    ? [
+        svgElement('defs', {}, [
+          svgElement('clipPath', { id: clip }, [
+            svgElement('rect', {
+              x: String(bbox.x),
+              y: String(bbox.y),
+              width: String(bbox.width),
+              height: String(bbox.height),
+            }),
+          ]),
+        ]),
+        svgElement('g', { 'clip-path': `url(#${clip})` }, artwork.value),
+      ]
+    : artwork.value;
   const children = [
-    svgElement('g', { transform: `translate(${String(dx)} ${String(dy)})` }, artwork.value),
+    svgElement('g', { transform: `translate(${String(dx)} ${String(dy)})` }, drawn),
   ];
   if (options.background !== undefined) {
     const side = String(size);

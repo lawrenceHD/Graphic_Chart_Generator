@@ -192,9 +192,18 @@ for (const file of logos) {
       ),
     );
   }
-  const favicon = faviconSvg(svg, bbox.value);
+  // R5 E: the symbol alone for the favicon and small sizes, when the logo is a lockup.
+  const symbol = measured.ok ? measured.value.symbol : undefined;
+  const favicon = faviconSvg(svg, symbol ?? bbox.value, symbol ? { crop: true } : {});
   if (favicon.ok)
-    tiles.push(await tile(favicon.value.svg, `favicon ${favicon.value.warnings.join(',')}`));
+    tiles.push(
+      await tile(
+        favicon.value.svg,
+        symbol
+          ? 'E. Symbole seul (favicon)'
+          : `favicon, logo entier ${favicon.value.warnings.join(',')}`,
+      ),
+    );
   const donts = dosAndDontsSvg(svg, bbox.value, palette);
   if (donts.ok) {
     for (const panel of donts.value)

@@ -55,6 +55,20 @@ describe('measureLogo (R6, R7)', () => {
     expect(minimum.widthMm).toBe(Math.ceil(((5 * 180) / 80) * 2) / 2);
   });
 
+  it('sizes on the typical letter, not on a dot or a leaf', async () => {
+    const dotted = svgOf(
+      '<rect x="10" y="0" width="40" height="100" fill="#1F4BFF"/>' +
+        [60, 85, 110, 135, 160]
+          .map((x) => `<rect x="${String(x)}" y="60" width="20" height="30"/>`)
+          .join('') +
+        '<rect x="62" y="40" width="10" height="10"/>',
+    );
+    const measured = await measureLogo(dotted, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    // Letters 30 of 100 rule: 6 × 100 / 30 = 20 px → floor 24 px; the dot (10) would give 60 px.
+    expect(measured.value.minimum.heightPx).toBe(24);
+  });
+
   it('raises the minimum for a logo with small details', async () => {
     const fine = svgOf(
       '<rect x="10" y="0" width="60" height="100" fill="#1F4BFF"/>' +
@@ -68,5 +82,41 @@ describe('measureLogo (R6, R7)', () => {
     expect(measured.value.minimum.heightPx).toBeGreaterThanOrEqual(49);
     expect(measured.value.minimum.heightPx).toBeLessThanOrEqual(52);
     expect([12.5, 13]).toContain(measured.value.minimum.heightMm);
+  });
+
+  it('finds the symbol of a lockup: the side of the widest gap with few pieces, facing the letters', async () => {
+    const measured = await measureLogo(lockup, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    const symbol = measured.value.symbol;
+    expect(symbol?.x).toBeCloseTo(10, 0);
+    expect(symbol?.width).toBeCloseTo(60, 0);
+    expect(symbol?.height).toBeCloseTo(80, 0);
+  });
+
+  it('finds a symbol stacked above its name', async () => {
+    const stacked = svgOf(
+      '<circle cx="100" cy="35" r="30" fill="#EB001B"/>' +
+        [20, 50, 80, 110, 140]
+          .map((x) => `<rect x="${String(x)}" y="78" width="20" height="15"/>`)
+          .join(''),
+    );
+    const measured = await measureLogo(stacked, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.symbol?.y).toBeCloseTo(5, 0);
+    expect(measured.value.symbol?.height).toBeCloseTo(60, 0);
+  });
+
+  it('has no separable symbol for a mark made of equal pieces or of one piece', async () => {
+    const grid = svgOf(
+      '<rect x="10" y="10" width="35" height="35"/><rect x="55" y="10" width="35" height="35"/>' +
+        '<rect x="10" y="55" width="35" height="35"/><rect x="55" y="55" width="35" height="35"/>',
+      '0 0 100 100',
+    );
+    const one = svgOf('<circle cx="100" cy="50" r="40"/>');
+    for (const logo of [grid, one]) {
+      const measured = await measureLogo(logo, rasterizer);
+      if (!measured.ok) throw new Error(measured.error);
+      expect(measured.value.symbol).toBeUndefined();
+    }
   });
 });

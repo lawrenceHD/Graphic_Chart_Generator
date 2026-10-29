@@ -290,6 +290,7 @@ Cible : `#000000` ou `#FFFFFF`.
 - Côté du carré : `S = max(W, H) / 0.8` (le logo occupe 80 % du plus grand côté, marge de sécurité de 10 % de chaque côté).
 - Logo centré dans le carré. Fond transparent par défaut ; option fond uni (couleur du jeton) avec coins arrondis (rayon 18 % de `S`).
 - Sorties : SVG, PNG 16, 32, 48, 180 (apple-touch), 192, 512.
+- **Symbole seul (R5 E)** : `measureLogo` coupe le logo à la plus large bande vide (≥ 4 % de `H`, horizontale ou verticale) ; le côté au plus petit nombre de pièces est le symbole s'il fait face à un nom d'au moins 3 pièces et en compte au plus moitié moins. Le favicon d'un logo à symbole se construit sur la boîte du symbole avec `crop: true` (le nom est découpé, jamais réduit). Un logo sans nom (marque seule) garde le logo entier.
 - **Logo très allongé** (ADR-021) : si `W / H > 2` ou `W / H < 0,5`, le favicon est produit avec la même règle mais porte l'avertissement `FAVICON_EXTREME_ASPECT` (enregistré dans `assets.meta` et affiché dans l'interface) : le logo risque d'être illisible en 16 et 32 px.
 
 ### 5.5 Zone d'exclusion (clear space)

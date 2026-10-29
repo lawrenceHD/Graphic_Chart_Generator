@@ -70,6 +70,38 @@ describe('faviconSvg (05_ENGINES.md §5.4)', () => {
     expect(fine.ok && fine.value.warnings).toEqual([]);
   });
 
+  it('crops to the symbol of a lockup: the name never shows in the square', async () => {
+    const lockup = sanitizeSvg(
+      encode(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><rect x="10" y="10" width="40" height="80" fill="#1F4BFF"/><rect x="56" y="40" width="60" height="30" fill="#12161F"/></svg>',
+      ),
+    );
+    if (!lockup.ok) throw new Error(lockup.error.code);
+    const symbol = { x: 10, y: 10, width: 40, height: 80 };
+    const favicon = faviconSvg(lockup.value.svg, symbol, { crop: true });
+    if (!favicon.ok) throw new Error(favicon.error);
+    // The rendered pixels, not the geometry: a clip leaves the geometric box unchanged.
+    const inkColumns = async (svg: string): Promise<number> => {
+      const raster = await rasterizer.rasterize(svg, 100);
+      if (!raster.ok) throw new Error(raster.error.code);
+      const { width, height, rgba } = raster.value;
+      let columns = 0;
+      for (let x = 0; x < width; x += 1) {
+        let inked = false;
+        for (let y = 0; y < height && !inked; y += 1)
+          inked = (rgba[(y * width + x) * 4 + 3] ?? 0) > 128;
+        if (inked) columns += 1;
+      }
+      return columns;
+    };
+    // S = 80 / 0.8 = 100 rendered at 100 px: the symbol is 40 px wide, the name would add more.
+    expect(Math.abs((await inkColumns(favicon.value.svg)) - 40)).toBeLessThanOrEqual(1);
+    expect(accepted(favicon.value.svg)).toBe(true);
+    const uncropped = faviconSvg(lockup.value.svg, symbol);
+    if (!uncropped.ok) throw new Error(uncropped.error);
+    expect(await inkColumns(uncropped.value.svg)).toBeGreaterThan(50);
+  });
+
   it('draws an optional rounded background (radius 18 % of S)', () => {
     const box = { x: 25, y: 25, width: 50, height: 50 };
     const favicon = faviconSvg(logo(box), box, { background: '#FFD60A' });

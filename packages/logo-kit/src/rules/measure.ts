@@ -35,6 +35,8 @@ export interface MinimumSize {
 }
 export interface LogoMeasure {
   readonly bbox: Rect;
+  /** Box of the symbol of a lockup (R5 E: favicon, avatar, below the minimum size); none for a mark alone. */
+  readonly symbol?: Rect;
   readonly clearSpace: ClearSpaceMeasure;
   readonly minimum: MinimumSize;
 }
@@ -85,6 +87,34 @@ function components(mask: Uint8Array, width: number, height: number): Component[
   return found;
 }
 
+/** A gap separates a symbol from its name when it is at least this share of the logo height. */
+const MIN_GAP = 0.04;
+/** The name has at least this many pieces, the symbol at most half as many. */
+const MIN_NAME_PIECES = 3;
+
+// Splits the pieces at the widest empty band across one axis; the symbol is the side with few pieces
+// facing a name of several letters. A mark of equal pieces or a single piece has no separable symbol.
+function symbolOf(pieces: readonly Component[], pixelsHigh: number): Component[] | undefined {
+  let best: { gap: number; sides: [Component[], Component[]] } | undefined;
+  for (const [start, end] of [
+    ['left', 'right'],
+    ['top', 'bottom'],
+  ] as const) {
+    const sorted = [...pieces].sort((a, b) => a[start] - b[start]);
+    let reach = -Infinity;
+    sorted.forEach((piece, index) => {
+      const gap = piece[start] - reach;
+      if (index > 0 && gap >= pixelsHigh * MIN_GAP && gap > (best?.gap ?? 0))
+        best = { gap, sides: [sorted.slice(0, index), sorted.slice(index)] };
+      reach = Math.max(reach, piece[end]);
+    });
+  }
+  if (best === undefined) return undefined;
+  const [first, second] = best.sides;
+  const [symbol, name] = first.length <= second.length ? [first, second] : [second, first];
+  return name.length >= MIN_NAME_PIECES && symbol.length * 2 <= name.length ? symbol : undefined;
+}
+
 const halfUp = (value: number): number => Math.ceil(value * 2) / 2;
 
 /**
@@ -124,6 +154,14 @@ export async function measureLogo(
   const left = Math.min(...pieces.map((piece) => piece.left));
   const right = Math.max(...pieces.map((piece) => piece.right));
   const bbox = rect({ left, top, right, bottom, area: ink });
+  const span = (group: readonly Component[]): Rect =>
+    rect({
+      left: Math.min(...group.map((piece) => piece.left)),
+      top: Math.min(...group.map((piece) => piece.top)),
+      right: Math.max(...group.map((piece) => piece.right)),
+      bottom: Math.max(...group.map((piece) => piece.bottom)),
+      area: 0,
+    });
   const pixelsHigh = bottom - top;
 
   const significant = pieces.filter((piece) => piece.area >= ink * MIN_AREA);
@@ -137,19 +175,21 @@ export async function measureLogo(
       ? { x: CONVENTION_RATIO * bbox.height, source: 'convention' }
       : { x: rect(reference).height, source: 'element', element: rect(reference) };
 
-  // The smallest element that matters for reading: letter-sized or larger, never a speck.
-  const detail = Math.min(
-    pixelsHigh,
-    ...significant
-      .map((piece) => piece.bottom - piece.top)
-      .filter((pixels) => pixels >= pixelsHigh * MIN_SHARE),
-  );
+  // The typical element (lower median of the letter-sized pieces), so that a dot or a leaf does not
+  // inflate the minimum: what must stay legible is a letter of the name.
+  const heights = significant
+    .map((piece) => piece.bottom - piece.top)
+    .filter((pixels) => pixels >= pixelsHigh * MIN_SHARE)
+    .sort((a, b) => a - b);
+  const detail = heights[Math.floor((heights.length - 1) / 2)] ?? pixelsHigh;
   const ratio = pixelsHigh / detail;
   const heightPx = Math.max(FLOOR_PX, Math.ceil(DETAIL_PX * ratio));
   const heightMm = Math.max(FLOOR_MM, halfUp(DETAIL_MM * ratio));
   const aspect = bbox.width / bbox.height;
+  const symbol = symbolOf(significant, pixelsHigh);
   return ok({
     bbox,
+    ...(symbol === undefined ? {} : { symbol: span(symbol) }),
     clearSpace,
     minimum: {
       heightPx,
