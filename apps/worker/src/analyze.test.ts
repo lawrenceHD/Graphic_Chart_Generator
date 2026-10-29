@@ -148,6 +148,8 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     const document = BrandDocumentSchema.parse(stored?.body);
     expect(document.tokens.colors.primary).toEqual({ hex: '#1F4BFF', source: 'extracted' });
     expect(document.brand.name).toBe('Logo');
+    // R6, R7: measured on the logo (one piece: x by convention; minimum on the floors), not the defaults.
+    expect(document.tokens.logo).toEqual({ clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 5 });
     const byVariant = new Map(
       made.map((row) => [Reflect.get(Object(row.meta), 'variant'), row.id] as const),
     );

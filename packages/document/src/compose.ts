@@ -26,7 +26,16 @@ export interface ComposeInput {
     readonly extra: readonly ComposeColor[];
   };
   readonly variants: readonly VariantRef[];
+  /** Clear space and minimum size measured on the logo (logo-kit measureLogo); defaults when absent. */
+  readonly logoRules?: {
+    readonly clearSpaceRatio: number;
+    readonly minSizePx: number;
+    readonly minSizeMm: number;
+  };
 }
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
 
 export interface ComposeError {
   readonly code: 'INVALID_DOCUMENT';
@@ -128,7 +137,15 @@ export function composeInitialDocument(input: ComposeInput): Result<BrandDocumen
       // "Modern, versatile" in the closed catalogue (09_DESIGN_SYSTEM.md §8).
       typography: { pairingId: 'modern-geometric' },
       // 05_ENGINES.md §5.5: clear space 0.25 × H, minimum height 24 px and 12 mm.
-      logo: { clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 12 },
+      // Bounds of LogoRulesSchema: a measure outside them is brought back, never refused.
+      logo:
+        input.logoRules === undefined
+          ? { clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 12 }
+          : {
+              clearSpaceRatio: clamp(input.logoRules.clearSpaceRatio, 0.1, 0.5),
+              minSizePx: clamp(Math.ceil(input.logoRules.minSizePx), 8, 512),
+              minSizeMm: clamp(input.logoRules.minSizeMm, 2, 100),
+            },
     },
     assets: { logoSanitizedId: input.logoSanitizedId, variants: [...input.variants] },
     pages,

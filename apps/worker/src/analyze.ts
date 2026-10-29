@@ -22,7 +22,12 @@ import {
 } from '@app/db';
 import { composeInitialDocument, CURRENT_SCHEMA_VERSION } from '@app/document';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
-import { monochromeVariant, STRUCTURE_THRESHOLD, type MonoTarget } from '@app/logo-kit';
+import {
+  measureLogo,
+  monochromeVariant,
+  STRUCTURE_THRESHOLD,
+  type MonoTarget,
+} from '@app/logo-kit';
 import { z } from 'zod';
 
 // Job project.analyze (02_ARCHITECTURE.md §5.2, decision T-019 part 2): 1 palette (color-engine) stored in
@@ -240,7 +245,25 @@ const Language = z.enum(['fr', 'en']);
 
 // Step 4: the document of the project, composed once. A project that already has one (a new analysis of
 // another logo) keeps it: it may hold the user's edits.
-async function composeDocument(deps: AnalyzeDeps, logo: Asset): Promise<Result<StepDone, string>> {
+// R6, R7 of 16_GUIDELINE_RULES.md: clear space and minimum size measured on an SVG logo. A raster logo, or
+// one the measure cannot read, keeps the document defaults; the step says so with its code.
+async function logoRules(deps: AnalyzeDeps, logo: Asset, bytes: Uint8Array) {
+  if (logo.mime !== SVG) return undefined;
+  const measured = await measureLogo(new TextDecoder().decode(bytes), deps.rasterizer);
+  if (!measured.ok) return undefined;
+  const { bbox, clearSpace, minimum } = measured.value;
+  return {
+    clearSpaceRatio: clearSpace.x / bbox.height,
+    minSizePx: minimum.widthPx,
+    minSizeMm: minimum.widthMm,
+  };
+}
+
+async function composeDocument(
+  deps: AnalyzeDeps,
+  logo: Asset,
+  bytes: Uint8Array,
+): Promise<Result<StepDone, string>> {
   const [existing] = await deps.orm
     .select({ seq: documents.seq })
     .from(documents)
@@ -256,7 +279,9 @@ async function composeDocument(deps: AnalyzeDeps, logo: Asset): Promise<Result<S
   if (!language.success) return err('LANGUAGE_UNSUPPORTED');
   const refs = await variantRefs(deps, logo);
   if (!refs.ok) return refs;
+  const rules = await logoRules(deps, logo, bytes);
   const document = composeInitialDocument({
+    ...(rules === undefined ? {} : { logoRules: rules }),
     brandName: project.title,
     language: language.data,
     logoSanitizedId: logo.id,

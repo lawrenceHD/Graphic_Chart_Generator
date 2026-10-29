@@ -93,6 +93,33 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
     expect(french.ok && french.value.brand.name).toBe('Ma marque');
   });
 
+  it('takes the logo rules measured on the logo (R6, R7), kept within the schema bounds', () => {
+    const measured = composeInitialDocument({
+      ...input,
+      logoRules: { clearSpaceRatio: 0.375, minSizePx: 73, minSizeMm: 18.5 },
+    });
+    expect(measured.ok && measured.value.tokens.logo).toEqual({
+      clearSpaceRatio: 0.375,
+      minSizePx: 73,
+      minSizeMm: 18.5,
+    });
+    const extreme = composeInitialDocument({
+      ...input,
+      logoRules: { clearSpaceRatio: 0.9, minSizePx: 2000.4, minSizeMm: 1 },
+    });
+    expect(extreme.ok && extreme.value.tokens.logo).toEqual({
+      clearSpaceRatio: 0.5,
+      minSizePx: 512,
+      minSizeMm: 2,
+    });
+    const defaults = composeInitialDocument(input);
+    expect(defaults.ok && defaults.value.tokens.logo).toEqual({
+      clearSpaceRatio: 0.25,
+      minSizePx: 24,
+      minSizeMm: 12,
+    });
+  });
+
   it('refuses inputs that cannot make a valid document', () => {
     const badColor = composeInitialDocument({
       ...input,
