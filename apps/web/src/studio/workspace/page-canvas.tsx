@@ -170,6 +170,7 @@ export function PageCanvas({
   selection,
   onSelect,
   onLogo,
+  onReload,
   rejection,
   sending,
 }: {
@@ -180,6 +181,7 @@ export function PageCanvas({
   readonly selection: Selection | null;
   readonly onSelect: (selection: Selection) => void;
   readonly onLogo: (file: File) => void;
+  readonly onReload: () => void;
   readonly rejection: AssetErrorCode | undefined;
   readonly sending: boolean;
 }) {
@@ -233,7 +235,26 @@ export function PageCanvas({
         tabIndex={0}
         aria-label={t('canvas')}
       >
-        {empty ? (
+        {phase === 'failed' && document === null ? (
+          <div className="grid min-h-full place-items-center p-6">
+            <div
+              role="alert"
+              className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 text-center"
+            >
+              <h2 className="m-0 font-display text-2xl font-bold tracking-tight">
+                {t('loadFailedTitle')}
+              </h2>
+              <p className="m-0 mt-2 mb-5 text-sm text-ink-2">{t('loadFailedLead')}</p>
+              <button
+                type="button"
+                onClick={onReload}
+                className="inline-flex h-11 items-center rounded-full bg-accent px-6 text-sm font-semibold text-on-accent"
+              >
+                {t('retry')}
+              </button>
+            </div>
+          </div>
+        ) : empty ? (
           <div className="grid min-h-full place-items-center p-6">
             <div className="w-full max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[0_8px_24px_-8px_oklch(0.2_0.01_60/0.2)]">
               <h2 className="m-0 font-display text-2xl font-bold tracking-tight">
@@ -318,6 +339,8 @@ export function PageCanvas({
                           className={`overflow-hidden rounded-[16px] shadow-[0_1px_2px_oklch(0.2_0.01_60/0.06),0_18px_40px_-18px_oklch(0.2_0.01_60/0.32)] outline-2 outline-offset-[6px] ${selected ? 'outline-ink' : 'outline-transparent'}`}
                         >
                           <MockupStage
+                            failedLabel={t('mockupFailed')}
+                            retryLabel={t('retry')}
                             scene={scene}
                             view={view}
                             label={t('mockupAlt', {

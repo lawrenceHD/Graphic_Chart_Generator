@@ -189,21 +189,36 @@ export function logoOn(view: BrandView, background: string, neutral = false): st
   return view.logo.color;
 }
 
-/** Width / height of an image once loaded (the clear-space drawing needs the logo's real proportions). */
-export function useImageAspect(src: string): number | null {
-  const [aspect, setAspect] = useState<{ readonly src: string; readonly value: number } | null>(
-    null,
-  );
+/**
+ * Width / height of an image once loaded (the clear-space drawing and the mockups need the logo's real
+ * proportions); 'failed' when the file does not load, so callers can say so instead of drawing nothing.
+ */
+export function useImageAspect(src: string): number | 'failed' | null {
+  const [aspect, setAspect] = useState<{
+    readonly src: string;
+    readonly value: number | 'failed';
+  } | null>(null);
   useEffect(() => {
     let alive = true;
     const image = new Image();
     image.onload = () => {
-      if (alive && image.naturalWidth > 0 && image.naturalHeight > 0)
-        setAspect({ src, value: image.naturalWidth / image.naturalHeight });
+      if (!alive) return;
+      setAspect({
+        src,
+        value:
+          image.naturalWidth > 0 && image.naturalHeight > 0
+            ? image.naturalWidth / image.naturalHeight
+            : 'failed',
+      });
+    };
+    image.onerror = () => {
+      if (alive) setAspect({ src, value: 'failed' });
     };
     image.src = src;
     return () => {
       alive = false;
+      image.onload = null;
+      image.onerror = null;
     };
   }, [src]);
   return aspect !== null && aspect.src === src ? aspect.value : null;

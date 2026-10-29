@@ -34,6 +34,11 @@ export function Landing() {
       clearTimeout(timer);
     };
   }, []);
+  // The anchors below the fold exist only once the rest is mounted: honour a deep link such as /#questions.
+  useEffect(() => {
+    if (!rest || window.location.hash === '') return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
+  }, [rest]);
   return (
     <div className="min-h-dvh overflow-x-clip bg-canvas text-ink">
       <Nav />

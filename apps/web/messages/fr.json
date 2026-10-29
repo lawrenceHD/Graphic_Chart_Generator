@@ -175,7 +175,8 @@
       "step": "Étape {done} sur 4",
       "checking": "Vérification du fichier",
       "loading": "Chargement",
-      "waiting": "En attente du logo"
+      "waiting": "En attente du logo",
+      "failed": "Chargement impossible"
     },
     "steps": {
       "at": "{seconds} s"
@@ -319,7 +320,10 @@
     },
     "oneColumn": "Une page par ligne",
     "twoColumns": "Deux pages par ligne",
-    "working": "J’applique…"
+    "working": "J’applique…",
+    "mockupFailed": "Cette mise en situation n’a pas pu être chargée.",
+    "loadFailedTitle": "La charte n’a pas pu être chargée",
+    "loadFailedLead": "Votre projet est intact. Vérifiez votre connexion, puis réessayez."
   },
   "landing": {
     "metaTitle": "Charta · Votre charte graphique, en direct, à partir de votre logo",
@@ -406,7 +410,9 @@
       "highlight": "en situation",
       "lead": "Le vrai fichier du logo, projeté par calcul de perspective sur des photographies. Il n’est jamais redessiné par une IA.",
       "computed": "calculé",
-      "alt": "{brand} sur : {scene}"
+      "alt": "{brand} sur : {scene}",
+      "retry": "Réessayer",
+      "failed": "Cette mise en situation n’a pas pu être chargée."
     },
     "faq": {
       "title": "Vos questions.",

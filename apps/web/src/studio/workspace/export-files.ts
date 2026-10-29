@@ -81,7 +81,10 @@ export function download(fileName: string, text: string, type: string): void {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
+  // Attached for the click: some browsers ignore a detached link.
+  document.body.append(link);
   link.click();
+  link.remove();
   setTimeout(() => {
     URL.revokeObjectURL(url);
   }, 1000);

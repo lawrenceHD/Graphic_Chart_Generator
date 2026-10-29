@@ -27,10 +27,7 @@ describe('copilot findings (measured, with their fixing command)', () => {
   it('proposes a fix for each colour unreadable as text, as a command that applies', () => {
     const insights = insightsOf(DEMO_DOCUMENT, null);
     const fixes = insights.filter((insight) => insight.kind === 'contrast-fix');
-    expect(fixes.map((fix) => fix.role)).toEqual([
-      'primary',
-      'accent',
-    ]);
+    expect(fixes.map((fix) => fix.role)).toEqual(['primary', 'accent']);
     for (const fix of fixes) {
       expect(fix.ratio).toBeLessThan(4.5);
       expect(fix.proposedRatio).toBeGreaterThanOrEqual(4.5);

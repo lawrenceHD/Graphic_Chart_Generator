@@ -175,7 +175,8 @@
       "step": "Step {done} of 4",
       "checking": "Checking the file",
       "loading": "Loading",
-      "waiting": "Waiting for the logo"
+      "waiting": "Waiting for the logo",
+      "failed": "Could not load"
     },
     "steps": {
       "at": "{seconds} s"
@@ -319,7 +320,10 @@
     },
     "oneColumn": "One page per row",
     "twoColumns": "Two pages per row",
-    "working": "Applying…"
+    "working": "Applying…",
+    "mockupFailed": "This mockup could not be loaded.",
+    "loadFailedTitle": "The guideline could not be loaded",
+    "loadFailedLead": "Your project is intact. Check your connection, then try again."
   },
   "landing": {
     "metaTitle": "Charta · Your brand guidelines, live, from your logo",
@@ -406,7 +410,9 @@
       "highlight": "in context",
       "lead": "The actual logo file, projected onto photographs by perspective maths. It is never redrawn by an AI.",
       "computed": "computed",
-      "alt": "{brand} on: {scene}"
+      "alt": "{brand} on: {scene}",
+      "retry": "Try again",
+      "failed": "This mockup could not be loaded."
     },
     "faq": {
       "title": "Your questions.",

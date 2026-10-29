@@ -31,7 +31,12 @@ function loadScene(id: SceneId): Promise<LoadedScene | null> {
       const parsed = parseScene(json);
       return parsed.ok ? parsed.value : null;
     })
-    .catch(() => null);
+    .catch(() => null)
+    .then((loaded) => {
+      // A failure is not remembered: the next stage asks again (a network blip must not hide a scene).
+      if (loaded === null) cache.delete(id);
+      return loaded;
+    });
   cache.set(id, loading);
   return loading;
 }
@@ -81,15 +86,21 @@ export function MockupStage({
   scene: id,
   view,
   label,
+  failedLabel,
+  retryLabel,
   className = '',
 }: {
   readonly scene: SceneId;
   readonly view: BrandView;
   readonly label: string;
+  /** Shown when the scene or the logo cannot be loaded, with a retry. */
+  readonly failedLabel: string;
+  readonly retryLabel: string;
   readonly className?: string;
 }) {
   const [scene, setScene] = useState<LoadedScene | null>(null);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [ref, width] = useWidth<HTMLDivElement>();
   const surface = scene?.scene.surfaces[0];
   const dark =
@@ -107,11 +118,13 @@ export function MockupStage({
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, attempt]);
 
   const size = scene?.scene.size ?? { width: 16, height: 9 };
   const h = surface === undefined ? undefined : scene?.homographies.get(surface.id);
-  const rect = surface !== undefined && aspect !== null ? placeLogo(surface.logoBox, aspect) : null;
+  const rect =
+    surface !== undefined && typeof aspect === 'number' ? placeLogo(surface.logoBox, aspect) : null;
+  const broken = failed || aspect === 'failed';
   const scale = width / size.width;
 
   return (
@@ -123,7 +136,23 @@ export function MockupStage({
         className="relative w-full overflow-hidden bg-preview"
         style={{ aspectRatio: `${String(size.width)} / ${String(size.height)}` }}
       >
-        {failed ? null : (
+        {broken ? (
+          <div className="absolute inset-0 grid place-items-center p-6 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <p className="m-0 text-sm text-ink-2">{failedLabel}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setFailed(false);
+                  setAttempt((value) => value + 1);
+                }}
+                className="inline-flex h-9 items-center rounded-full border border-line-strong bg-surface px-4 text-xs font-medium text-ink hover:bg-elevated"
+              >
+                {retryLabel}
+              </button>
+            </div>
+          </div>
+        ) : (
           <div
             className="absolute top-0 left-0 origin-top-left"
             style={{ width: size.width, height: size.height, transform: `scale(${String(scale)})` }}
@@ -133,6 +162,9 @@ export function MockupStage({
               src={`/scenes/${id}/base.webp`}
               alt=""
               draggable={false}
+              onError={() => {
+                setFailed(true);
+              }}
               className="absolute inset-0 size-full"
             />
             {h !== undefined && rect?.ok === true ? (

@@ -38,6 +38,8 @@ function Cover({ context }: { readonly context: SheetContext }) {
   const field = context.background ?? view.colors.primary;
   const ink = inkOn(field);
   const lead = briefLead(view.brief, 140);
+  const logo = logoOn(view, field);
+  const plate = logo === view.logo.color && field !== view.colors.neutralLight;
   return (
     <SheetFrame context={{ ...context, background: field }} bleed>
       <div
@@ -88,7 +90,18 @@ function Cover({ context }: { readonly context: SheetContext }) {
           <div
             className={`grid h-full min-h-0 place-items-center ${portrait ? 'order-1' : 'col-span-6'}`}
           >
-            <LogoImage src={logoOn(view, field)} alt={view.name} className="h-[62%] w-[82%]" />
+            {plate ? (
+              // No one-colour version reads on this field: the colour logo sits on its light plate,
+              // never on its own colours.
+              <div
+                className="grid size-full place-items-center"
+                style={{ background: view.colors.neutralLight, borderRadius: u(1.4) }}
+              >
+                <LogoImage src={view.logo.color} alt={view.name} className="h-[58%] w-[78%]" />
+              </div>
+            ) : (
+              <LogoImage src={logo} alt={view.name} className="h-[62%] w-[82%]" />
+            )}
           </div>
         </div>
         <div
@@ -303,7 +316,8 @@ function LogoPage({ context }: { readonly context: SheetContext }) {
 
 function ClearSpace({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
-  const aspect = useImageAspect(view.logo.color) ?? 2;
+  const measured = useImageAspect(view.logo.color);
+  const aspect = typeof measured === 'number' ? measured : 2;
   const ink = inkOn(context.background ?? PAPER);
   const ratio = view.rules.clearSpaceRatio;
   // Logo box in percent of the drawing: height 1, width = aspect, margin = ratio on every side.

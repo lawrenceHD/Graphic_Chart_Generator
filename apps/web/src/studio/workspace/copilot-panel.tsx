@@ -375,7 +375,7 @@ export function CopilotPanel({
 
   const submit = async (): Promise<void> => {
     const request = text.trim();
-    if (request === '' || document === null) return;
+    if (request === '' || document === null || busy) return;
     setText('');
     push({ from: 'you', text: request });
     const intent = readIntent(request, document, selectedPageId);
@@ -489,7 +489,7 @@ export function CopilotPanel({
               setText(event.target.value);
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
+              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 void submit();
               }

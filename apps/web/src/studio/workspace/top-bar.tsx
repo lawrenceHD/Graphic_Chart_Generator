@@ -51,9 +51,11 @@ function ProgressPill({ phase, done }: { readonly phase: Phase; readonly done: n
         ? t('step', { done: Math.min(done + 1, 4) })
         : phase === 'sending' || phase === 'scanning'
           ? t('checking')
-          : phase === 'loading'
-            ? t('loading')
-            : t('waiting');
+          : phase === 'failed'
+            ? t('failed')
+            : phase === 'loading'
+              ? t('loading')
+              : t('waiting');
   return (
     <div className="hidden h-10 items-center gap-2 rounded-full border border-line bg-surface pr-3.5 pl-1.5 text-xs text-ink-2 md:flex">
       <svg viewBox="0 0 24 24" className="size-7 -rotate-90" aria-hidden="true">

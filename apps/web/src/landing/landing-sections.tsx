@@ -713,6 +713,8 @@ export function Mockups() {
                 className="h-full overflow-hidden rounded-[28px] shadow-[0_40px_80px_-44px_oklch(0.2_0.01_60/0.6)]"
               >
                 <MockupStage
+                  failedLabel={t('failed')}
+                  retryLabel={t('retry')}
                   scene={scene}
                   view={DEMO_VIEW}
                   label={t('alt', { brand: DEMO_VIEW.name, scene: scenes(scene) })}

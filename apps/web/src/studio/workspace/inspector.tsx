@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   contrastRatio,
   hexToOklch,
@@ -63,6 +63,7 @@ function CommitRange({
   disabled = false,
   onPreview,
   onCommit,
+  onCancel,
 }: {
   readonly label: string;
   readonly value: number;
@@ -73,15 +74,22 @@ function CommitRange({
   readonly disabled?: boolean;
   readonly onPreview: (value: number) => void;
   readonly onCommit: (value: number) => void;
+  readonly onCancel: () => void;
 }) {
   const [local, setLocal] = useState(value);
-  const [dragging, setDragging] = useState(false);
+  // Value when the gesture started: the shown document follows the preview, so the prop does too.
+  const start = useRef<number | null>(null);
+  // Latest value moved to: a key-up can arrive before React re-renders with it.
+  const moved = useRef(value);
   useEffect(() => {
-    if (!dragging) setLocal(value);
-  }, [value, dragging]);
-  const commit = (): void => {
-    setDragging(false);
-    if (local !== value) onCommit(local);
+    if (start.current === null) setLocal(value);
+  }, [value]);
+  const end = (): void => {
+    const from = start.current;
+    start.current = null;
+    if (from === null) return;
+    if (moved.current !== from) onCommit(moved.current);
+    else onCancel();
   };
   return (
     <label className="block text-xs text-ink-2">
@@ -98,15 +106,16 @@ function CommitRange({
         disabled={disabled}
         onChange={(event) => {
           const next = Number(event.target.value);
-          setDragging(true);
+          start.current ??= local;
+          moved.current = next;
           setLocal(next);
           onPreview(next);
         }}
-        onPointerUp={commit}
-        onKeyUp={commit}
-        onBlur={() => {
-          if (dragging) commit();
-        }}
+        onPointerUp={end}
+        onPointerCancel={end}
+        onLostPointerCapture={end}
+        onKeyUp={end}
+        onBlur={end}
         className="mt-1.5 h-6 w-full cursor-pointer disabled:cursor-not-allowed"
       />
     </label>
@@ -177,7 +186,7 @@ function PaletteEditor({
   onRun,
 }: {
   readonly document: BrandDocument;
-  readonly onPreview: (command: Command) => void;
+  readonly onPreview: (command: Command | null) => void;
   readonly onRun: (command: Command) => void;
 }) {
   const t = useTranslations('workspace');
@@ -256,6 +265,9 @@ function PaletteEditor({
                       onPreview={(value) => {
                         onPreview(command(role, withHue(hex, value)));
                       }}
+                      onCancel={() => {
+                        onPreview(null);
+                      }}
                       onCommit={(value) => {
                         onRun(command(role, withHue(hex, value)));
                       }}
@@ -268,6 +280,9 @@ function PaletteEditor({
                       format={(value) => `${String(value)} %`}
                       onPreview={(value) => {
                         onPreview(command(role, withLightness(hex, value / 100)));
+                      }}
+                      onCancel={() => {
+                        onPreview(null);
                       }}
                       onCommit={(value) => {
                         onRun(command(role, withLightness(hex, value / 100)));
@@ -367,7 +382,7 @@ function LogoRules({
   onRun,
 }: {
   readonly document: BrandDocument;
-  readonly onPreview: (command: Command) => void;
+  readonly onPreview: (command: Command | null) => void;
   readonly onRun: (command: Command) => void;
 }) {
   const t = useTranslations('workspace.inspector');
@@ -388,6 +403,9 @@ function LogoRules({
         onPreview={(value) => {
           onPreview(command({ clearSpaceRatio: value / 100 }));
         }}
+        onCancel={() => {
+          onPreview(null);
+        }}
         onCommit={(value) => {
           onRun(command({ clearSpaceRatio: value / 100 }));
         }}
@@ -401,6 +419,9 @@ function LogoRules({
         onPreview={(value) => {
           onPreview(command({ minSizePx: value }));
         }}
+        onCancel={() => {
+          onPreview(null);
+        }}
         onCommit={(value) => {
           onRun(command({ minSizePx: value }));
         }}
@@ -413,6 +434,9 @@ function LogoRules({
         format={(value) => `${String(value)} mm`}
         onPreview={(value) => {
           onPreview(command({ minSizeMm: value }));
+        }}
+        onCancel={() => {
+          onPreview(null);
         }}
         onCommit={(value) => {
           onRun(command({ minSizeMm: value }));
@@ -626,7 +650,7 @@ export function Inspector({
 }: {
   readonly document: BrandDocument | null;
   readonly selection: Selection | null;
-  readonly onPreview: (command: Command) => void;
+  readonly onPreview: (command: Command | null) => void;
   readonly onRun: (command: Command) => void;
 }) {
   const t = useTranslations('workspace');

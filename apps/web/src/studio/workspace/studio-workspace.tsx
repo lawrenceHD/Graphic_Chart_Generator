@@ -105,8 +105,8 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
           logo={view?.logo.color ?? null}
           phase={studio.phase}
           done={done}
-          canUndo={studio.undoable > 0 && !studio.busy}
-          canRedo={studio.redoable > 0 && !studio.busy}
+          canUndo={studio.canUndo && !studio.busy}
+          canRedo={studio.canRedo && !studio.busy}
           onUndo={() => {
             void studio.undo();
           }}
@@ -150,6 +150,9 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
               onLogo={(file) => {
                 void studio.send(file);
               }}
+              onReload={() => {
+                void studio.reload();
+              }}
               rejection={studio.rejection}
               sending={studio.phase === 'sending' || studio.phase === 'scanning'}
             />
@@ -183,7 +186,8 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
                   <button
                     type="button"
                     onClick={() => {
-                      void studio.analyze();
+                      // A failed load is retried as a load, never as a new analysis.
+                      void (studio.phase === 'failed' ? studio.reload() : studio.analyze());
                     }}
                     className="shrink-0 font-medium text-ink underline"
                   >
@@ -236,9 +240,10 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
             setExporting(false);
           }}
           onPrint={() => {
-            setTimeout(() => {
+            // The sheets print with their own fonts: wait for them before opening the print window.
+            void window.document.fonts.ready.then(() => {
               window.print();
-            }, 150);
+            });
           }}
         />
       </div>
