@@ -103,7 +103,7 @@ function withOverride(
   if (value !== undefined && !isOverrideValue(key, value)) {
     return undefined;
   }
-  const { [key]: _removed, ...rest } = overrides;
+  const rest = Object.fromEntries(Object.entries(overrides).filter(([name]) => name !== key));
   const next = value === undefined ? rest : { ...rest, [key]: value };
   const parsed = PageOverridesSchema.safeParse(next);
   return parsed.success ? parsed.data : undefined;
