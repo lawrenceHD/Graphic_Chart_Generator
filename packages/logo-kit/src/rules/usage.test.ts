@@ -70,6 +70,20 @@ describe('version on a background (R3, R9)', () => {
     expect(forbidden?.contrast).toBeLessThan(3);
   });
 
+  it('keeps the colour version on the light background it was designed for, even with a pale colour', () => {
+    // Mastercard: its orange reads at about 2:1 on white, yet the colour logo is the one shown on white.
+    const board = backgroundBoard({ ...palette, neutralLight: '#FCF3F1', primary: '#EB001B' }, [
+      '#EB001B',
+      '#F79E1B',
+      '#000000',
+    ]);
+    const light = board.find(({ kind }) => kind === 'light');
+    expect(light?.version).toBe('colour');
+    // Reported: the contrast of its best-reading colour, the one that carries the shape.
+    expect(light?.contrast).toBeCloseTo(contrastRatio('#FCF3F1', '#000000'), 9);
+    expect(board.find(({ kind }) => kind === 'forbidden')?.background).not.toBe('#FCF3F1');
+  });
+
   it('shows no forbidden case when no logo colour is known, and never the colour version', () => {
     const board = backgroundBoard(palette, []);
     expect(board.map(({ kind }) => kind)).not.toContain('forbidden');

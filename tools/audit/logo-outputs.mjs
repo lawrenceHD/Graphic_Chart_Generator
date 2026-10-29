@@ -5,11 +5,13 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, join } from 'node:path';
 import {
-  clearSpaceDiagramSvg,
+  backgroundBoard,
+  clearSpacePlateSvg,
   dosAndDontsSvg,
   faviconSvg,
+  logoVersions,
+  measureLogo,
   monochromeVariant,
-  tonalSvg,
 } from '../../packages/logo-kit/dist/index.js';
 import { assignRoles, extractPalette } from '../../packages/color-engine/dist/index.js';
 import { sanitizeSvg } from '../../packages/svg-engine/dist/index.js';
@@ -27,6 +29,20 @@ mkdirSync(outDir, { recursive: true });
 const rasterizer = createNodeRasterizer();
 const TILE = 360;
 // French captions of the misuse grid, imperative as in the real charters (R8).
+const VERSION_FR = {
+  colour: 'A. Version principale',
+  negative: 'B. Négatif sur couleur de marque',
+  black: 'C. Noir',
+  white: 'D. Blanc sur fond sombre',
+};
+const BACKGROUND_FR = {
+  light: 'Fond clair',
+  dark: 'Fond sombre',
+  brand: 'Couleur de marque',
+  'photo-light': 'Photo claire',
+  'photo-dark': 'Photo sombre',
+  forbidden: 'Interdit :',
+};
 const DONT_FR = {
   distort: 'Ne pas étirer',
   squash: 'Ne pas écraser',
@@ -43,8 +59,9 @@ const DONT_FR = {
 };
 const LABEL = 28;
 
-async function tile(svg, label, background = '#E6E6E6') {
-  const raster = await rasterizer.rasterize(svg, TILE - 40);
+// `overlay(scale, top)` returns SVG text in tile pixels: labels the page sets over a sanitized drawing.
+async function tile(svg, label, background = '#E6E6E6', { width = TILE - 40, overlay } = {}) {
+  const raster = await rasterizer.rasterize(svg, width);
   const canvas = sharp({
     create: { width: TILE, height: TILE + LABEL, channels: 4, background },
   });
@@ -56,7 +73,16 @@ async function tile(svg, label, background = '#E6E6E6') {
     const image = sharp(Buffer.from(raster.value.png));
     const meta = await image.metadata();
     const top = Math.max(0, Math.round((TILE - meta.height) / 2));
-    layers.push({ input: await image.png().toBuffer(), top, left: 20 });
+    const left = Math.round((TILE - meta.width) / 2);
+    layers.push({ input: await image.png().toBuffer(), top, left });
+    if (overlay)
+      layers.push({
+        input: Buffer.from(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${TILE}" height="${TILE}">${overlay(meta.width, left, top)}</svg>`,
+        ),
+        top: 0,
+        left: 0,
+      });
   } else {
     layers.push({
       input: Buffer.from(
@@ -82,28 +108,7 @@ for (const file of logos) {
     console.log(`${name}: bbox failed`);
     continue;
   }
-  const tiles = [await tile(svg, 'original', '#E6E6E6')];
-  const notes = [];
-  for (const [target, bg, label] of [
-    ['#000000', '#FFFFFF', 'mono noir sur blanc'],
-    ['#FFFFFF', '#1A1A1A', 'mono blanc sur noir'],
-  ]) {
-    const mono = await monochromeVariant(svg, target, rasterizer);
-    if (mono.ok) {
-      tiles.push(await tile(mono.value.svg, `${label} (${mono.value.drawing})`, bg));
-      notes.push(
-        `${label}: ${mono.value.drawing}, structure ${mono.value.structure}, ${mono.value.warnings.join(',')}`,
-      );
-    } else notes.push(`${label}: ${JSON.stringify(mono.error)}`);
-  }
-  const tonal = tonalSvg(svg, '#000000');
-  if (tonal.ok) tiles.push(await tile(tonal.value.svg, 'tonal noir', '#FFFFFF'));
-  const favicon = faviconSvg(svg, bbox.value);
-  if (favicon.ok)
-    tiles.push(await tile(favicon.value.svg, `favicon ${favicon.value.warnings.join(',')}`));
-  const clear = clearSpaceDiagramSvg(svg, bbox.value, 0.25);
-  if (clear.ok) tiles.push(await tile(clear.value, "zone d'exclusion 0.25", '#FFFFFF'));
-  // The logo's own palette, as the generator extracts it, so that the faulty panels are the real ones.
+  // The logo's own palette, as the generator extracts it, so that every page uses the real colours.
   const raster = await rasterizer.rasterize(svg, 256);
   const extracted = raster.ok
     ? extractPalette({
@@ -124,9 +129,72 @@ for (const file of logos) {
     neutralDark: roles.neutralDark.hex,
     extra: roles.extra.map((token) => token.hex),
   };
-  notes.push(
+  const logoColours = extracted.value.clusters.filter((c) => c.share >= 0.05).map((c) => c.hex);
+  const notes = [
     `palette ${palette.primary}/${palette.accent}/${palette.neutralLight}/${palette.neutralDark}`,
-  );
+  ];
+  const drawings = { colour: svg };
+  for (const [version, target] of [
+    ['black', '#000000'],
+    ['white', '#FFFFFF'],
+  ]) {
+    const mono = await monochromeVariant(svg, target, rasterizer);
+    if (mono.ok) {
+      drawings[version] = mono.value.svg;
+      notes.push(`${version}: ${mono.value.drawing} ${mono.value.structure.toFixed(2)}`);
+    } else notes.push(`${version}: ${JSON.stringify(mono.error)}`);
+  }
+  const tiles = [];
+  // R5: versions, each on the background it is made for.
+  for (const spec of logoVersions(palette))
+    tiles.push(await tile(drawings[spec.version], `${VERSION_FR[spec.key]}`, spec.background));
+  // R9: usage on backgrounds, the photo ones shown on their representative tone.
+  for (const usage of backgroundBoard(palette, logoColours))
+    tiles.push(
+      await tile(
+        drawings[usage.version],
+        `${BACKGROUND_FR[usage.kind]} ${usage.contrast.toFixed(1)}:1`,
+        usage.background,
+      ),
+    );
+  // R6, R7: plate with the real reference element, labels set as the page will set them.
+  const measured = await measureLogo(svg, rasterizer);
+  if (measured.ok) {
+    const plate = clearSpacePlateSvg(svg, measured.value);
+    if (plate.ok) {
+      const [vx, vy, vw] = plate.value.viewBox;
+      const x = measured.value.clearSpace.x;
+      const overlay = (pixels, left, top) => {
+        const scale = pixels / vw;
+        return plate.value.labels
+          .map(
+            (label) =>
+              `<text x="${left + (label.x - vx) * scale}" y="${top + (label.y - vy) * scale}" font-family="Georgia" font-style="italic" font-size="${Math.max(11, x * 0.6 * scale)}" text-anchor="middle" dominant-baseline="central" fill="#000">x</text>`,
+          )
+          .join('');
+      };
+      tiles.push(
+        await tile(
+          plate.value.svg,
+          `zone : x = ${measured.value.clearSpace.source === 'element' ? 'élément du logo' : 'convention 0,25 H'}`,
+          '#FFFFFF',
+          { overlay },
+        ),
+      );
+    }
+    const { minimum } = measured.value;
+    tiles.push(
+      await tile(
+        svg,
+        `taille min. ${minimum.widthPx} px / ${String(minimum.widthMm).replace('.', ',')} mm (rendu réel)`,
+        '#FFFFFF',
+        { width: minimum.widthPx },
+      ),
+    );
+  }
+  const favicon = faviconSvg(svg, bbox.value);
+  if (favicon.ok)
+    tiles.push(await tile(favicon.value.svg, `favicon ${favicon.value.warnings.join(',')}`));
   const donts = dosAndDontsSvg(svg, bbox.value, palette);
   if (donts.ok) {
     for (const panel of donts.value)

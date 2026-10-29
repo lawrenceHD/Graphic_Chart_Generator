@@ -21,3 +21,11 @@ export {
   type VersionKey,
   type VersionSpec,
 } from './usage.js';
+export {
+  measureLogo,
+  type ClearSpaceMeasure,
+  type LogoMeasure,
+  type MeasureError,
+  type MinimumSize,
+} from './measure.js';
+export { clearSpacePlateSvg, type ClearSpacePlate, type PlateLabel } from './plate.js';

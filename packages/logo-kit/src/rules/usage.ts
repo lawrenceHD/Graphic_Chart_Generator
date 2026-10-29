@@ -71,13 +71,21 @@ export function backgroundBoard(
     ['photo-light', PHOTO_TONES.light],
     ['photo-dark', PHOTO_TONES.dark],
   ];
-  const board: BackgroundUsage[] = backgrounds.map(([kind, background]) => ({
-    kind,
-    background,
-    ...chooseVersion(background, logoColours),
-  }));
-  // Forbidden: the colour logo on the background where it reads worst.
-  const worst = [...backgrounds]
+  // The light background is the home of the colour version (R5 A): a multicolour mark keeps its pale
+  // colours there, as every charter shows it; its best-reading colour carries the shape.
+  const board: BackgroundUsage[] = backgrounds.map(([kind, background]) =>
+    kind === 'light' && logoColours.length > 0
+      ? {
+          kind,
+          background,
+          version: 'colour',
+          contrast: Math.max(...logoColours.map((colour) => contrastRatio(background, colour))),
+        }
+      : { kind, background, ...chooseVersion(background, logoColours) },
+  );
+  // Forbidden: the colour logo on the background where it reads worst, its home excepted.
+  const worst = backgrounds
+    .filter(([kind]) => kind !== 'light')
     .map(([, background]) => ({ background, contrast: lowest(background, logoColours) }))
     .sort((a, b) => a.contrast - b.contrast)[0];
   if (worst !== undefined && worst.contrast < GRAPHIC_CONTRAST)

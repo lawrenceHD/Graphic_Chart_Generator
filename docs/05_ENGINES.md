@@ -299,7 +299,9 @@ Cible : `#000000` ou `#FFFFFF`.
 - Zone d'exclusion = boîte englobante élargie de `X` sur les quatre côtés.
 - Le schéma généré montre le logo, le rectangle de zone en pointillés et quatre carrés de côté `X` aux coins.
 - **Taille minimale** (recommandation, valeurs par défaut modifiables) : hauteur 24 px en numérique, 12 mm en impression. Affichée comme une recommandation, jamais comme une norme.
-- `X` est une **convention** de présentation : l'interface ne prétend pas qu'elle soit calculée à partir d'un élément du logo.
+- **Mesure sur le logo (R6, R7 de `16_GUIDELINE_RULES.md`, `measureLogo`)** : rendu 1024 px, composantes connexes (8-connexité) ; `X` = hauteur du **premier élément en ordre de lecture** dont la hauteur est entre 10 % et 50 % de `H` et l'aire ≥ 0,4 % de l'encre (`source: 'element'`). Sans élément de ce type, `X = 0,25 × H` et `source: 'convention'` : l'interface dit alors qu'il s'agit d'une convention.
+- **Planche (`clearSpacePlateSvg`)** : logo, cadre de zone en pointillés fins, l'élément de référence découpé du vrai logo en **fantôme** (opacité 0,18) sur les quatre côtés (tourné de 90° à gauche et à droite), deux cotes à talons hors de la zone ; les libellés « x » sont positionnés pour la page (pas de `<text>` dans un SVG assaini). Sans élément : quatre carrés `X × X` aux coins.
+- **Taille minimale mesurée** : le plus petit élément significatif (≥ 10 % de `H`) garde 6 px à l'écran et 1,5 mm à l'impression ; planchers 24 px et 5 mm de hauteur ; largeurs déduites du rapport du logo (px arrondis au supérieur, mm au demi-millimètre).
 
 ### 5.6 Do & Don't
 
