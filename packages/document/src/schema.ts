@@ -138,6 +138,8 @@ export const PageOverridesSchema = z
       .regex(/^#[0-9A-F]{6}$/u)
       .optional(),
     layout: z.enum(['split', 'grid', 'full-bleed', 'minimal']).optional(),
+    // ADR-027 §4: absent means landscape 16:9, the default of every page.
+    format: z.enum(['landscape', 'portrait']).optional(),
   })
   .strict();
 export type PageOverrides = z.infer<typeof PageOverridesSchema>;

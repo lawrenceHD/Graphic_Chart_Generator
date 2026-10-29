@@ -1,5 +1,5 @@
 import { err } from '@app/kernel';
-import type { ApplyInput, Command } from './command-schema.js';
+import { SetPageOverrideInverseSchema, type ApplyInput, type Command } from './command-schema.js';
 import {
   expectationFailed,
   expectationFails,
@@ -9,7 +9,7 @@ import {
   replacePage,
   success,
 } from './command-internal.js';
-import type { BrandDocument, Page } from './schema.js';
+import { PageOverridesSchema, type BrandDocument, type Page } from './schema.js';
 
 type PageFieldCommand = Extract<
   ApplyInput,
@@ -18,7 +18,7 @@ type PageFieldCommand = Extract<
       'SetPageField' | 'SetPageOverride' | 'ClearPageOverride' | 'SelectScene' | 'RestoreMockup';
   }
 >;
-type OverrideKey = 'background' | 'layout';
+type OverrideKey = keyof Page['overrides'];
 
 export function applyPageFieldCommand(
   document: BrandDocument,
@@ -100,19 +100,13 @@ function withOverride(
   key: OverrideKey,
   value: string | undefined,
 ): Page['overrides'] | undefined {
-  const { background, layout } = overrides;
-  const next = key === 'background' ? { background: value, layout } : { background, layout: value };
-  const result: Page['overrides'] = {};
-  if (next.background !== undefined) {
-    result.background = next.background;
+  if (value !== undefined && !isOverrideValue(key, value)) {
+    return undefined;
   }
-  if (next.layout !== undefined) {
-    if (!isLayout(next.layout)) {
-      return undefined;
-    }
-    result.layout = next.layout;
-  }
-  return result;
+  const { [key]: _removed, ...rest } = overrides;
+  const next = value === undefined ? rest : { ...rest, [key]: value };
+  const parsed = PageOverridesSchema.safeParse(next);
+  return parsed.success ? parsed.data : undefined;
 }
 
 function overrideCommand(
@@ -124,17 +118,23 @@ function overrideCommand(
   if (value === undefined) {
     return { type: 'ClearPageOverride', pageId, key, expect: written };
   }
-  if (key === 'background') {
-    return { type: 'SetPageOverride', pageId, key, value, expect: written };
-  }
-  if (!isLayout(value) || (written !== null && !isLayout(written))) {
-    return undefined;
-  }
-  return { type: 'SetPageOverride', pageId, key, value, expect: written };
+  const parsed = SetPageOverrideInverseSchema.safeParse({
+    type: 'SetPageOverride',
+    pageId,
+    key,
+    value,
+    expect: written,
+  });
+  return parsed.success ? parsed.data : undefined;
 }
 
-function isLayout(value: string): value is NonNullable<Page['overrides']['layout']> {
-  return ['split', 'grid', 'full-bleed', 'minimal'].includes(value);
+const OVERRIDE_VALUES: Readonly<Record<Exclude<OverrideKey, 'background'>, readonly string[]>> = {
+  layout: ['split', 'grid', 'full-bleed', 'minimal'],
+  format: ['landscape', 'portrait'],
+};
+
+function isOverrideValue(key: OverrideKey, value: string): boolean {
+  return key === 'background' || OVERRIDE_VALUES[key].includes(value);
 }
 
 function applyMockup(

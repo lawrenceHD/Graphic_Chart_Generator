@@ -24,6 +24,7 @@ const CommandTextSchema = z
 const PageIdSchema = CommandTextSchema.refine((value) => value.length > 0);
 const PositionSchema = DocumentTextSchema.min(1);
 const LayoutSchema = z.enum(['split', 'grid', 'full-bleed', 'minimal']);
+const FormatSchema = z.enum(['landscape', 'portrait']);
 const BrandValuesSchema = z.preprocess(
   (value) => normalizeNfcDeep(value),
   z.tuple([BrandValueSchema, BrandValueSchema, BrandValueSchema, BrandValueSchema]),
@@ -77,7 +78,8 @@ const SetPageFieldSchema = z
   })
   .strict();
 
-const SetPageOverrideSchema = z.discriminatedUnion('key', [
+// Exported for the inverse built by command-page-fields.ts; not part of the public index.
+export const SetPageOverrideInverseSchema = z.discriminatedUnion('key', [
   z
     .object({
       type: z.literal('SetPageOverride'),
@@ -96,14 +98,23 @@ const SetPageOverrideSchema = z.discriminatedUnion('key', [
       expect: LayoutSchema.nullable().optional(),
     })
     .strict(),
+  z
+    .object({
+      type: z.literal('SetPageOverride'),
+      pageId: PageIdSchema,
+      key: z.literal('format'),
+      value: FormatSchema,
+      expect: FormatSchema.nullable().optional(),
+    })
+    .strict(),
 ]);
 
 const ClearPageOverrideSchema = z
   .object({
     type: z.literal('ClearPageOverride'),
     pageId: PageIdSchema,
-    key: z.enum(['background', 'layout']),
-    expect: z.union([HexColor, LayoutSchema]).nullable().optional(),
+    key: z.enum(['background', 'layout', 'format']),
+    expect: z.union([HexColor, LayoutSchema, FormatSchema]).nullable().optional(),
   })
   .strict();
 
@@ -166,7 +177,7 @@ const COMMAND_SCHEMAS = [
   SetTypographyPairingSchema,
   SetBrandFieldSchema,
   SetPageFieldSchema,
-  SetPageOverrideSchema,
+  SetPageOverrideInverseSchema,
   ClearPageOverrideSchema,
   SetLogoRulesSchema,
   ReorderPageSchema,
