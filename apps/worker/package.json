@@ -26,6 +26,6 @@
     "@app/storage": "workspace:*",
     "@app/svg-engine": "workspace:*",
     "pino": "10.4.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }

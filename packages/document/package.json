@@ -27,6 +27,6 @@
     "@app/contracts": "workspace:*",
     "@app/kernel": "workspace:*",
     "fractional-indexing": "4.0.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   }
 }
