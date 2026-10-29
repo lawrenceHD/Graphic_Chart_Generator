@@ -42,3 +42,4 @@ next-env.d.ts
 corpus-reel/*
 !corpus-reel/README.md
 tools/references/.venv/
+__pycache__/

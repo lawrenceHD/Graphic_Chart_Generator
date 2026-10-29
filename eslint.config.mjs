@@ -53,6 +53,8 @@ export default tseslint.config(
       'prototypes/**',
       // Private corpus (separate repository): research tools, not project code.
       '.cache/**',
+      // Python virtual environment of the reference tools (third-party packages).
+      'tools/references/.venv/**',
       // Agent skills and hooks installed by their vendors (third-party material, as .prettierignore).
       '.claude/**',
       '.agent/**',
