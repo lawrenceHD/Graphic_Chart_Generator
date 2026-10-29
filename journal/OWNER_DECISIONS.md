@@ -305,3 +305,11 @@ reprises de `PROJECT_HANDOFF.md` (dossier de reprise du 2026-10-13).
 - **Scènes Flow manuelles annulées** (propriétaire, 2026-10-28) : aucune génération à la main. Les scènes de mockup
   sont produites automatiquement par l'agent avec `MCP-IMAGE-GENERATION` (Cloudflare FLUX, gratuit) et les 7
   scènes de `scenes_work/`.
+
+## Facturation et références (propriétaire, 2026-10-29)
+- **Facturation Google reportée** : la carte prépayée a été refusée ; outils gratuits uniquement pour l'instant.
+  L'hébergement de démo (ADR-027 §7) sera choisi parmi des solutions gratuites ; Cloud Run attendra.
+- **Références sectorielles** : la récupération automatique d'images Pinterest est autorisée pour constituer une
+  **base d'inspiration interne** (analyse par l'IA, jamais redistribuée ni montrée comme notre travail, pas
+  nécessairement présentée au jury). Outil : `tools/references/` (`pinterest-dl`, secteurs dans `sectors.json`),
+  sortie privée `corpus-reel/pinterest/` (ignorée par Git).

@@ -1,0 +1,186 @@
+{
+ "schemaVersion": 2,
+ "generatedAt": "2026-10-29T00:29:09.406916+00:00",
+ "title": "Design System: Charta",
+ "extensions": {
+  "colorMeta": {
+   "ink": {
+    "role": "primary",
+    "displayName": "Proofing Ink",
+    "canonical": "oklch(0.2 0.01 60)",
+    "tonalRamp": [
+     "oklch(0.15 0.01 60)",
+     "oklch(0.25 0.01 60)",
+     "oklch(0.35 0.01 60)",
+     "oklch(0.45 0.01 60)",
+     "oklch(0.6 0.01 60)",
+     "oklch(0.72 0.01 60)",
+     "oklch(0.85 0.01 60)",
+     "oklch(0.95 0.01 60)"
+    ]
+   },
+   "paper-canvas": {
+    "role": "neutral",
+    "displayName": "Paper Canvas",
+    "canonical": "oklch(0.965 0.008 85)",
+    "tonalRamp": [
+     "oklch(0.16 0.008 85)",
+     "oklch(0.28 0.008 85)",
+     "oklch(0.4 0.008 85)",
+     "oklch(0.52 0.008 85)",
+     "oklch(0.65 0.008 85)",
+     "oklch(0.78 0.008 85)",
+     "oklch(0.9 0.008 85)",
+     "oklch(0.965 0.008 85)"
+    ]
+   },
+   "preview-grey": {
+    "role": "neutral",
+    "displayName": "Preview Grey",
+    "canonical": "oklch(0.9 0 0)"
+   },
+   "focus-violet": {
+    "role": "tertiary",
+    "displayName": "Focus Violet",
+    "canonical": "oklch(0.5 0.2 268)"
+   }
+  },
+  "typographyMeta": {
+   "display": {
+    "displayName": "Display",
+    "purpose": "Landing hero only."
+   },
+   "measure": {
+    "displayName": "Measure",
+    "purpose": "Every computed value: hex, OKLCH, ratios, timings."
+   }
+  },
+  "shadows": [
+   {
+    "name": "sheet",
+    "value": "0 1px 2px oklch(0.2 0.01 60 / 0.06), 0 12px 32px -12px oklch(0.2 0.01 60 / 0.18)",
+    "purpose": "Guideline pages and mockups on the canvas."
+   },
+   {
+    "name": "float",
+    "value": "0 8px 24px -8px oklch(0.2 0.01 60 / 0.2)",
+    "purpose": "Floating controls and popovers."
+   }
+  ],
+  "motion": [
+   {
+    "name": "ease-out-expo",
+    "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "purpose": "Reveals and sheet arrival."
+   },
+   {
+    "name": "state",
+    "value": "150ms ease-out",
+    "purpose": "Hover and press."
+   }
+  ],
+  "breakpoints": [
+   {
+    "name": "md",
+    "value": "768px"
+   },
+   {
+    "name": "lg",
+    "value": "1024px"
+   },
+   {
+    "name": "xl",
+    "value": "1280px"
+   }
+  ]
+ },
+ "components": [
+  {
+   "name": "Primary Button",
+   "kind": "button",
+   "refersTo": "button-primary",
+   "description": "The single main action of a screen.",
+   "html": "<button class=\"ds-btn-primary\">Exporter</button>",
+   "css": ".ds-btn-primary{background:oklch(0.2 0.01 60);color:oklch(0.975 0.008 85);border:0;border-radius:999px;padding:14px 28px;font:500 14px/1.4 'Geist Variable',system-ui,sans-serif;cursor:pointer;transition:background .15s}.ds-btn-primary:hover{background:oklch(0.3 0.01 60)}.ds-btn-primary:focus-visible{outline:2px solid oklch(0.5 0.2 268);outline-offset:2px}"
+  },
+  {
+   "name": "Secondary Button",
+   "kind": "button",
+   "refersTo": "button-secondary",
+   "description": "Secondary actions.",
+   "html": "<button class=\"ds-btn-secondary\">Voir le studio</button>",
+   "css": ".ds-btn-secondary{background:oklch(0.99 0.004 85);color:oklch(0.2 0.01 60);border:1px solid oklch(0.45 0.01 85);border-radius:999px;padding:14px 28px;font:500 14px/1.4 'Geist Variable',system-ui,sans-serif;cursor:pointer}.ds-btn-secondary:hover{background:oklch(0.925 0.012 85)}.ds-btn-secondary:focus-visible{outline:2px solid oklch(0.5 0.2 268);outline-offset:2px}"
+  },
+  {
+   "name": "Proof Chip",
+   "kind": "chip",
+   "refersTo": "chip",
+   "description": "Cites a computed value as evidence.",
+   "html": "<span class=\"ds-chip\">4.6:1 · AA</span>",
+   "css": ".ds-chip{display:inline-flex;gap:6px;align-items:center;background:oklch(0.99 0.004 85);color:oklch(0.38 0.01 60);border:1px solid oklch(0.84 0.01 85);border-radius:999px;padding:6px 14px;font:400 12px/1.4 'Geist Mono Variable',ui-monospace,monospace;font-variant-numeric:tabular-nums}"
+  },
+  {
+   "name": "Chat Prompt",
+   "kind": "input",
+   "refersTo": "input-prompt",
+   "description": "Copilot prompt with a round send button.",
+   "html": "<label class=\"ds-prompt\"><input placeholder=\"Demander une modification\"><button aria-label=\"Envoyer\">&#8593;</button></label>",
+   "css": ".ds-prompt{display:flex;align-items:center;gap:8px;background:oklch(0.99 0.004 85);border:1px solid oklch(0.45 0.01 85);border-radius:24px;padding:8px 8px 8px 20px}.ds-prompt input{flex:1;border:0;background:transparent;font:400 16px/1.5 'Geist Variable',system-ui,sans-serif;color:oklch(0.2 0.01 60);outline:none}.ds-prompt:focus-within{outline:2px solid oklch(0.5 0.2 268);outline-offset:2px}.ds-prompt button{width:40px;height:40px;border-radius:999px;border:0;background:oklch(0.2 0.01 60);color:oklch(0.975 0.008 85)}"
+  },
+  {
+   "name": "Guideline Sheet",
+   "kind": "custom",
+   "refersTo": "preview-tile",
+   "description": "A 16:9 guideline page on the dotted canvas.",
+   "html": "<article class=\"ds-sheet\"><header>LA MÈZA — CHARTE GRAPHIQUE <span>03</span></header><h3>Palette</h3></article>",
+   "css": ".ds-sheet{aspect-ratio:16/9;width:320px;background:oklch(0.99 0.004 85);border-radius:24px;padding:20px;box-shadow:0 1px 2px oklch(0.2 0.01 60 / .06),0 12px 32px -12px oklch(0.2 0.01 60 / .18)}.ds-sheet header{display:flex;justify-content:space-between;font:400 10px/1.4 'Geist Mono Variable',monospace;color:oklch(0.46 0.01 60);letter-spacing:.08em}.ds-sheet h3{font:700 28px/1.05 'Bricolage Grotesque Variable',sans-serif;margin:12px 0 0;color:oklch(0.2 0.01 60)}"
+  }
+ ],
+ "narrative": {
+  "northStar": "The Proofing Table",
+  "overview": "Charta is a print studio's proofing table rendered in software: warm uncoated paper, dense black ink, and on the table the client's work, which is the only thing allowed to be in colour.",
+  "keyCharacteristics": [
+   "Warm paper neutrals (hue 85) and warm ink (hue 60), never pure white or pure black.",
+   "Colour in the interface comes from the user's brand only; chrome stays achromatic-warm.",
+   "Brand previews always sit on neutral grey with zero chroma.",
+   "Pill controls, 16 to 24 px sheets, hairline borders, soft ambient shadows.",
+   "Monospace for every measured value."
+  ],
+  "rules": [
+   {
+    "name": "The Client Owns Colour Rule",
+    "section": "colors",
+    "body": "No saturated colour in the chrome. Saturated colour on screen is either the user's brand or a status, and nothing else."
+   },
+   {
+    "name": "The Grey Light Box Rule",
+    "section": "colors",
+    "body": "A brand colour or logo is only ever previewed on preview-grey (chroma 0) or on a surface the user chose, never on the warm paper."
+   },
+   {
+    "name": "The Evidence Is Mono Rule",
+    "section": "typography",
+    "body": "Any computed value (colour code, ratio, size, time) is set in Geist Mono with tabular figures. Prose never contains a raw measurement in the body font."
+   },
+   {
+    "name": "The Paper Weight Rule",
+    "section": "elevation",
+    "body": "Only things that represent a printed artefact (sheets, mockups) or float above the work cast a shadow. Panels and cards do not."
+   }
+  ],
+  "dos": [
+   "Do keep the interface to paper, ink and status colours; let the user's brand provide all other colour.",
+   "Do preview every logo and swatch on preview-grey.",
+   "Do set every measured value in Geist Mono with tabular figures.",
+   "Do keep one primary ink button per screen.",
+   "Do honour prefers-reduced-motion: skeletons and reveals fall back to instant states."
+  ],
+  "donts": [
+   "Don't use pure white #FFFFFF or pure black #000000 in the chrome.",
+   "Don't give the interface its own brand accent colour.",
+   "Don't put a shadow on panels or inspector cards.",
+   "Don't show raw JSON or event codes to the user; the journal speaks in sentences.",
+   "Don't use emoji as icons."
+  ]
+ }
+}

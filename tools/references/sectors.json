@@ -1,0 +1,25 @@
+{
+  "perQuery": 30,
+  "minResolution": "700x700",
+  "sectors": {
+    "restaurant": ["restaurant brand identity guidelines", "restaurant branding mockup", "fine dining brand identity"],
+    "cafe-bakery": ["coffee shop brand identity", "bakery branding mockup", "cafe brand guidelines"],
+    "hospitality-events": ["hotel brand identity guidelines", "event brand identity mockup", "supper club branding"],
+    "fashion": ["fashion brand identity guidelines", "clothing brand mockup branding"],
+    "beauty-cosmetics": ["cosmetics brand identity", "skincare branding mockup", "beauty salon brand guidelines"],
+    "health-clinic": ["medical clinic brand identity", "pharmacy branding mockup", "wellness brand guidelines"],
+    "tech-startup": ["tech startup brand identity guidelines", "saas branding mockup", "app brand identity system"],
+    "finance": ["fintech brand identity", "bank brand guidelines", "insurance branding mockup"],
+    "education": ["school brand identity", "education brand guidelines", "university branding mockup"],
+    "real-estate-construction": ["real estate brand identity", "construction company branding", "architecture studio brand guidelines"],
+    "agriculture-food-products": ["agro brand identity", "organic food packaging branding", "farm brand guidelines"],
+    "ngo-community": ["nonprofit brand identity", "community organization branding", "charity brand guidelines"],
+    "sport-fitness": ["gym brand identity", "sports club branding mockup", "fitness brand guidelines"],
+    "retail-ecommerce": ["retail store brand identity", "ecommerce branding mockup", "boutique brand guidelines"],
+    "transport-logistics": ["logistics company brand identity", "transport branding mockup", "delivery brand guidelines"],
+    "consulting-legal": ["law firm brand identity", "consulting brand guidelines", "accounting firm branding"],
+    "media-music-creative": ["music label brand identity", "creative agency brand guidelines", "podcast branding mockup"],
+    "kids-family": ["kids brand identity", "toy brand branding mockup", "family brand guidelines"],
+    "african-brands": ["african brand identity design", "afrocentric branding mockup", "cameroon brand identity"]
+  }
+}
