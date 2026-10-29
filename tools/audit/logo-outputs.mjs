@@ -11,6 +11,7 @@ import {
   monochromeVariant,
   tonalSvg,
 } from '../../packages/logo-kit/dist/index.js';
+import { assignRoles, extractPalette } from '../../packages/color-engine/dist/index.js';
 import { sanitizeSvg } from '../../packages/svg-engine/dist/index.js';
 import { createNodeRasterizer } from '../../packages/svg-engine/dist/raster/index.js';
 
@@ -25,6 +26,21 @@ if (!outDir || logos.length === 0) {
 mkdirSync(outDir, { recursive: true });
 const rasterizer = createNodeRasterizer();
 const TILE = 360;
+// French captions of the misuse grid, imperative as in the real charters (R8).
+const DONT_FR = {
+  distort: 'Ne pas étirer',
+  squash: 'Ne pas écraser',
+  rotate: 'Ne pas pivoter',
+  recolor: 'Ne pas changer les couleurs',
+  'partial-recolor': 'Ne pas recolorer une partie',
+  outline: 'Ne pas utiliser en contour',
+  shadow: 'Ne pas ajouter d’effet',
+  transparency: 'Ne pas rendre transparent',
+  'bad-background': 'Pas de fond peu contrasté',
+  'busy-background': 'Pas de fond chargé',
+  crop: 'Ne pas recadrer',
+  crowd: 'Respecter la zone de protection',
+};
 const LABEL = 28;
 
 async function tile(svg, label, background = '#E6E6E6') {
@@ -87,16 +103,34 @@ for (const file of logos) {
     tiles.push(await tile(favicon.value.svg, `favicon ${favicon.value.warnings.join(',')}`));
   const clear = clearSpaceDiagramSvg(svg, bbox.value, 0.25);
   if (clear.ok) tiles.push(await tile(clear.value, "zone d'exclusion 0.25", '#FFFFFF'));
-  const donts = dosAndDontsSvg(svg, bbox.value, {
-    primary: '#4A154B',
-    accent: '#36C5F0',
-    neutralLight: '#F4F4F4',
-    neutralDark: '#1D1C1D',
-    extra: [],
-  });
+  // The logo's own palette, as the generator extracts it, so that the faulty panels are the real ones.
+  const raster = await rasterizer.rasterize(svg, 256);
+  const extracted = raster.ok
+    ? extractPalette({
+        width: raster.value.width,
+        height: raster.value.height,
+        data: raster.value.rgba,
+      })
+    : undefined;
+  if (!extracted?.ok) {
+    console.log(`${name}: palette extraction failed`);
+    continue;
+  }
+  const roles = assignRoles(extracted.value.clusters);
+  const palette = {
+    primary: roles.primary.hex,
+    accent: roles.accent.hex,
+    neutralLight: roles.neutralLight.hex,
+    neutralDark: roles.neutralDark.hex,
+    extra: roles.extra.map((token) => token.hex),
+  };
+  notes.push(
+    `palette ${palette.primary}/${palette.accent}/${palette.neutralLight}/${palette.neutralDark}`,
+  );
+  const donts = dosAndDontsSvg(svg, bbox.value, palette);
   if (donts.ok) {
     for (const panel of donts.value)
-      tiles.push(await tile(panel.svg, `interdit: ${panel.kind}`, panel.background ?? '#FFFFFF'));
+      tiles.push(await tile(panel.svg, DONT_FR[panel.kind] ?? panel.kind, panel.background));
   }
   const cols = 4;
   const rows = Math.ceil(tiles.length / cols);

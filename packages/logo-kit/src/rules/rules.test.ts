@@ -4,7 +4,7 @@ import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer } from '@app/svg-engine/raster';
 import { describe, expect, it } from 'vitest';
 import { clearSpace, clearSpaceDiagramSvg } from './clear-space.js';
-import { dosAndDontsSvg, offPaletteHue } from './dos-donts.js';
+import { DONT_KINDS, dosAndDontsSvg, offPaletteHue, STRIKE_RED } from './dos-donts.js';
 import { faviconSvg } from './favicon.js';
 
 const rasterizer = createNodeRasterizer();
@@ -100,14 +100,24 @@ describe('clear space (§5.5)', () => {
   });
 });
 
-describe("Do & Don't (§5.6)", () => {
+describe("Do & Don't (§5.6, R8)", () => {
   const box = { x: 20, y: 20, width: 60, height: 60 };
+  const twoColoursResult = sanitizeSvg(
+    encode(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="30" fill="#1F4BFF"/><rect x="20" y="50" width="60" height="30" fill="#DAA500"/></svg>',
+    ),
+  );
+  if (!twoColoursResult.ok) throw new Error(twoColoursResult.error.code);
+  const twoColours = twoColoursResult.value.svg;
 
   it('3. the bad background has a contrast below 3 with the logo colour', () => {
     const panels = dosAndDontsSvg(logo(box), box, palette);
     if (!panels.ok) throw new Error(panels.error);
     const bad = panels.value.find((panel) => panel.kind === 'bad-background');
-    expect(bad && contrastRatio(bad.background ?? '', palette.primary)).toBeLessThan(3);
+    expect(bad && contrastRatio(bad.background, palette.primary)).toBeLessThan(3);
+    // Every other tile shares the light neutral background.
+    for (const panel of panels.value.filter((candidate) => candidate !== bad))
+      expect(panel.background).toBe(palette.neutralLight);
   });
 
   it('3 bis. generates a grey when no palette colour is close enough', () => {
@@ -125,19 +135,65 @@ describe("Do & Don't (§5.6)", () => {
     expect(contrastRatio(bad?.background ?? '#FFFFFF', '#000000')).toBeLessThan(3);
   });
 
-  it('4. every generated panel is a sanitizeSvg output with a label key', () => {
-    const panels = dosAndDontsSvg(logo(box), box, palette);
+  it('4. a grid of 6 to 12 struck panels in R8 priority order, each a sanitizeSvg output', () => {
+    const panels = dosAndDontsSvg(twoColours, box, palette);
     if (!panels.ok) throw new Error(panels.error);
-    expect(panels.value.map((panel) => panel.kind)).toEqual([
-      'distort',
-      'rotate',
-      'recolor',
-      'bad-background',
-    ]);
+    expect(panels.value.map((panel) => panel.kind)).toEqual([...DONT_KINDS]);
     for (const panel of panels.value) {
       expect(accepted(panel.svg)).toBe(true);
-      expect(panel.labelKey).toMatch(/^logo\.dont\./);
+      expect(panel.labelKey).toBe(`logo.dont.${panel.kind}`);
+      // R8: the red diagonal strike across the thumbnail, over a light halo for dark backgrounds.
+      expect(panel.svg).toContain(`stroke="${STRIKE_RED}"`);
     }
+  });
+
+  it('4 bis. a one-shape, one-colour logo has no partial recolour panel, still at least 6', () => {
+    const panels = dosAndDontsSvg(logo(box), box, palette);
+    if (!panels.ok) throw new Error(panels.error);
+    const kinds = panels.value.map((panel) => panel.kind);
+    expect(kinds).not.toContain('partial-recolor');
+    expect(kinds.length).toBeGreaterThanOrEqual(6);
+    expect(kinds.length).toBeLessThanOrEqual(12);
+  });
+
+  it('4 ter. the panels really transform the logo', async () => {
+    const panels = dosAndDontsSvg(twoColours, box, palette);
+    if (!panels.ok) throw new Error(panels.error);
+    const panel = (kind: string): string => {
+      const found = panels.value.find((candidate) => candidate.kind === kind);
+      if (!found) throw new Error(kind);
+      return found.svg.replace(/<line[^>]*\/>/g, '');
+    };
+    // Pixels that differ from the tile colour (#F2F5FC): what the eye sees as drawn.
+    const coverage = async (svg: string): Promise<{ ink: number; alpha: number }> => {
+      const raster = await rasterizer.rasterize(svg, 128);
+      if (!raster.ok) throw new Error(raster.error.code);
+      const data = raster.value.rgba;
+      let ink = 0;
+      let alpha = 255;
+      for (let i = 0; i < data.length; i += 4) {
+        const [r, g, b] = [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0];
+        const distance = Math.max(Math.abs(r - 0xf2), Math.abs(g - 0xf5), Math.abs(b - 0xfc));
+        if (distance > 24) ink += 1;
+        // Transparency: the darkest channel of the logo stays close to the tile.
+        if (distance > 0) alpha = Math.min(alpha, Math.min(r, g, b));
+      }
+      return { ink, alpha };
+    };
+    const original = await coverage(panel('rotate'));
+    expect((await coverage(panel('outline'))).ink).toBeLessThan(original.ink * 0.6);
+    expect((await coverage(panel('transparency'))).alpha).toBeGreaterThan(100);
+    expect(original.alpha).toBeLessThan(100);
+    const cropped = await rasterizer.bbox(panel('crop'));
+    if (!cropped.ok) throw new Error(cropped.error.reason);
+    const size = Number(/viewBox="0 0 ([\d.]+)/.exec(panel('crop'))?.[1]);
+    expect(cropped.value.x + cropped.value.width).toBeGreaterThanOrEqual(size - 0.5);
+    // Partial recolour: the first colour is kept, the second is replaced by the off-palette colour.
+    const partial = panel('partial-recolor');
+    expect(partial).toContain('#1F4BFF');
+    expect(partial).not.toContain('#DAA500');
+    expect(panel('shadow')).toContain('feDropShadow');
+    expect(panel('busy-background')).toContain('<pattern');
   });
 
   it('5. the recolour hue is ≥ 60° from the primary and its derived accent, deterministic', () => {

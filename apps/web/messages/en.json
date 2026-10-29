@@ -114,5 +114,21 @@
     "turnstile": "The anti-bot check did not complete. Try again.",
     "rateLimited": "Too many projects created in a short time. Wait a few minutes, then try again.",
     "refused": "The request was refused (code {code}). Try again in a moment."
+  },
+  "logo": {
+    "dont": {
+      "distort": "Do not stretch",
+      "squash": "Do not squash",
+      "rotate": "Do not rotate",
+      "recolor": "Do not change the colours",
+      "partial-recolor": "Do not recolour one part",
+      "outline": "Do not use as an outline",
+      "shadow": "Do not add effects",
+      "transparency": "Do not make it transparent",
+      "bad-background": "No low-contrast background",
+      "busy-background": "No busy background",
+      "crop": "Do not crop",
+      "crowd": "Keep the clear space free"
+    }
   }
 }

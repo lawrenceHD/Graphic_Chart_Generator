@@ -1,5 +1,7 @@
 export { clearSpace, clearSpaceDiagramSvg, type ClearSpace } from './clear-space.js';
 export {
+  DONT_KINDS,
+  STRIKE_RED,
   dosAndDontsSvg,
   offPaletteHue,
   type DontKind,

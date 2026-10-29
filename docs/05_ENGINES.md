@@ -303,7 +303,7 @@ Cible : `#000000` ou `#FFFFFF`.
 
 ### 5.6 Do & Don't
 
-Quatre panneaux SVG générés avec le logo réel, chacun avec une icône de croix, un libellé texte et une couleur (jamais la couleur seule) :
+Grille d'interdits conforme à R8 (`16_GUIDELINE_RULES.md`) : **6 à 12 vignettes** générées avec le logo réel, même fond clair (`neutralLight`) pour toutes, **barre diagonale rouge `#E0322B`** sur un liseré blanc, légende à l'impératif sous chaque vignette (clé i18n `logo.dont.<cas>`, jamais la couleur seule). Ordre de priorité : étirer, écraser (×0,65 en hauteur), pivoter, recolorer, **recolorer une partie** (dernière couleur à plat remplacée ; absent pour un logo d'une seule couleur), **contour** (surfaces remplies du fond de vignette et cernées, pour que la géométrie masquée le reste), **ombre portée**, **transparence** (opacité 0,3), fond peu contrasté, **fond chargé** (rayures de la palette), **recadrage** (logo décalé de 32 % hors du cadre), **zone de protection envahie** (lignes de texte factices sous le logo). Les quatre cas historiques restent définis ainsi :
 1. **Déformation** : mise à l'échelle horizontale ×1,4.
 2. **Rotation** : −15°.
 3. **Recoloration** (ADR-021) : variante monochrome dans une couleur **hors palette**, calculée ainsi :

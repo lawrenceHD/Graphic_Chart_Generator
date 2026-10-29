@@ -1,12 +1,14 @@
 import { contrastRatio, hexToOklch, oklchToHexMapped } from '@app/color-engine';
 import type { Rect } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
-import type { SvgNode } from '@app/svg-engine';
+import { isSvgElement, type SvgElement, type SvgNode } from '@app/svg-engine';
 import { recolorSvg } from '../mono/index.js';
+import { paintKey, readPaint } from '../mono/paint.js';
 import { artworkOf, document, svgElement, type ComposeError } from './compose.js';
 
-// 05_ENGINES.md §5.6 and ADR-021.
+// 05_ENGINES.md §5.6, ADR-021 and R8 of 16_GUIDELINE_RULES.md.
 const DISTORT_SCALE = 1.4;
+const SQUASH_SCALE = 0.65;
 const ROTATION_DEG = -15;
 const PANEL_SCALE = 1.6;
 const MIN_HUE_GAP = 60;
@@ -14,6 +16,14 @@ const CHROMATIC = 0.04;
 const RECOLOR_L = 0.6;
 const RECOLOR_C = 0.15;
 const MAX_BAD_CONTRAST = 3;
+const OUTLINE_WIDTH = 0.003;
+const TRANSPARENCY = 0.3;
+const CROP_SHIFT = 0.32;
+/** Red of the diagonal strike every misuse thumbnail carries (R8), whatever the palette. */
+export const STRIKE_RED = '#E0322B';
+const STRIKE_HALO = '#FFFFFF';
+/** Grey of the stand-in text lines of the crowd panel. */
+const TEXT_GREY = '#9AA0A6';
 
 export interface PaletteHexes {
   readonly primary: string;
@@ -22,14 +32,29 @@ export interface PaletteHexes {
   readonly neutralDark: string;
   readonly extra: readonly string[];
 }
-export type DontKind = 'distort' | 'rotate' | 'recolor' | 'bad-background';
+/** R8 cases, by priority: the order of the grid. */
+export const DONT_KINDS = [
+  'distort',
+  'squash',
+  'rotate',
+  'recolor',
+  'partial-recolor',
+  'outline',
+  'shadow',
+  'transparency',
+  'bad-background',
+  'busy-background',
+  'crop',
+  'crowd',
+] as const;
+export type DontKind = (typeof DONT_KINDS)[number];
 export interface DontPanel {
   readonly kind: DontKind;
   readonly svg: string;
-  /** i18n key of the visible label: sanitized SVGs carry no <text> (05_ENGINES.md §3.2). */
+  /** i18n key of the visible caption: sanitized SVGs carry no <text> (05_ENGINES.md §3.2). */
   readonly labelKey: `logo.dont.${DontKind}`;
-  /** Background of the bad-background panel. */
-  readonly background?: string;
+  /** Background of the tile: the light neutral, or the faulty one of bad-background. */
+  readonly background: string;
 }
 
 const gap = (a: number, b: number): number => {
@@ -86,29 +111,94 @@ function badBackground(palette: PaletteHexes): string {
   return oklchToHexMapped(L, 0, 0);
 }
 
-function cross(size: number, palette: PaletteHexes): SvgNode {
-  const r = size * 0.07;
-  const cx = size - r * 1.6;
-  const cy = r * 1.6;
-  const arm = r * 0.5;
-  const d = `M${String(cx - arm)} ${String(cy - arm)}L${String(cx + arm)} ${String(cy + arm)}M${String(cx + arm)} ${String(cy - arm)}L${String(cx - arm)} ${String(cy + arm)}`;
-  return svgElement('g', {}, [
-    svgElement('circle', {
-      cx: String(cx),
-      cy: String(cy),
-      r: String(r),
-      fill: palette.neutralDark,
-    }),
-    svgElement('path', {
-      d,
-      fill: 'none',
-      stroke: palette.neutralLight,
-      'stroke-width': String(r * 0.3),
-    }),
-  ]);
+// R8: one red diagonal across the thumbnail, over a white halo so that it reads on any background.
+function strike(size: number): SvgNode[] {
+  const inset = size * 0.08;
+  const ends = {
+    x1: String(inset),
+    y1: String(size - inset),
+    x2: String(size - inset),
+    y2: String(inset),
+    'stroke-linecap': 'round',
+  };
+  return [
+    svgElement('line', { ...ends, stroke: STRIKE_HALO, 'stroke-width': String(size * 0.022) }),
+    svgElement('line', { ...ends, stroke: STRIKE_RED, 'stroke-width': String(size * 0.012) }),
+  ];
 }
 
-/** The four misuse panels of §5.6, built from the real logo. */
+const SHAPES = new Set(['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon']);
+// Definitions whose content is not painted as is: masks and clips work by luminance or geometry.
+const NOT_ARTWORK = new Set([
+  'defs',
+  'clipPath',
+  'mask',
+  'pattern',
+  'filter',
+  'linearGradient',
+  'radialGradient',
+]);
+
+function mapArtwork(
+  nodes: readonly SvgNode[],
+  change: (node: SvgElement, fill: string) => Map<string, string>,
+  inherited = 'black',
+): SvgNode[] {
+  return nodes.map((node) => {
+    if (!isSvgElement(node) || NOT_ARTWORK.has(node.name)) return node;
+    const fill = node.attributes.get('fill') ?? inherited;
+    return {
+      ...node,
+      attributes: change(node, fill),
+      children: mapArtwork(node.children, change, fill),
+    };
+  });
+}
+
+// Effective fill colours of the drawn shapes, in paint order (gradients and none excluded).
+function shapeColours(nodes: readonly SvgNode[], inherited = 'black'): string[] {
+  return nodes.flatMap((node) => {
+    if (!isSvgElement(node) || NOT_ARTWORK.has(node.name)) return [];
+    const fill = node.attributes.get('fill') ?? inherited;
+    const key = paintKey(fill);
+    const own = SHAPES.has(node.name) && key !== undefined && !key.startsWith('url(') ? [key] : [];
+    return [...own, ...shapeColours(node.children, fill)];
+  });
+}
+
+/**
+ * Line drawing of the logo: every surface filled with the tile colour and stroked in `ink`. Filled rather
+ * than emptied, so that geometry the artwork hides under later shapes stays hidden, as on the original.
+ */
+function outlined(nodes: readonly SvgNode[], ink: string, width: number, tile: string): SvgNode[] {
+  return mapArtwork(nodes, (node, fill) => {
+    const attributes = new Map(node.attributes);
+    attributes.set('fill', readPaint(fill).kind === 'none' ? 'none' : tile);
+    if (SHAPES.has(node.name) && readPaint(fill).kind !== 'none') {
+      attributes.set('stroke', ink);
+      attributes.set('stroke-width', String(width));
+      attributes.set('stroke-linejoin', 'round');
+    }
+    return attributes;
+  });
+}
+
+/** The logo's last colour replaced by `colour`, the others kept; undefined for a one-colour logo. */
+function partlyRecoloured(nodes: readonly SvgNode[], colour: string): SvgNode[] | undefined {
+  const colours = [...new Set(shapeColours(nodes))];
+  const target = colours.at(-1);
+  if (colours.length < 2 || target === undefined) return undefined;
+  return mapArtwork(nodes, (node) => {
+    const attributes = new Map(node.attributes);
+    for (const name of ['fill', 'stroke']) {
+      const value = attributes.get(name);
+      if (value !== undefined && paintKey(value) === target) attributes.set(name, colour);
+    }
+    return attributes;
+  });
+}
+
+/** The R8 misuse grid (6 to 12 panels, priority order), each built from the real logo. */
 export function dosAndDontsSvg(
   svg: string,
   bbox: Rect,
@@ -117,43 +207,121 @@ export function dosAndDontsSvg(
 ): Result<DontPanel[], ComposeError> {
   const artwork = artworkOf(svg);
   if (!artwork.ok) return artwork;
-  const recoloured = recolorSvg(
-    svg,
-    oklchToHexMapped(RECOLOR_L, RECOLOR_C, offPaletteHue(palette, fallbackHue)),
-  );
+  const offPalette = oklchToHexMapped(RECOLOR_L, RECOLOR_C, offPaletteHue(palette, fallbackHue));
+  const recoloured = recolorSvg(svg, offPalette);
   if (!recoloured.ok) return err('INVALID_SVG');
   const recolouredArtwork = artworkOf(recoloured.value.svg);
   if (!recolouredArtwork.ok) return recolouredArtwork;
 
   const size = Math.max(bbox.width, bbox.height) * PANEL_SCALE;
+  const unit = String(size);
   const centre = `translate(${String(size / 2)} ${String(size / 2)})`;
   const back = `translate(${String(-(bbox.x + bbox.width / 2))} ${String(-(bbox.y + bbox.height / 2))})`;
-  const placed = (transform: string, nodes: SvgNode[]): SvgNode =>
-    svgElement('g', { transform: `${centre} ${transform} ${back}`.replace(/\s+/g, ' ') }, nodes);
+  const placed = (
+    transform: string,
+    nodes: SvgNode[],
+    extra: Readonly<Record<string, string>> = {},
+  ): SvgNode =>
+    svgElement(
+      'g',
+      { ...extra, transform: `${centre} ${transform} ${back}`.replace(/\s+/g, ' ') },
+      nodes,
+    );
+  const plain = (fill: string): SvgNode => svgElement('rect', { width: unit, height: unit, fill });
+
   const background = badBackground(palette);
+  const partial = partlyRecoloured(artwork.value, offPalette);
+  const shift = String(size * CROP_SHIFT);
+  const crop = bbox.width >= bbox.height ? `translate(${shift} 0)` : `translate(0 ${shift})`;
+  // Busy background: diagonal stripes of the palette itself, the logo lost in them.
+  const stripe = size / 16;
+  const stripes = [palette.accent, palette.neutralLight, palette.primary, palette.neutralDark];
+  const pattern = svgElement(
+    'pattern',
+    {
+      id: 'charta-dont-busy',
+      patternUnits: 'userSpaceOnUse',
+      width: String(stripe * stripes.length),
+      height: unit,
+      patternTransform: 'rotate(35)',
+    },
+    stripes.map((fill, index) =>
+      svgElement('rect', { x: String(stripe * index), width: String(stripe), height: unit, fill }),
+    ),
+  );
+  const shadow = svgElement(
+    'filter',
+    { id: 'charta-dont-shadow', x: '-50%', y: '-50%', width: '200%', height: '200%' },
+    [
+      svgElement('feDropShadow', {
+        dx: String(size * 0.025),
+        dy: String(size * 0.025),
+        stdDeviation: String(size * 0.02),
+        'flood-color': '#000000',
+        'flood-opacity': '0.6',
+      }),
+    ],
+  );
+  // Crowd: lines of stand-in text set inside the clear space, right under the logo (R6 broken).
+  const top = size / 2 + bbox.height / 2;
+  const left = size / 2 - bbox.width / 2;
+  const textLine = (offset: number, share: number): SvgNode =>
+    svgElement('rect', {
+      x: String(left),
+      y: String(top + bbox.height * offset),
+      width: String(bbox.width * share),
+      height: String(bbox.height * 0.07),
+      fill: TEXT_GREY,
+    });
+
   const specs: { kind: DontKind; nodes: SvgNode[]; background?: string }[] = [
     { kind: 'distort', nodes: [placed(`scale(${String(DISTORT_SCALE)} 1)`, artwork.value)] },
+    { kind: 'squash', nodes: [placed(`scale(1 ${String(SQUASH_SCALE)})`, artwork.value)] },
     { kind: 'rotate', nodes: [placed(`rotate(${String(ROTATION_DEG)})`, artwork.value)] },
     { kind: 'recolor', nodes: [placed('', recolouredArtwork.value)] },
+    ...(partial === undefined
+      ? []
+      : [{ kind: 'partial-recolor' as const, nodes: [placed('', partial)] }]),
     {
-      kind: 'bad-background',
-      background,
+      kind: 'outline',
       nodes: [
-        svgElement('rect', { width: String(size), height: String(size), fill: background }),
-        placed('', artwork.value),
+        placed(
+          '',
+          outlined(artwork.value, palette.primary, size * OUTLINE_WIDTH, palette.neutralLight),
+        ),
       ],
+    },
+    {
+      kind: 'shadow',
+      nodes: [shadow, placed('', artwork.value, { filter: 'url(#charta-dont-shadow)' })],
+    },
+    {
+      kind: 'transparency',
+      nodes: [placed('', artwork.value, { opacity: String(TRANSPARENCY) })],
+    },
+    { kind: 'bad-background', background, nodes: [placed('', artwork.value)] },
+    {
+      kind: 'busy-background',
+      nodes: [pattern, plain('url(#charta-dont-busy)'), placed('', artwork.value)],
+    },
+    { kind: 'crop', nodes: [placed(crop, artwork.value)] },
+    {
+      kind: 'crowd',
+      nodes: [placed('', artwork.value), textLine(0.06, 1), textLine(0.18, 0.7)],
     },
   ];
   const panels: DontPanel[] = [];
   for (const spec of specs) {
-    const built = document(size, [...spec.nodes, cross(size, palette)]);
+    // Every tile has the same plain background, as in a printed grid; only bad-background changes it.
+    const tile = spec.background ?? palette.neutralLight;
+    const built = document(size, [plain(tile), ...spec.nodes, ...strike(size)]);
     if (!built.ok) return built;
-    const panel = {
+    panels.push({
       kind: spec.kind,
       svg: built.value,
-      labelKey: `logo.dont.${spec.kind}` as const,
-    };
-    panels.push(spec.background === undefined ? panel : { ...panel, background: spec.background });
+      labelKey: `logo.dont.${spec.kind}`,
+      background: tile,
+    });
   }
   return ok(panels);
 }

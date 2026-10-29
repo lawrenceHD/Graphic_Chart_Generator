@@ -114,5 +114,21 @@
     "turnstile": "La vérification anti-robot n'a pas abouti. Réessayez.",
     "rateLimited": "Trop de projets créés en peu de temps. Patientez quelques minutes, puis réessayez.",
     "refused": "La création a été refusée (code {code}). Réessayez dans un instant."
+  },
+  "logo": {
+    "dont": {
+      "distort": "Ne pas étirer",
+      "squash": "Ne pas écraser",
+      "rotate": "Ne pas pivoter",
+      "recolor": "Ne pas changer les couleurs",
+      "partial-recolor": "Ne pas recolorer une partie",
+      "outline": "Ne pas utiliser en contour",
+      "shadow": "Ne pas ajouter d’effet",
+      "transparency": "Ne pas rendre transparent",
+      "bad-background": "Pas de fond peu contrasté",
+      "busy-background": "Pas de fond chargé",
+      "crop": "Ne pas recadrer",
+      "crowd": "Respecter la zone de protection"
+    }
   }
 }
