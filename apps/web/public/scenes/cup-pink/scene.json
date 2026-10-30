@@ -1,0 +1,39 @@
+{
+  "id": "cup-pink",
+  "kind": "psd",
+  "schemaVersion": 3,
+  "size": {
+    "width": 2400,
+    "height": 3601
+  },
+  "layers": [
+    {
+      "type": "image",
+      "src": "base.webp",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-1",
+      "role": "cup-logo",
+      "aspect": 1.0,
+      "blend": "normal",
+      "opacity": 1.0,
+      "uv": "uv-slot-1.png",
+      "vv": "vv-slot-1.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-2.png",
+      "blend": "darken",
+      "opacity": 0.149
+    },
+    {
+      "type": "image",
+      "src": "layer-3.png",
+      "blend": "normal",
+      "opacity": 1
+    }
+  ]
+}

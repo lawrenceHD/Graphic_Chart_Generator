@@ -2,11 +2,12 @@
   "id": "cup-pink",
   "width": 2400,
   "slots": {
-    "logo": "cup-logo",
-    "logo copy": "cup-logo"
+    "logo": "cup-logo"
   },
   "paint": {},
-  "hide": ["firmbee-pion"],
+  "hide": [
+    "firmbee-pion"
+  ],
   "source": "https://firmbee.com/pink-coffee-cup",
   "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
 }

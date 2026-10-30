@@ -34,6 +34,9 @@ export const SCENES = [
   'poster-living',
   'poster-held',
   'poster-hanging',
+  'mug-white',
+  'mug-stripes',
+  'cup-pink',
   // Generated photographs of the hospitality pack, where a centred mark is what the object wants.
   'place-cards',
   'menu-table',
