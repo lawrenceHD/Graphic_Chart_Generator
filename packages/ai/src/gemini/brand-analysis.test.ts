@@ -61,7 +61,7 @@ describe('analyzeBrand — the brand analysis of 07_AI_COPILOT.md §3', () => {
     const result = await analyzeBrand(transport, input, 'gemini-test');
 
     expect(result.ok && result.value.archetype).toBe('caregiver');
-    expect(result.ok && result.value.values[0]?.label).toBe('Hospitalité');
+    expect(result.ok && result.value.values[0].label).toBe('Hospitalité');
     expect(prompts[0]).toContain('<brief>');
     expect(prompts[0]).toContain('#D88F7A');
     expect(prompts[0]).toContain('inline_data');
