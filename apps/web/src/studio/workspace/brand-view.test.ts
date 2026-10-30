@@ -49,6 +49,7 @@ describe('the landing example', () => {
       'contrast',
       'typography',
       'tone-of-voice',
+      'mockup',
       'tokens',
     ]);
   });
