@@ -87,7 +87,7 @@ function PendingSheet({
   const t = useTranslations('workspace');
   return (
     <div
-      className={`relative aspect-[16/9] w-full overflow-hidden rounded-[14px] border border-line bg-surface ${state === 'composing' ? 'sweep' : ''}`}
+      className={`relative aspect-[297/210] w-full overflow-hidden rounded-[14px] border border-line bg-surface ${state === 'composing' ? 'sweep' : ''}`}
     >
       <div className="absolute inset-0 flex flex-col gap-4 p-8" aria-hidden="true">
         <div className="skeleton h-3 w-1/3 rounded-full" />

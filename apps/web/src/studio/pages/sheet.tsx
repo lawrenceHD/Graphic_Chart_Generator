@@ -6,12 +6,12 @@ import { svgDataUrl, tintSvg } from '../../brand/logo-tint';
 import type { BrandView } from '../workspace/brand-view';
 import type { SheetWords } from './sheet-words';
 
-// Frame of a guideline page (DESIGN.md "Guideline Sheet"): a 16:9 landscape sheet by default, A4 portrait on
+// Frame of a guideline page (DESIGN.md "Guideline Sheet"): an A4 landscape sheet by default, A4 portrait on
 // request. Every size is a multiple of --u, one hundredth of the sheet width in landscape and a larger step in
 // portrait, so the same page reads at any zoom of the canvas, in print and in the PDF.
 export const u = (value: number): string => `calc(var(--u) * ${String(value)})`;
 
-export const PAPER = '#FBFBF9';
+export const PAPER = '#FFFFFF';
 
 export interface SheetContext {
   readonly view: BrandView;
@@ -42,16 +42,16 @@ export function SheetFrame({
 }: {
   readonly context: SheetContext;
   readonly children: ReactNode;
-  /** One sentence under the title: what the page is for. */
+  /** One sentence beside the content: what the page is for. */
   readonly lead?: string;
   readonly aside?: ReactNode;
-  /** Full-bleed pages (cover) draw their own layout inside the frame. */
+  /** Full-bleed pages (cover, dividers) draw their own layout inside the frame. */
   readonly bleed?: boolean;
-  /** Narrower title column (3 of 12) for pages whose content needs the width. */
+  /** Narrower text column (2 of 12) for pages whose content needs the width. */
   readonly wide?: boolean;
   readonly className?: string;
 }) {
-  const { view, words, portrait } = context;
+  const { view, portrait } = context;
   const paper = context.background ?? PAPER;
   const ink = sheetInk(view, paper);
   const style: CSSProperties & Record<'--u', string> = {
@@ -60,69 +60,88 @@ export function SheetFrame({
     color: ink,
     fontFamily: view.pairing.text.css,
   };
+  // The page of a printed guideline (references: État, Data Terra, Slack, Nevers): white paper, a hairline
+  // and a small section title at the top, the content set in wide margins, folio at the foot. No boxes.
   return (
     <article
-      className={`@container relative w-full overflow-hidden ${portrait ? 'aspect-[210/297]' : 'aspect-[16/9]'} ${className}`}
-      style={{ ...style, borderRadius: u(1.2) }}
+      className={`@container relative w-full overflow-hidden ${portrait ? 'aspect-[210/297]' : 'aspect-[297/210]'} ${className}`}
+      style={style}
     >
       {bleed ? (
         children
       ) : (
-        <div className="absolute inset-0 flex flex-col" style={{ padding: u(4) }}>
-          <RunningHeader context={context} ink={ink} />
+        <div
+          className="absolute inset-0 flex flex-col"
+          style={{ padding: `${u(4.2)} ${u(portrait ? 5.5 : 5)} ${u(3)}` }}
+        >
+          <SectionHead context={context} ink={ink} />
           <div
             className={`grid min-h-0 flex-1 ${portrait ? 'grid-rows-[auto_1fr]' : 'grid-cols-12'}`}
-            style={{ gap: u(portrait ? 3 : 2.6), paddingTop: u(portrait ? 3.4 : 3) }}
+            style={{ gap: u(portrait ? 2.4 : 2.6), paddingTop: u(portrait ? 2.6 : 3.2) }}
           >
-            <div
-              className={`flex min-w-0 flex-col ${portrait ? '' : wide ? 'col-span-3' : 'col-span-4'}`}
-            >
-              <h2
-                className="m-0 text-balance"
-                style={{
-                  fontFamily: view.pairing.display.css,
-                  fontSize: u(portrait ? 6 : 4.4),
-                  lineHeight: 0.95,
-                  letterSpacing: '-0.025em',
-                  fontWeight: 650,
-                }}
+            {lead === undefined && aside === undefined ? null : (
+              <div
+                className={`flex min-w-0 flex-col ${portrait ? '' : wide ? 'col-span-2' : 'col-span-3'}`}
               >
-                {context.title}
-              </h2>
-              {lead === undefined ? null : <Lead>{lead}</Lead>}
-              {aside === undefined ? null : (
-                <div className="mt-auto" style={{ paddingTop: u(2) }}>
-                  {aside}
-                </div>
-              )}
-            </div>
+                {lead === undefined ? null : <Lead>{lead}</Lead>}
+                {aside === undefined ? null : (
+                  <div className="mt-auto" style={{ paddingTop: u(2) }}>
+                    {aside}
+                  </div>
+                )}
+              </div>
+            )}
             <div
-              className={`relative min-h-0 min-w-0 ${portrait ? '' : wide ? 'col-span-9' : 'col-span-8'}`}
+              className={`relative min-h-0 min-w-0 ${portrait ? '' : lead === undefined && aside === undefined ? 'col-span-12' : wide ? 'col-span-10' : 'col-span-9'}`}
             >
               {children}
             </div>
           </div>
+          <Folio context={context} />
         </div>
       )}
-      <span className="sr-only">{words.guideline}</span>
+      <span className="sr-only">{context.words.guideline}</span>
     </article>
   );
 }
 
-function RunningHeader({ context, ink }: { readonly context: SheetContext; readonly ink: string }) {
+const SMALL_CAPS: CSSProperties = {
+  fontSize: u(0.82),
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+};
+
+function SectionHead({ context, ink }: { readonly context: SheetContext; readonly ink: string }) {
+  return (
+    <header style={{ borderTop: `1px solid color-mix(in oklch, ${ink} 30%, transparent)` }}>
+      <h2
+        className="m-0"
+        style={{
+          ...SMALL_CAPS,
+          fontSize: u(0.95),
+          fontWeight: 700,
+          paddingTop: u(1.1),
+          fontFamily: context.view.pairing.text.css,
+        }}
+      >
+        {context.title}
+      </h2>
+    </header>
+  );
+}
+
+function Folio({ context }: { readonly context: SheetContext }) {
   const pad = (value: number): string => String(value).padStart(2, '0');
   return (
-    <header
-      className="flex items-baseline justify-between font-mono uppercase"
-      style={{ fontSize: u(0.95), letterSpacing: '0.14em', color: ink, opacity: 0.62 }}
+    <footer
+      className="flex items-baseline justify-between"
+      style={{ ...SMALL_CAPS, fontSize: u(0.72), opacity: 0.55, paddingTop: u(1.4) }}
     >
       <span className="truncate">
-        {context.view.name} — {context.words.guideline}
+        {context.view.name} · {context.words.guideline}
       </span>
-      <span className="tabular shrink-0">
-        {pad(context.number)} / {pad(context.total)}
-      </span>
-    </header>
+      <span className="tabular shrink-0">{pad(context.number)}</span>
+    </footer>
   );
 }
 
@@ -130,20 +149,25 @@ function Lead({ children }: { readonly children: ReactNode }) {
   return (
     <p
       className="m-0 text-pretty"
-      style={{
-        fontSize: u(1.32),
-        lineHeight: 1.45,
-        opacity: 0.72,
-        marginTop: u(1.6),
-        maxWidth: '34ch',
-      }}
+      style={{ fontSize: u(1.05), lineHeight: 1.55, opacity: 0.78, maxWidth: '30ch' }}
     >
       {children}
     </p>
   );
 }
 
-/** Small mono label of a measured value (DESIGN.md: the evidence is mono). */
+/** Small uppercase label above a block (the printed guideline's "SUR FOND FONCÉ"). */
+export function Label({
+  children,
+  style,
+}: {
+  readonly children: ReactNode;
+  readonly style?: CSSProperties;
+}) {
+  return <span style={{ ...SMALL_CAPS, fontWeight: 600, ...style }}>{children}</span>;
+}
+
+/** Small label of a measured value, tabular figures in the brand's text face (as printed guidelines do). */
 export function Measure({
   children,
   style,
@@ -152,7 +176,7 @@ export function Measure({
   readonly style?: CSSProperties;
 }) {
   return (
-    <span className="tabular font-mono" style={{ fontSize: u(0.95), ...style }}>
+    <span className="tabular" style={{ fontSize: u(0.9), letterSpacing: '0.02em', ...style }}>
       {children}
     </span>
   );

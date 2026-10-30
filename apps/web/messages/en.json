@@ -305,7 +305,7 @@
       "lead": "Files are produced from the guideline as you see it.",
       "close": "Close",
       "pdf": "Guideline as PDF",
-      "pdfDetail": "Every page, in 16:9 landscape or A4 portrait.",
+      "pdfDetail": "Every page, in A4 landscape or portrait.",
       "pdfAction": "Print to PDF",
       "logos": "Logo files",
       "logosDetail": "Colour, black, white and favicon.",

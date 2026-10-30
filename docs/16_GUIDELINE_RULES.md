@@ -106,7 +106,7 @@ uniforme, véhicule…). Chaque mockup montre le logo selon R5-R9.
 
 ## Niveau 6 — Mise en page des pages de la charte
 
-**R18. Gabarit constant** : format 16:9 par défaut (BBC, Instacart 1920×1080 ; ADR-027), marges et grille
+**R18. Gabarit constant** : format A4, paysage par défaut et portrait par page (décision du propriétaire 2026-10-30, remplace le 16:9 de l’ADR-027), marges et grille
 identiques sur toutes les pages, en-tête courant (marque, « Charte graphique », section) et numéro de page.
 **R19. Une idée par page**, titre de section en grand, texte court (≤ 60 mots) à côté du visuel, visuel dominant.
 **R20. Ordre des sections** : couverture, sommaire, marque (histoire, valeurs, ton), logo (R5-R9), couleurs,

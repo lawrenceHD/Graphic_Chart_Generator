@@ -1,13 +1,13 @@
 /*
  * PDF of the guideline = the browser's print of the same sheets as the canvas (one renderer, DESIGN.md).
- * Landscape sheets print on a 16:9 page, portrait ones on A4 (named pages).
+ * Sheets print on A4: landscape by default, portrait per page (named pages), as printed guidelines are.
  */
 .print-only {
   display: none;
 }
 
 @page {
-  size: 320mm 180mm;
+  size: 297mm 210mm;
   margin: 0;
 }
 
@@ -31,8 +31,8 @@
   }
 
   .print-page {
-    width: 320mm;
-    height: 180mm;
+    width: 297mm;
+    height: 210mm;
     break-after: page;
     overflow: hidden;
     -webkit-print-color-adjust: exact;

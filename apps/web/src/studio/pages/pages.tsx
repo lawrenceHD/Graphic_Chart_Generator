@@ -24,6 +24,7 @@ import {
   useImageAspect,
   useTintedLogo,
   type SheetContext,
+  Label,
 } from './sheet';
 
 // The ten page types of the initial document (01 §4), drawn only from the document: nothing here is
@@ -35,92 +36,41 @@ const hairline = (ink: string): CSSProperties => ({
 });
 
 function Cover({ context }: { readonly context: SheetContext }) {
-  const { view, words, portrait } = context;
-  const field = context.background ?? view.colors.primary;
+  const { view, words } = context;
+  // A one-colour version still to check never stands in for the logo on the cover: the field turns to
+  // the light neutral and carries the upload itself, directly, without a plate.
+  const field =
+    context.background ??
+    (view.needsReview.length > 0 ? view.colors.neutralLight : view.colors.primary);
   const ink = inkOn(field);
-  const lead = briefLead(view.brief, 140);
-  // The cover is the first thing anyone sees: a one-colour version still to check (traced from a raster
-  // upload) never stands in for the logo there; the upload sits on its light plate instead.
-  const logo = view.needsReview.length > 0 ? view.logo.color : logoOn(view, field);
-  const plate = logo === view.logo.color && field !== view.colors.neutralLight;
+  const logo =
+    view.needsReview.length > 0 && context.background === undefined
+      ? view.logo.color
+      : logoOn(view, field, true);
+  const accent = contrastRatio(view.colors.accent, field) >= 3 ? view.colors.accent : ink;
   return (
     <SheetFrame context={{ ...context, background: field }} bleed>
       <div
         className="absolute inset-0 flex flex-col"
-        style={{ padding: u(4.4), color: ink, fontFamily: view.pairing.text.css }}
+        style={{ padding: `${u(5)} ${u(6)}`, color: ink, fontFamily: view.pairing.text.css }}
       >
-        <div
-          className="flex items-baseline justify-between font-mono uppercase"
-          style={{ fontSize: u(0.95), letterSpacing: '0.16em', opacity: 0.75 }}
-        >
-          <span>{words.guideline}</span>
-          <span className="tabular">{words.edition(context.year)}</span>
+        <div className="grid min-h-0 flex-1 place-items-center">
+          <LogoImage src={logo} alt={view.name} className="h-[46%] w-[46%]" />
         </div>
         <div
-          className={`grid min-h-0 flex-1 items-center ${portrait ? 'grid-rows-[1fr_auto]' : 'grid-cols-12'}`}
-          style={{ gap: u(3) }}
+          className="flex items-end justify-between"
+          style={{
+            borderTop: `1px solid color-mix(in oklch, ${ink} 35%, transparent)`,
+            paddingTop: u(1.4),
+          }}
         >
-          <div
-            className={`flex min-w-0 flex-col justify-end self-end ${portrait ? 'order-2' : 'col-span-6'}`}
-          >
-            <p
-              className="m-0 text-balance"
-              style={{
-                fontFamily: view.pairing.display.css,
-                fontSize: u(portrait ? 10 : 8.4),
-                lineHeight: 0.9,
-                letterSpacing: '-0.035em',
-                fontWeight: 700,
-              }}
-            >
-              {view.name}
-            </p>
-            {lead === null ? null : (
-              <p
-                className="m-0 text-pretty"
-                style={{
-                  fontSize: u(1.4),
-                  lineHeight: 1.45,
-                  opacity: 0.8,
-                  marginTop: u(1.8),
-                  maxWidth: '38ch',
-                }}
-              >
-                {lead}
-              </p>
-            )}
-          </div>
-          <div
-            className={`grid h-full min-h-0 place-items-center ${portrait ? 'order-1' : 'col-span-6'}`}
-          >
-            {plate ? (
-              // No one-colour version reads on this field: the colour logo sits on its light plate,
-              // never on its own colours.
-              <div
-                className="grid size-full place-items-center"
-                style={{ background: view.colors.neutralLight, borderRadius: u(1.4) }}
-              >
-                <LogoImage src={view.logo.color} alt={view.name} className="h-[58%] w-[78%]" />
-              </div>
-            ) : (
-              <LogoImage src={logo} alt={view.name} className="h-[62%] w-[82%]" />
-            )}
-          </div>
-        </div>
-        <div
-          className="flex overflow-hidden"
-          style={{ height: u(1), borderRadius: u(0.5), marginTop: u(2.4) }}
-        >
-          {COLOR_ROLES.map((role, index) => (
-            <span
-              key={role}
-              style={{
-                background: view.colors[role],
-                flex: [5, 2, 2, 1][index],
-                boxShadow: `inset 0 0 0 1px color-mix(in oklch, ${ink} 18%, transparent)`,
-              }}
-            />
-          ))}
+          <Label style={{ fontSize: u(0.95) }}>
+            <span style={{ color: accent }}>{words.guideline}</span>{' '}
+            <span className="tabular" style={{ opacity: 0.75 }}>
+              {words.edition(context.year)}
+            </span>
+          </Label>
+          <Label style={{ fontSize: u(0.95), opacity: 0.75 }}>{view.name}</Label>
         </div>
       </div>
     </SheetFrame>
@@ -136,7 +86,7 @@ function Manifesto({ context }: { readonly context: SheetContext }) {
       <SheetFrame context={context} lead={words.lead.manifesto}>
         <div className="flex h-full flex-col justify-center" style={{ gap: u(2.4) }}>
           <p
-            className="m-0 font-mono uppercase"
+            className="m-0 uppercase"
             style={{ fontSize: u(0.95), letterSpacing: '0.14em', opacity: 0.6 }}
           >
             {quote === null ? words.manifesto.pending : words.manifesto.fromBrief}
@@ -212,7 +162,7 @@ function Statement({
   return (
     <div>
       <p
-        className="m-0 font-mono uppercase"
+        className="m-0 uppercase"
         style={{ fontSize: u(0.95), letterSpacing: '0.14em', opacity: 0.6 }}
       >
         {label}
@@ -247,26 +197,30 @@ function Tile({
   readonly style?: CSSProperties;
   readonly className?: string;
 }) {
+  // A flat block of colour, as printed guidelines show versions: no radius, no frame; a hairline only
+  // when the block is the paper's own white, so its edge still shows.
+  const edge = contrastRatio(background, PAPER) < 1.08;
   return (
-    <figure className={`m-0 flex min-h-0 flex-col ${className}`} style={{ gap: u(0.7), ...style }}>
+    <figure className={`m-0 flex min-h-0 flex-col ${className}`} style={{ gap: u(0.8), ...style }}>
+      {label === undefined ? null : <Label>{label}</Label>}
       <div
-        className="relative grid min-h-0 flex-1 place-items-center overflow-hidden border"
-        style={{ background, borderRadius: u(0.9), ...hairline(ink) }}
+        className="relative grid min-h-0 flex-1 place-items-center overflow-hidden"
+        style={{
+          background,
+          boxShadow: edge
+            ? `inset 0 0 0 1px color-mix(in oklch, ${ink} 16%, transparent)`
+            : undefined,
+        }}
       >
         {children}
       </div>
-      {label === undefined ? null : (
-        <figcaption className="font-mono" style={{ fontSize: u(0.9), opacity: 0.7 }}>
-          {label}
-        </figcaption>
-      )}
     </figure>
   );
 }
 
 function LogoPage({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
-  const ink = inkOn(context.background ?? PAPER);
+  const ink = inkOn(PAPER);
   const review = (kind: 'mono-black' | 'mono-white'): string =>
     view.needsReview.includes(kind) ? ` · ${words.logo.review}` : '';
   const black = view.logo['mono-black'];
@@ -278,68 +232,59 @@ function LogoPage({ context }: { readonly context: SheetContext }) {
     readonly background: string;
     readonly src: string | null;
     readonly label: string;
-  }[] = [
-    {
-      key: 'black',
-      background: '#FFFFFF',
-      src: black,
-      label: `${words.logo.black}${review('mono-black')}`,
-    },
-    {
-      key: 'white',
-      background: view.colors.neutralDark,
-      src: white,
-      label: `${words.logo.white}${review('mono-white')}`,
-    },
-    { key: 'tint', background: view.colors.neutralLight, src: tint, label: words.logo.tint },
-    { key: 'reversed', background: view.colors.primary, src: white, label: words.logo.reversed },
-  ];
-  const monochrome = black !== null && white !== null;
+  }[] =
+    black !== null && white !== null
+      ? [
+          {
+            key: 'reversed',
+            background: view.colors.primary,
+            src: white,
+            label: words.logo.reversed,
+          },
+          {
+            key: 'white',
+            background: view.colors.neutralDark,
+            src: white,
+            label: `${words.logo.white}${review('mono-white')}`,
+          },
+          {
+            key: 'black',
+            background: '#FFFFFF',
+            src: black,
+            label: `${words.logo.black}${review('mono-black')}`,
+          },
+          { key: 'tint', background: view.colors.neutralLight, src: tint, label: words.logo.tint },
+        ]
+      : [
+          {
+            key: 'light',
+            background: view.colors.neutralLight,
+            src: view.logo.color,
+            label: words.logo.onLight,
+          },
+          { key: 'white', background: '#FFFFFF', src: view.logo.color, label: words.logo.onColor },
+        ];
   return (
-    <SheetFrame context={context} lead={words.lead.logo}>
-      <div
-        className={`grid h-full ${monochrome ? 'grid-cols-4' : 'grid-cols-6'} grid-rows-[1.5fr_1fr]`}
-        style={{ gap: u(1.4) }}
-      >
-        <Tile
-          background={view.colors.neutralLight}
-          ink={ink}
-          label={words.logo.primary}
-          className={monochrome ? 'col-span-4' : 'col-span-6'}
+    <SheetFrame context={context} lead={words.lead.logo} wide>
+      <div className="grid h-full grid-rows-[1.55fr_1fr]" style={{ gap: u(2.6) }}>
+        <figure className="m-0 flex min-h-0 flex-col" style={{ gap: u(0.8) }}>
+          <Label>{words.logo.primary}</Label>
+          <div className="grid min-h-0 flex-1 place-items-center">
+            <LogoImage src={view.logo.color} alt={view.name} className="h-[70%] w-[56%]" />
+          </div>
+        </figure>
+        <div
+          className="grid min-h-0"
+          style={{ gridTemplateColumns: `repeat(${String(versions.length)}, minmax(0, 1fr))` }}
         >
-          <LogoImage src={view.logo.color} alt={view.name} className="h-[66%] w-[60%]" />
-        </Tile>
-        {monochrome ? (
-          versions.map((version) => (
+          {versions.map((version) => (
             <Tile key={version.key} background={version.background} ink={ink} label={version.label}>
               {version.src === null ? null : (
-                <LogoImage src={version.src} className="h-[56%] w-[76%]" />
+                <LogoImage src={version.src} className="h-[52%] w-[74%]" />
               )}
             </Tile>
-          ))
-        ) : (
-          <>
-            <Tile
-              background={view.colors.primary}
-              ink={ink}
-              label={words.logo.onColor}
-              className="col-span-2"
-            >
-              <LogoImage src={logoOn(view, view.colors.primary)} className="h-[56%] w-[70%]" />
-            </Tile>
-            <Tile background="#FFFFFF" ink={ink} label={words.logo.onLight} className="col-span-2">
-              <LogoImage src={view.logo.color} className="h-[56%] w-[70%]" />
-            </Tile>
-            <Tile
-              background={view.colors.neutralDark}
-              ink={ink}
-              label={words.logo.onDark}
-              className="col-span-2"
-            >
-              <LogoImage src={view.logo.color} className="h-[56%] w-[70%]" />
-            </Tile>
-          </>
-        )}
+          ))}
+        </div>
       </div>
     </SheetFrame>
   );
@@ -366,7 +311,7 @@ function ClearSpace({ context }: { readonly context: SheetContext }) {
           </p>
           <div className="border-t" style={{ ...hairline(ink), paddingTop: u(1.2) }}>
             <p
-              className="m-0 font-mono uppercase"
+              className="m-0 uppercase"
               style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
             >
               {words.clearSpace.minimum}
@@ -391,7 +336,7 @@ function ClearSpace({ context }: { readonly context: SheetContext }) {
     >
       <div
         className="relative grid h-full place-items-center border"
-        style={{ background: view.colors.neutralLight, borderRadius: u(1), ...hairline(ink) }}
+        style={{ background: view.colors.neutralLight, borderRadius: 0, ...hairline(ink) }}
       >
         <div
           className="relative"
@@ -423,7 +368,7 @@ function ClearSpace({ context }: { readonly context: SheetContext }) {
           {(['top', 'left'] as const).map((side) => (
             <span
               key={side}
-              className="absolute grid place-items-center font-mono"
+              className="absolute grid place-items-center"
               style={{
                 fontSize: u(1.1),
                 color: guide,
@@ -514,7 +459,7 @@ function DoDont({ context }: { readonly context: SheetContext }) {
             <div
               className="relative grid min-h-0 flex-1 place-items-center overflow-hidden border"
               style={{
-                borderRadius: u(0.8),
+                borderRadius: 0,
                 background: panel.busy
                   ? `repeating-linear-gradient(135deg, ${view.colors.primary} 0 ${u(0.8)}, ${view.colors.accent} ${u(0.8)} ${u(1.6)}, ${light} ${u(1.6)} ${u(2.4)})`
                   : (panel.background ?? light),
@@ -524,7 +469,7 @@ function DoDont({ context }: { readonly context: SheetContext }) {
               <LogoImage src={view.logo.color} className="h-[46%] w-[66%]" style={panel.art} />
               {panel.crowd ? (
                 <span
-                  className="absolute font-mono"
+                  className="absolute"
                   style={{ fontSize: u(0.95), color: inkOn(light), left: '18%', top: '30%' }}
                 >
                   {words.dont.crowdText}
@@ -573,12 +518,12 @@ function Palette({ context }: { readonly context: SheetContext }) {
       aside={
         <div>
           <p
-            className="m-0 font-mono uppercase"
+            className="m-0 uppercase"
             style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
           >
             {words.palette.scale}
           </p>
-          <div className="flex overflow-hidden" style={{ marginTop: u(0.8), borderRadius: u(0.6) }}>
+          <div className="flex overflow-hidden" style={{ marginTop: u(0.8), borderRadius: 0 }}>
             {buildScale(view.colors.primary).map((step) => (
               <span
                 key={step.step}
@@ -607,7 +552,7 @@ function Palette({ context }: { readonly context: SheetContext }) {
                 flex: SHARE[role],
                 background: hex,
                 color: on,
-                borderRadius: u(1),
+                borderRadius: 0,
                 padding: u(1.4),
                 ...hairline(ink),
               }}
@@ -628,7 +573,7 @@ function Palette({ context }: { readonly context: SheetContext }) {
                 </p>
               </div>
               <dl
-                className="tabular m-0 grid grid-cols-[auto_1fr] font-mono"
+                className="tabular m-0 grid grid-cols-[auto_1fr]"
                 style={{ fontSize: u(0.8), columnGap: u(0.6), rowGap: u(0.2), lineHeight: 1.35 }}
               >
                 <dt style={{ opacity: 0.82 }}>HEX</dt>
@@ -683,7 +628,7 @@ function Contrast({ context }: { readonly context: SheetContext }) {
       aside={
         <div>
           <p
-            className="m-0 font-mono uppercase"
+            className="m-0 uppercase"
             style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
           >
             {words.contrast.best}
@@ -703,7 +648,7 @@ function Contrast({ context }: { readonly context: SheetContext }) {
                       color: pair.text.hex,
                       width: u(2.4),
                       height: u(1.6),
-                      borderRadius: u(0.4),
+                      borderRadius: 0,
                       fontSize: u(0.9),
                       fontWeight: 600,
                     }}
@@ -734,7 +679,7 @@ function Contrast({ context }: { readonly context: SheetContext }) {
           {swatches.map((background) => (
             <span
               key={background.hex}
-              className="truncate font-mono"
+              className="truncate"
               style={{ fontSize: u(0.85), opacity: 0.7, alignSelf: 'end' }}
             >
               {background.hex}
@@ -769,7 +714,7 @@ function ContrastRow({
             <span
               key={background.hex}
               style={{
-                borderRadius: u(0.5),
+                borderRadius: 0,
                 background: 'color-mix(in oklch, currentColor 5%, transparent)',
               }}
             />
@@ -783,18 +728,15 @@ function ContrastRow({
             style={{
               background: background.hex,
               color: text.hex,
-              borderRadius: u(0.5),
+              borderRadius: 0,
               borderColor: 'color-mix(in oklch, currentColor 10%, transparent)',
               opacity: verdict.tone === 'bad' ? 0.55 : 1,
             }}
           >
-            <span className="tabular font-mono" style={{ fontSize: u(1.25), fontWeight: 600 }}>
+            <span className="tabular" style={{ fontSize: u(1.25), fontWeight: 600 }}>
               {ratio.toFixed(1)}
             </span>
-            <span
-              className="flex items-center font-mono"
-              style={{ fontSize: u(0.78), gap: u(0.3) }}
-            >
+            <span className="flex items-center" style={{ fontSize: u(0.78), gap: u(0.3) }}>
               <VerdictIcon tone={verdict.tone} />
               {words.contrast.levels[verdict.level]}
             </span>
@@ -883,7 +825,7 @@ function Typography({ context }: { readonly context: SheetContext }) {
           </div>
         ))}
         <p
-          className="m-0 border-t font-mono"
+          className="m-0 border-t"
           style={{
             ...hairline(ink),
             fontSize: u(1),
@@ -921,7 +863,7 @@ function Tone({ context }: { readonly context: SheetContext }) {
                     height: u(0.3),
                     marginTop: u(0.9),
                     background: `color-mix(in oklch, ${ink} 14%, transparent)`,
-                    borderRadius: u(1),
+                    borderRadius: 0,
                   }}
                 >
                   <span
@@ -990,11 +932,11 @@ function Tokens({ context }: { readonly context: SheetContext }) {
       aside={<Measure style={{ opacity: 0.7 }}>{words.tokens.formats}</Measure>}
     >
       <pre
-        className="m-0 h-full overflow-hidden font-mono"
+        className="m-0 h-full overflow-hidden"
         style={{
           background: code,
           color: inkOn(code),
-          borderRadius: u(1),
+          borderRadius: 0,
           padding: u(2.4),
           fontSize: u(1.25),
           lineHeight: 1.7,
