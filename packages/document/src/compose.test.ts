@@ -120,6 +120,41 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
     });
   });
 
+  it('copies the brand analysis as written: texts, archetype, tone and type pairing (ADR-020)', () => {
+    const brand: NonNullable<ComposeInput['brand']> = {
+      mission: 'Réunir des inconnus autour d’une même table.',
+      vision: 'Une table de rencontre dans chaque ville.',
+      values: [
+        { label: 'Hospitalité', description: 'Recevoir chacun comme un hôte.' },
+        { label: 'Élégance', description: 'Un cadre soigné.' },
+        { label: 'Bienveillance', description: 'Une écoute sans jugement.' },
+        { label: 'Partage', description: 'Le repas comme prétexte.' },
+      ],
+      archetype: 'caregiver',
+      tone: {
+        axes: [
+          { id: 'formal-casual', value: 40 },
+          { id: 'serious-playful', value: 30 },
+          { id: 'classic-avantgarde', value: 35 },
+          { id: 'sober-expressive', value: 50 },
+        ],
+        examples: ['Bienvenue à table.', 'Six chaises.', 'Une place pour vous.'],
+      },
+      pairingId: 'warm-serif',
+    };
+    const result = composeInitialDocument({ ...input, brand });
+    if (!result.ok) throw new Error(result.error.code);
+
+    expect(result.value.brand).toMatchObject({
+      mission: brand.mission,
+      vision: brand.vision,
+      archetype: 'caregiver',
+      values: brand.values,
+      tone: brand.tone,
+    });
+    expect(result.value.tokens.typography.pairingId).toBe('warm-serif');
+  });
+
   it('refuses inputs that cannot make a valid document', () => {
     const badColor = composeInitialDocument({
       ...input,

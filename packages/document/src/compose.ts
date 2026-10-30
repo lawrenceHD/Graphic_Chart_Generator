@@ -1,4 +1,12 @@
-import { TONE_AXIS_IDS, type PageType, type VariantRef } from '@app/contracts';
+import {
+  TONE_AXIS_IDS,
+  type Archetype,
+  type BrandValue,
+  type PageType,
+  type PairingId,
+  type Tone,
+  type VariantRef,
+} from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 import { generateKeyBetween } from 'fractional-indexing';
 import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION, type BrandDocument } from './schema.js';
@@ -26,6 +34,15 @@ export interface ComposeInput {
     readonly extra: readonly ComposeColor[];
   };
   readonly variants: readonly VariantRef[];
+  /** Texts and choices of the brand analysis (07_AI_COPILOT.md §3); explicit defaults when absent. */
+  readonly brand?: {
+    readonly mission: string;
+    readonly vision: string;
+    readonly values: readonly [BrandValue, BrandValue, BrandValue, BrandValue];
+    readonly archetype: Archetype;
+    readonly tone: Tone;
+    readonly pairingId: PairingId;
+  };
   /** Clear space and minimum size measured on the logo (logo-kit measureLogo); defaults when absent. */
   readonly logoRules?: {
     readonly clearSpaceRatio: number;
@@ -119,12 +136,15 @@ export function composeInitialDocument(input: ComposeInput): Result<BrandDocumen
     schemaVersion: CURRENT_SCHEMA_VERSION,
     brand: {
       name: name === '' ? words.brand : name,
-      mission: '',
-      vision: '',
-      values: [value(1), value(2), value(3), value(4)],
+      mission: input.brand?.mission ?? '',
+      vision: input.brand?.vision ?? '',
+      values: input.brand?.values ?? [value(1), value(2), value(3), value(4)],
       // Required by the schema, which has no "unknown": the archetype of an ordinary, approachable brand.
-      archetype: 'everyman',
-      tone: { axes: TONE_AXIS_IDS.map((id) => ({ id, value: 50 })), examples: ['', '', ''] },
+      archetype: input.brand?.archetype ?? 'everyman',
+      tone: input.brand?.tone ?? {
+        axes: TONE_AXIS_IDS.map((id) => ({ id, value: 50 })),
+        examples: ['', '', ''],
+      },
     },
     tokens: {
       colors: {
@@ -135,7 +155,7 @@ export function composeInitialDocument(input: ComposeInput): Result<BrandDocumen
         extra: input.colors.extra.slice(0, MAX_EXTRA_COLORS).map(color),
       },
       // "Modern, versatile" in the closed catalogue (09_DESIGN_SYSTEM.md §8).
-      typography: { pairingId: 'modern-geometric' },
+      typography: { pairingId: input.brand?.pairingId ?? 'modern-geometric' },
       // 05_ENGINES.md §5.5: clear space 0.25 × H, minimum height 24 px and 12 mm.
       // Bounds of LogoRulesSchema: a measure outside them is brought back, never refused.
       logo:
