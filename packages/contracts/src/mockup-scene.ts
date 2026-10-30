@@ -115,3 +115,53 @@ export const SceneDefinition = z
     });
   });
 export type SceneDefinition = z.infer<typeof SceneDefinition>;
+
+// Scenes baked from Photoshop mockups (tools/psd-mockups/bake.py, schema 3): layers replayed bottom to top.
+const PsdFile = z.string().regex(/^[a-z0-9-]+\.(png|webp)$/);
+export const PSD_BLENDS = [
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'soft-light',
+  'darken',
+  'lighten',
+] as const;
+const Blend = z.enum(PSD_BLENDS);
+const Opacity = z.number().min(0).max(1);
+const Role = z.enum(['primary', 'accent', 'neutralLight', 'neutralDark']);
+
+export const PsdLayerSchema = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('image'), src: PsdFile, blend: Blend, opacity: Opacity }),
+  z.strictObject({
+    type: z.literal('paint'),
+    mask: PsdFile,
+    paint: z.array(Role).min(1),
+    opacity: Opacity,
+  }),
+  z.strictObject({
+    type: z.literal('slot'),
+    id: z.string().regex(/^[a-z0-9-]+$/),
+    role: z.string().regex(/^[a-z0-9-]+$/),
+    aspect: z.number().positive().max(20),
+    blend: Blend,
+    opacity: Opacity,
+    uv: PsdFile,
+    vv: PsdFile,
+  }),
+]);
+export type PsdLayer = z.infer<typeof PsdLayerSchema>;
+
+export const PsdSceneSchema = z.strictObject({
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  kind: z.literal('psd'),
+  schemaVersion: z.literal(3),
+  size: z.strictObject({
+    width: z.number().int().positive().max(8192),
+    height: z.number().int().positive().max(8192),
+  }),
+  layers: z.array(PsdLayerSchema).min(1).max(64),
+});
+export type PsdScene = z.infer<typeof PsdSceneSchema>;
+
+export type PsdBlend = (typeof PSD_BLENDS)[number];
