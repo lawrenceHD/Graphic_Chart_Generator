@@ -202,6 +202,11 @@ def main():
     for layer, alpha in flat_layers(psd):
         if layer.name in hidden or id(layer) in skip:
             continue
+        # Adjustment layers (curves, levels, hue) recolour what is under them; replayed as images they
+        # would paint a grey box. Above the slots they are left out: the brand's artwork stays true.
+        if layer.kind not in ("pixel", "shape", "smartobject", "type"):
+            print(f"  skipped adjustment {layer.name!r} ({layer.kind})", flush=True)
+            continue
         blend = BLENDS.get(getattr(layer.blend_mode, "name", "NORMAL"), "normal")
         if layer.kind == "smartobject" and layer.name in slots:
             key = layer.name if layer.name not in seen else f"{layer.name}-{len(layers)}"
