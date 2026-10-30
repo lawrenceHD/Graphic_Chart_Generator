@@ -161,7 +161,7 @@
     "composing": "Composing…",
     "waitingStep": "Waiting for step {step}",
     "mockups": "In context",
-    "mockupsLead": "Your actual file, projected onto photographs by perspective maths: the logo is never redrawn.",
+    "mockupsLead": "Each object is painted in a colour of your guideline, with the photograph's light kept, then receives your real file with a real finish: print, foil, emboss, embroidery. The logo is never redrawn.",
     "mockupAlt": "{brand} on: {scene}",
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
@@ -332,7 +332,29 @@
     "working": "Applying…",
     "mockupFailed": "This mockup could not be loaded.",
     "loadFailedTitle": "The guideline could not be loaded",
-    "loadFailedLead": "Your project is intact. Check your connection, then try again."
+    "loadFailedLead": "Your project is intact. Check your connection, then try again.",
+    "proof": {
+      "finish": {
+        "flat": "Print",
+        "print": "Print",
+        "emboss": "Emboss",
+        "deboss": "Deboss",
+        "foil": "Foil",
+        "embroidery": "Embroidery",
+        "engrave": "Engraving",
+        "screen": "Screen"
+      },
+      "foil": {
+        "gold": "gold",
+        "silver": "silver"
+      },
+      "logo": {
+        "color": "colour logo",
+        "black": "black logo",
+        "white": "white logo"
+      },
+      "stock": "original stock"
+    }
   },
   "landing": {
     "metaTitle": "Charta · Your brand guidelines, live, from your logo",

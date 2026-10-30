@@ -339,6 +339,7 @@ export function PageCanvas({
                           className={`overflow-hidden rounded-[16px] shadow-[0_1px_2px_oklch(0.2_0.01_60/0.06),0_18px_40px_-18px_oklch(0.2_0.01_60/0.32)] outline-2 outline-offset-[6px] ${selected ? 'outline-ink' : 'outline-transparent'}`}
                         >
                           <MockupStage
+                            proof
                             failedLabel={t('mockupFailed')}
                             retryLabel={t('retry')}
                             scene={scene}

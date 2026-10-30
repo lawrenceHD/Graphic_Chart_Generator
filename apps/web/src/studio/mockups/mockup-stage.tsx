@@ -12,6 +12,7 @@ import {
   type LogoVersion,
   type SurfaceDirection,
 } from '@app/mockup-engine';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 
@@ -177,6 +178,8 @@ function sharedCompositor(width: number, height: number) {
   return shared;
 }
 
+const SHAPE_ONLY = new Set(['foil', 'emboss', 'deboss', 'engrave']);
+
 type Stage = 'loading' | 'ready' | 'failed';
 
 export function MockupStage({
@@ -186,6 +189,7 @@ export function MockupStage({
   failedLabel,
   retryLabel,
   className = '',
+  proof = false,
 }: {
   readonly scene: SceneId;
   readonly view: BrandView;
@@ -194,7 +198,11 @@ export function MockupStage({
   readonly failedLabel: string;
   readonly retryLabel: string;
   readonly className?: string;
+  /** Show the art direction applied under the picture (finish, colour, logo version). */
+  readonly proof?: boolean;
 }) {
+  const t = useTranslations('workspace.proof');
+  const [directions, setDirections] = useState<readonly SurfaceDirection[]>([]);
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(view);
   const [stage, setStage] = useState<Stage>('loading');
@@ -211,7 +219,10 @@ export function MockupStage({
     if (node === null) return;
     renderScene(id, latest.current, node, () => alive)
       .then((done) => {
-        if (alive && done !== null) setStage('ready');
+        if (alive && done !== null) {
+          setDirections(done);
+          setStage('ready');
+        }
       })
       .catch(() => {
         if (alive) setStage('failed');
@@ -250,6 +261,30 @@ export function MockupStage({
           </div>
         ) : null}
       </div>
+      {proof && stage === 'ready' ? (
+        <figcaption className="flex flex-wrap gap-1.5 pt-2.5">
+          {directions.map((direction) => (
+            <span
+              key={direction.surfaceId}
+              className="tabular inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 font-mono text-xs text-ink-2"
+            >
+              <span
+                aria-hidden="true"
+                className="size-2.5 rounded-full border border-line-strong"
+                style={{ background: direction.background }}
+              />
+              {[
+                direction.foil === undefined
+                  ? t(`finish.${direction.finish}`)
+                  : `${t(`finish.${direction.finish}`)} ${t(`foil.${direction.foil}`)}`,
+                direction.paint ?? t('stock'),
+                // Foil, relief and engraving take the logo's shape only, not its colours.
+                ...(SHAPE_ONLY.has(direction.finish) ? [] : [t(`logo.${direction.logo}`)]),
+              ].join(' · ')}
+            </span>
+          ))}
+        </figcaption>
+      ) : null}
     </figure>
   );
 }

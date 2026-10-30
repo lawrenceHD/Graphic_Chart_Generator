@@ -161,7 +161,7 @@
     "composing": "Composition…",
     "waitingStep": "En attente de l'étape {step}",
     "mockups": "En situation",
-    "mockupsLead": "Votre vrai fichier, projeté sur des photographies par calcul de perspective : le logo n’est jamais redessiné.",
+    "mockupsLead": "Chaque objet est peint dans une couleur de votre charte, avec la lumière de la photo, puis reçoit votre vrai fichier avec une finition réelle : impression, dorure, gaufrage, broderie. Le logo n’est jamais redessiné.",
     "mockupAlt": "{brand} sur : {scene}",
     "zoomOut": "Dézoomer",
     "zoomIn": "Zoomer",
@@ -332,7 +332,29 @@
     "working": "J’applique…",
     "mockupFailed": "Cette mise en situation n’a pas pu être chargée.",
     "loadFailedTitle": "La charte n’a pas pu être chargée",
-    "loadFailedLead": "Votre projet est intact. Vérifiez votre connexion, puis réessayez."
+    "loadFailedLead": "Votre projet est intact. Vérifiez votre connexion, puis réessayez.",
+    "proof": {
+      "finish": {
+        "flat": "Impression",
+        "print": "Impression",
+        "emboss": "Gaufrage",
+        "deboss": "Débossage",
+        "foil": "Dorure",
+        "embroidery": "Broderie",
+        "engrave": "Gravure",
+        "screen": "Écran"
+      },
+      "foil": {
+        "gold": "or",
+        "silver": "argent"
+      },
+      "logo": {
+        "color": "logo couleur",
+        "black": "logo noir",
+        "white": "logo blanc"
+      },
+      "stock": "support d’origine"
+    }
   },
   "landing": {
     "metaTitle": "Charta · Votre charte graphique, en direct, à partir de votre logo",

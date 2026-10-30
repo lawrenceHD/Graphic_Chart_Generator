@@ -39,7 +39,9 @@ function Cover({ context }: { readonly context: SheetContext }) {
   const field = context.background ?? view.colors.primary;
   const ink = inkOn(field);
   const lead = briefLead(view.brief, 140);
-  const logo = logoOn(view, field);
+  // The cover is the first thing anyone sees: a one-colour version still to check (traced from a raster
+  // upload) never stands in for the logo there; the upload sits on its light plate instead.
+  const logo = view.needsReview.length > 0 ? view.logo.color : logoOn(view, field);
   const plate = logo === view.logo.color && field !== view.colors.neutralLight;
   return (
     <SheetFrame context={{ ...context, background: field }} bleed>
