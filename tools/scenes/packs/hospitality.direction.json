@@ -1,0 +1,154 @@
+{
+  "scenes": {
+    "place-cards": {
+      "category": "hospitality",
+      "light": [-0.3, -0.5, 0.81],
+      "surfaces": {
+        "left": {
+          "material": "card",
+          "paint": ["primary", "neutralLight", "neutralDark"],
+          "finishes": ["foil", "emboss", "print"],
+          "padding": 0.24
+        },
+        "centre": {
+          "material": "card",
+          "paint": ["primary", "neutralLight", "neutralDark"],
+          "finishes": ["foil", "emboss", "print"],
+          "padding": 0.24
+        },
+        "right": {
+          "material": "card",
+          "paint": ["primary", "neutralLight", "neutralDark"],
+          "finishes": ["foil", "emboss", "print"],
+          "padding": 0.24
+        }
+      }
+    },
+    "menu-table": {
+      "category": "hospitality",
+      "light": [-0.6, -0.5, 0.62],
+      "surfaces": {
+        "menu": {
+          "material": "card",
+          "paint": ["neutralDark"],
+          "finishes": ["foil", "print"],
+          "padding": 0.3
+        }
+      }
+    },
+    "stationery-flatlay": {
+      "category": "stationery",
+      "light": [-0.6, -0.4, 0.69],
+      "surfaces": {
+        "cards": {
+          "material": "card",
+          "paint": ["primary"],
+          "finishes": ["foil", "print"],
+          "padding": 0.16
+        },
+        "letter": {
+          "material": "paper",
+          "paint": ["none"],
+          "finishes": ["print"],
+          "padding": 0.36
+        },
+        "envelope": {
+          "material": "paper",
+          "paint": ["neutralLight"],
+          "finishes": ["print"],
+          "padding": 0.18
+        },
+        "compliment": {
+          "material": "card",
+          "paint": ["neutralLight"],
+          "finishes": ["emboss", "print"],
+          "padding": 0.2
+        }
+      }
+    },
+    "napkin-plate": {
+      "category": "hospitality",
+      "light": [-0.4, -0.5, 0.77],
+      "surfaces": {
+        "napkin": {
+          "material": "fabric",
+          "paint": ["neutralLight"],
+          "finishes": ["embroidery"],
+          "padding": 0.2
+        }
+      }
+    },
+    "paper-bag": {
+      "category": "packaging",
+      "light": [-0.6, -0.4, 0.69],
+      "surfaces": {
+        "bag": {
+          "material": "paper",
+          "paint": ["primary"],
+          "finishes": ["print"],
+          "padding": 0.22
+        }
+      }
+    },
+    "storefront-sign": {
+      "category": "signage",
+      "light": [0.4, -0.3, 0.87],
+      "surfaces": {
+        "panel": {
+          "material": "metal",
+          "paint": ["neutralDark"],
+          "finishes": ["foil", "print"],
+          "padding": 0.2
+        }
+      }
+    },
+    "gift-box": {
+      "category": "packaging",
+      "light": [-0.4, -0.6, 0.69],
+      "surfaces": {
+        "box": {
+          "material": "card",
+          "paint": ["accent"],
+          "finishes": ["deboss", "print"],
+          "padding": 0.26
+        }
+      }
+    },
+    "apron": {
+      "category": "apparel",
+      "light": [-0.5, -0.4, 0.77],
+      "surfaces": {
+        "apron": {
+          "material": "fabric",
+          "paint": ["neutralDark"],
+          "finishes": ["embroidery"],
+          "padding": 0.06
+        }
+      }
+    },
+    "phone-table": {
+      "category": "digital",
+      "light": [-0.3, -0.5, 0.81],
+      "surfaces": {
+        "screen": {
+          "material": "screen",
+          "paint": ["primary"],
+          "finishes": ["screen"],
+          "padding": 0.1
+        }
+      }
+    },
+    "invitation": {
+      "category": "stationery",
+      "light": [-0.5, -0.5, 0.71],
+      "surfaces": {
+        "card": {
+          "material": "paper",
+          "paint": ["none"],
+          "finishes": ["print"],
+          "padding": 0.26
+        }
+      }
+    }
+  }
+}
