@@ -1,0 +1,58 @@
+{
+  "id": "menu-table",
+  "schemaVersion": 2,
+  "category": "hospitality",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "menu",
+      "quad": [
+        [
+          287,
+          308
+        ],
+        [
+          941,
+          165
+        ],
+        [
+          1317,
+          767
+        ],
+        [
+          501,
+          1039
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.04,
+        "fit": "contain",
+        "paddingRatio": 0.3
+      },
+      "baseTint": [
+        0.929,
+        0.91,
+        0.882
+      ],
+      "light": {
+        "direction": [
+          -0.6017,
+          -0.5014,
+          0.6217
+        ]
+      },
+      "finishes": [
+        "foil",
+        "print"
+      ],
+      "mask": "mask-menu.png",
+      "material": "card",
+      "paint": [
+        "neutralDark"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "gift-box",
+  "schemaVersion": 2,
+  "category": "packaging",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "box",
+      "quad": [
+        [
+          188,
+          373
+        ],
+        [
+          935,
+          110
+        ],
+        [
+          1372,
+          505
+        ],
+        [
+          628,
+          777
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.335,
+        "fit": "contain",
+        "paddingRatio": 0.26
+      },
+      "baseTint": [
+        0.933,
+        0.933,
+        0.925
+      ],
+      "light": {
+        "direction": [
+          -0.4008,
+          -0.6012,
+          0.6913
+        ]
+      },
+      "finishes": [
+        "deboss",
+        "print"
+      ],
+      "mask": "mask-box.png",
+      "material": "card",
+      "paint": [
+        "accent"
+      ]
+    }
+  ]
+}

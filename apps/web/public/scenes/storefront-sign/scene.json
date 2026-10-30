@@ -1,0 +1,58 @@
+{
+  "id": "storefront-sign",
+  "schemaVersion": 2,
+  "category": "signage",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "panel",
+      "quad": [
+        [
+          575,
+          215
+        ],
+        [
+          1241,
+          151
+        ],
+        [
+          1256,
+          848
+        ],
+        [
+          574,
+          834
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.027,
+        "fit": "contain",
+        "paddingRatio": 0.2
+      },
+      "baseTint": [
+        0.784,
+        0.796,
+        0.827
+      ],
+      "light": {
+        "direction": [
+          0.3986,
+          -0.299,
+          0.867
+        ]
+      },
+      "finishes": [
+        "foil",
+        "print"
+      ],
+      "mask": "mask-panel.png",
+      "material": "metal",
+      "paint": [
+        "neutralDark"
+      ]
+    }
+  ]
+}

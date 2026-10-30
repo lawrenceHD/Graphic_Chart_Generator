@@ -699,7 +699,7 @@ export function Mockups() {
         </h2>
         <p className="mt-4 max-w-[56ch] text-ink-2">{t('lead')}</p>
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {SCENES.filter((scene) => scene !== 'laptop-screen').map((scene, index) => (
+          {SCENES.slice(0, 7).map((scene, index) => (
             <motion.figure
               key={scene}
               className={`relative m-0 ${index === 0 ? 'sm:col-span-2 lg:row-span-2' : ''}`}

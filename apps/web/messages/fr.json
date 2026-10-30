@@ -241,13 +241,16 @@
       "tokens": "Tokens"
     },
     "scenes": {
-      "business-card": "Carte de visite",
-      "shop-sign": "Enseigne",
-      "tote-bag": "Tote bag",
-      "t-shirt-folded": "T-shirt",
-      "reception-wall": "Mur d'accueil",
-      "framed-poster": "Affiche encadrée",
-      "laptop-screen": "Écran"
+      "place-cards": "Marque-places",
+      "stationery-flatlay": "Papeterie",
+      "menu-table": "Menu",
+      "napkin-plate": "Serviette brodée",
+      "paper-bag": "Sac",
+      "storefront-sign": "Enseigne",
+      "gift-box": "Coffret",
+      "apron": "Tablier",
+      "phone-table": "Application",
+      "invitation": "Invitation"
     },
     "inspector": {
       "label": "Inspecteur",

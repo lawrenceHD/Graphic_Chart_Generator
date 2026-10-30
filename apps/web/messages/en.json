@@ -241,13 +241,16 @@
       "tokens": "Tokens"
     },
     "scenes": {
-      "business-card": "Business card",
-      "shop-sign": "Shop sign",
-      "tote-bag": "Tote bag",
-      "t-shirt-folded": "T-shirt",
-      "reception-wall": "Reception wall",
-      "framed-poster": "Framed poster",
-      "laptop-screen": "Screen"
+      "place-cards": "Place cards",
+      "stationery-flatlay": "Stationery",
+      "menu-table": "Menu",
+      "napkin-plate": "Embroidered napkin",
+      "paper-bag": "Bag",
+      "storefront-sign": "Sign",
+      "gift-box": "Gift box",
+      "apron": "Apron",
+      "phone-table": "App",
+      "invitation": "Invitation"
     },
     "inspector": {
       "label": "Inspector",
