@@ -1,0 +1,15 @@
+{
+  "id": "cards-stack",
+  "width": 2400,
+  "slots": {
+    "PROJECT_front": "card-front",
+    "PROJECT_back": "card-back"
+  },
+  "paint": {
+    "Prostokąt 1 kopia": ["neutralLight"],
+    "Prostokąt 1": ["primary"]
+  },
+  "hide": [],
+  "source": "https://firmbee.com/business-cards-presentation-mockup",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}

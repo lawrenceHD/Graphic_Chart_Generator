@@ -1,0 +1,15 @@
+{
+  "id": "a4-flyers",
+  "width": 2400,
+  "slots": {
+    "A4_HERE kopia": "letter",
+    "design_1": "poster"
+  },
+  "paint": {
+    "Prostokąt 1 kopia": ["neutralLight"],
+    "Prostokąt 1": ["primary"]
+  },
+  "hide": [],
+  "source": "https://firmbee.com/a4-mockup-psd",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}

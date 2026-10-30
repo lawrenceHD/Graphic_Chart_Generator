@@ -1,0 +1,12 @@
+{
+  "id": "cards-desk",
+  "width": 2400,
+  "slots": {
+    "business-card": "card-front",
+    "business-card2": "card-back"
+  },
+  "paint": {},
+  "hide": ["firmbee-poziom"],
+  "source": "https://firmbee.com/free-business-cards-psd-mockup",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "poster-hanging",
+  "width": 2400,
+  "slots": {
+    "A4_HERE": "poster"
+  },
+  "paint": {},
+  "hide": [],
+  "source": "https://firmbee.com/hanging-poster-mockup",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}

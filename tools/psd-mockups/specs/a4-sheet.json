@@ -1,0 +1,14 @@
+{
+  "id": "a4-sheet",
+  "width": 2400,
+  "slots": {
+    "design": "letter"
+  },
+  "paint": {
+    "Prostokąt 1 kopia": ["neutralLight"],
+    "Prostokąt 1": ["primary"]
+  },
+  "hide": [],
+  "source": "https://firmbee.com/a4-paper-psd-mockup",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}

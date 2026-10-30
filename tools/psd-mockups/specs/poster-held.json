@@ -1,0 +1,11 @@
+{
+  "id": "poster-held",
+  "width": 2400,
+  "slots": {
+    "PROJECT_HERE": "poster"
+  },
+  "paint": {},
+  "hide": [],
+  "source": "https://firmbee.com/hold-my-poster",
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+}
