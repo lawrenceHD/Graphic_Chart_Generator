@@ -27,3 +27,15 @@ describe('export files', () => {
     });
   });
 });
+
+describe('measured ratios in the exported files', () => {
+  it('are rounded to two decimals, never a floating-point tail', () => {
+    const view = {
+      ...DEMO_VIEW,
+      rules: { ...DEMO_VIEW.rules, clearSpaceRatio: 0.11999999999999998 },
+    };
+
+    expect(cssTokens(view)).toContain('--logo-clear-space: 0.12;');
+    expect(dtcgTokens(view)).toContain('"$value": 0.12');
+  });
+});

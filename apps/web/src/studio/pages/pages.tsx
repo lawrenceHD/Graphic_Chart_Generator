@@ -27,6 +27,7 @@ import {
   Label,
 } from './sheet';
 import { MockupStage, type SceneId } from '../mockups/mockup-stage';
+import { ratio } from '../workspace/export-files';
 
 // The ten page types of the initial document (01 §4), drawn only from the document: nothing here is
 // invented. Pages whose text the AI has not written yet say so, and quote the brief instead.
@@ -918,7 +919,7 @@ function Tokens({ context }: { readonly context: SheetContext }) {
     ...COLOR_ROLES.map((role) => `  --color-${slug(role)}: ${view.colors[role]};`),
     `  --font-display: '${view.pairing.display.name}';`,
     `  --font-text: '${view.pairing.text.name}';`,
-    `  --logo-clear-space: ${String(view.rules.clearSpaceRatio)};`,
+    `  --logo-clear-space: ${String(ratio(view.rules.clearSpaceRatio))};`,
     `  --logo-min-size: ${String(view.rules.minSizePx)}px;`,
     '}',
   ];

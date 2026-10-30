@@ -7,6 +7,9 @@ import { buildScale } from '../../brand/color';
 const slug = (role: ColorRole): string =>
   role.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`);
 
+/** A measured ratio as a designer writes it: two decimals, no floating-point tail. */
+export const ratio = (value: number): number => Math.round(value * 100) / 100;
+
 export function fileStem(name: string): string {
   const stem = name
     .normalize('NFD')
@@ -28,7 +31,7 @@ export function cssTokens(view: BrandView): string {
     scale,
     `  --font-display: ${view.pairing.display.css};`,
     `  --font-text: ${view.pairing.text.css};`,
-    `  --logo-clear-space: ${String(view.rules.clearSpaceRatio)};`,
+    `  --logo-clear-space: ${String(ratio(view.rules.clearSpaceRatio))};`,
     `  --logo-min-size: ${String(view.rules.minSizePx)}px;`,
     '}',
     '',
@@ -66,7 +69,7 @@ export function dtcgTokens(view: BrandView): string {
         text: { $type: 'fontFamily', $value: view.pairing.text.name },
       },
       logo: {
-        'clear-space': { $type: 'number', $value: view.rules.clearSpaceRatio },
+        'clear-space': { $type: 'number', $value: ratio(view.rules.clearSpaceRatio) },
         'min-size': { $type: 'dimension', $value: `${String(view.rules.minSizePx)}px` },
       },
     },
