@@ -1,3 +1,6 @@
 export * from './homography.js';
 export * from './placement.js';
 export * from './scene.js';
+export * from './direct.js';
+export * from './render/uniforms.js';
+export * from './render/compositor.js';

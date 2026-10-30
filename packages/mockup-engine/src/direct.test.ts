@@ -1,0 +1,101 @@
+import type { SceneDefinition, SceneSurface } from '@app/contracts';
+import { describe, expect, it } from 'vitest';
+import { contrast, directScene, type BrandPalette } from './direct.js';
+
+const LA_MEZA: BrandPalette = {
+  primary: '#D88F7A',
+  accent: '#E3C884',
+  neutralLight: '#FCF3F0',
+  neutralDark: '#1D1D1B',
+};
+const PASTEL_INKS = ['#D88F7A', '#A6B49B', '#E3C884', '#1D1D1B'];
+
+function surface(id: string, patch: Partial<SceneSurface> = {}): SceneSurface {
+  return {
+    id,
+    quad: [
+      [0, 0],
+      [100, 0],
+      [100, 100],
+      [0, 100],
+    ],
+    logoBox: { aspect: 1, fit: 'contain', paddingRatio: 0.2 },
+    baseTint: [0.95, 0.95, 0.94],
+    light: { direction: [0, 0, 1] },
+    finishes: ['print'],
+    ...patch,
+  };
+}
+const scene = (...surfaces: SceneSurface[]): SceneDefinition => ({
+  id: 'test',
+  schemaVersion: 2,
+  category: 'hospitality',
+  size: { width: 100, height: 100 },
+  surfaces,
+});
+
+describe('directScene — the art direction of a mockup', () => {
+  it('shares the brand colours out between the objects of one scene', () => {
+    const paints: SceneSurface['paint'] = ['primary', 'neutralLight', 'neutralDark'];
+    const directions = directScene(
+      scene(
+        surface('left', { paint: paints }),
+        surface('centre', { paint: paints }),
+        surface('right', { paint: paints }),
+      ),
+      LA_MEZA,
+      PASTEL_INKS,
+    );
+
+    expect(directions.map((d) => d.paint)).toEqual(['#D88F7A', '#FCF3F0', '#1D1D1B']);
+  });
+
+  it('prints the colour logo only where it reads, a one-colour logo elsewhere', () => {
+    const [onWhite, onTerracotta, onBlack] = directScene(
+      scene(
+        surface('white', { paint: ['none'] }),
+        surface('terracotta', { paint: ['primary'] }),
+        surface('black', { paint: ['neutralDark'] }),
+      ),
+      LA_MEZA,
+      PASTEL_INKS,
+    );
+
+    expect(onWhite).toMatchObject({ paint: null, logo: 'color', finish: 'print' });
+    // The pastel inks vanish on terracotta: one colour, the one that reads best — the same choice as the
+    // backgrounds page of the guideline (R9 of 16_GUIDELINE_RULES.md, logo-kit chooseVersion).
+    expect(onTerracotta?.logo).toBe('black');
+    expect(onBlack?.logo).toBe('white');
+  });
+
+  it('chooses foil on dark stock and a blind emboss on white, when the surface allows them', () => {
+    const finishes: SceneSurface['finishes'] = ['foil', 'emboss', 'print'];
+    const [dark, light] = directScene(
+      scene(
+        surface('dark', { paint: ['neutralDark'], finishes }),
+        surface('light', { paint: ['neutralLight'], finishes }),
+      ),
+      LA_MEZA,
+      PASTEL_INKS,
+    );
+
+    expect(dark).toMatchObject({ finish: 'foil', foil: 'gold' });
+    expect(light).toMatchObject({ finish: 'emboss' });
+  });
+
+  it('picks silver foil for a cool palette', () => {
+    const cool: BrandPalette = { ...LA_MEZA, primary: '#1F4BFF', accent: '#7FA7C9' };
+    const [card] = directScene(
+      scene(surface('card', { paint: ['neutralDark'], finishes: ['foil'] })),
+      cool,
+      ['#1F4BFF'],
+    );
+
+    expect(card?.foil).toBe('silver');
+  });
+
+  it('measures contrast as WCAG does', () => {
+    expect(contrast('#000000', '#FFFFFF')).toBeCloseTo(21, 5);
+    expect(contrast('#E3C884', '#FCF3F0')).toBeCloseTo(1.49, 2);
+  });
+});
