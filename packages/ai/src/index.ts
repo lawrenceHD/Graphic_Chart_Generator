@@ -41,3 +41,10 @@ export {
   type ResearchInput,
   type ResearchWarning,
 } from './research.js';
+export {
+  analyzeBrand,
+  BrandAnalysisSchema,
+  escapeData,
+  type AnalyzeInput,
+  type BrandAnalysis,
+} from './gemini/brand-analysis.js';
