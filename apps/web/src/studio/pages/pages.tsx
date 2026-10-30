@@ -977,7 +977,7 @@ function Applications({ context }: { readonly context: SheetContext }) {
           {scene('a4-sheet', 'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover')}
         </div>
         <div className="col-span-2 min-h-0 overflow-hidden">
-          {scene('mug-white', 'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover')}
+          {scene('poster-living', 'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover')}
         </div>
       </div>
     </SheetFrame>

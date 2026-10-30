@@ -10,17 +10,13 @@
     {
       "type": "paint",
       "mask": "mask-0.png",
-      "paint": [
-        "neutralLight"
-      ],
+      "paint": ["neutralLight"],
       "opacity": 1.0
     },
     {
       "type": "paint",
       "mask": "mask-1.png",
-      "paint": [
-        "primary"
-      ],
+      "paint": ["primary"],
       "opacity": 1.0
     },
     {

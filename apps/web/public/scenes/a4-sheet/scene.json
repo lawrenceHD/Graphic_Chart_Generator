@@ -1,0 +1,45 @@
+{
+  "id": "a4-sheet",
+  "kind": "psd",
+  "schemaVersion": 3,
+  "size": {
+    "width": 2400,
+    "height": 1663
+  },
+  "layers": [
+    {
+      "type": "paint",
+      "mask": "mask-0.png",
+      "paint": ["neutralLight"],
+      "opacity": 1.0
+    },
+    {
+      "type": "paint",
+      "mask": "mask-1.png",
+      "paint": ["primary"],
+      "opacity": 1.0
+    },
+    {
+      "type": "image",
+      "src": "layer-2.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-3",
+      "role": "letter",
+      "aspect": 0.7069,
+      "blend": "normal",
+      "opacity": 1.0,
+      "uv": "uv-slot-3.png",
+      "vv": "vv-slot-3.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-4.png",
+      "blend": "normal",
+      "opacity": 1
+    }
+  ]
+}
