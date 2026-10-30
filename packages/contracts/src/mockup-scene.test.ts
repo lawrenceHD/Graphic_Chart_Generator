@@ -41,12 +41,20 @@ describe('SceneDefinition (06_MOCKUP_ENGINE §3)', () => {
   });
 
   it('lists the MVP scene categories with generic as fallback', () => {
-    expect(SceneCategory.options).toEqual(['stationery', 'digital', 'signage', 'generic']);
+    expect(SceneCategory.options).toEqual([
+      'stationery',
+      'digital',
+      'signage',
+      'generic',
+      'hospitality',
+      'packaging',
+      'apparel',
+    ]);
   });
 
   it('rejects unknown keys, versions and categories', () => {
     rejects((s) => ({ ...s, extra: true }));
-    rejects((s) => ({ ...s, schemaVersion: 2 }));
+    rejects((s) => ({ ...s, schemaVersion: 3 }));
     rejects((s) => ({ ...s, category: 'bottles' }));
     rejects((s) => ({ ...s, id: 'Business Card' }));
   });
@@ -75,5 +83,29 @@ describe('SceneDefinition (06_MOCKUP_ENGINE §3)', () => {
     rejectsSurface((s) => ({ ...s, finishes: [] }));
     rejectsSurface((s) => ({ ...s, finishes: ['flat', 'flat'] }));
     rejectsSurface((s) => ({ ...s, finishes: ['gloss'] }));
+  });
+
+  it('v2: a surface carries its mask, material and the brand colour painted on it', () => {
+    const scene = {
+      ...validScene(),
+      schemaVersion: 2,
+      category: 'hospitality',
+      surfaces: [
+        {
+          ...validScene().surfaces[0],
+          mask: 'mask-front.png',
+          material: 'card',
+          paint: ['primary', 'neutralLight'],
+          finishes: ['print', 'foil', 'emboss'],
+        },
+      ],
+    };
+
+    expect(SceneDefinition.safeParse(scene).success).toBe(true);
+    // The mask is a file beside scene.json, never a path out of the scene folder.
+    const outside = { ...scene, surfaces: [{ ...scene.surfaces[0], mask: '../x.png' }] };
+    expect(SceneDefinition.safeParse(outside).success).toBe(false);
+    const unknownPaint = { ...scene, surfaces: [{ ...scene.surfaces[0], paint: ['gold'] }] };
+    expect(SceneDefinition.safeParse(unknownPaint).success).toBe(false);
   });
 });
