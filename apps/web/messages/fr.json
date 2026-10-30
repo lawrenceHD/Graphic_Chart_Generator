@@ -250,7 +250,18 @@
       "gift-box": "Coffret",
       "apron": "Tablier",
       "phone-table": "Application",
-      "invitation": "Invitation"
+      "invitation": "Invitation",
+      "cards-floating": "Cartes de visite",
+      "a4-sheet": "Papier à en-tête",
+      "cards-stack": "Cartes, recto verso",
+      "poster-living": "Affiche",
+      "a4-flyers": "Papeterie A4",
+      "mug-white": "Tasse",
+      "poster-held": "Affiche tenue",
+      "cards-desk": "Cartes sur le bureau",
+      "poster-hanging": "Affiche suspendue",
+      "mug-stripes": "Mug",
+      "cup-pink": "Gobelet"
     },
     "inspector": {
       "label": "Inspecteur",
@@ -354,6 +365,14 @@
         "white": "logo blanc"
       },
       "stock": "support d’origine"
+    },
+    "artwork": {
+      "name": "Prénom Nom",
+      "title": "Fonction",
+      "phone": "+00 0 00 00 00 00",
+      "email": "contact@votremarque.com",
+      "address": "Adresse de la marque",
+      "dear": "Madame, Monsieur,"
     }
   },
   "landing": {

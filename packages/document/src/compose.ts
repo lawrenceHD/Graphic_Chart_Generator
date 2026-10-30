@@ -71,6 +71,7 @@ const PAGES: readonly PageType[] = [
   'contrast',
   'typography',
   'tone-of-voice',
+  'mockup',
   'tokens',
 ];
 
@@ -88,7 +89,7 @@ const WORDING = {
       contrast: 'Contrastes',
       typography: 'Typographie',
       'tone-of-voice': 'Ton de voix',
-      mockup: 'Mockup',
+      mockup: 'Applications',
       tokens: 'Tokens',
     },
   },
@@ -105,7 +106,7 @@ const WORDING = {
       contrast: 'Contrast',
       typography: 'Typography',
       'tone-of-voice': 'Tone of voice',
-      mockup: 'Mockup',
+      mockup: 'Applications',
       tokens: 'Tokens',
     },
   },

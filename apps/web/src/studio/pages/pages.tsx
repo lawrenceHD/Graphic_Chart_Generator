@@ -26,6 +26,7 @@ import {
   type SheetContext,
   Label,
 } from './sheet';
+import { MockupStage, type SceneId } from '../mockups/mockup-stage';
 
 // The ten page types of the initial document (01 §4), drawn only from the document: nothing here is
 // invented. Pages whose text the AI has not written yet say so, and quote the brief instead.
@@ -952,7 +953,42 @@ function Tokens({ context }: { readonly context: SheetContext }) {
   );
 }
 
-export const RENDERERS: Readonly<Record<Exclude<PageType, 'mockup'>, Renderer>> = {
+// Applications (R17 of 16_GUIDELINE_RULES.md): the brand on its collateral, in designers' Photoshop
+// mockups replayed with the brand's own artwork — the page every reference guideline ends its logo part on.
+function Applications({ context }: { readonly context: SheetContext }) {
+  const { view, words } = context;
+  const scene = (id: SceneId, className: string) => (
+    <MockupStage
+      scene={id}
+      view={view}
+      label={`${view.name} — ${words.applications.alt}`}
+      failedLabel={words.applications.failed}
+      retryLabel={words.applications.retry}
+      className={className}
+    />
+  );
+  return (
+    <SheetFrame context={context} lead={words.lead.applications} wide>
+      <div className="grid h-full grid-cols-5 grid-rows-2" style={{ gap: u(1.2) }}>
+        <div className="col-span-3 row-span-2 min-h-0 overflow-hidden">
+          {scene(
+            'cards-floating',
+            'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover',
+          )}
+        </div>
+        <div className="col-span-2 min-h-0 overflow-hidden">
+          {scene('a4-sheet', 'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover')}
+        </div>
+        <div className="col-span-2 min-h-0 overflow-hidden">
+          {scene('mug-white', 'h-full [&>div]:h-full [&>div]:!aspect-auto [&_canvas]:object-cover')}
+        </div>
+      </div>
+    </SheetFrame>
+  );
+}
+
+export const RENDERERS: Readonly<Record<PageType, Renderer>> = {
+  mockup: Applications,
   cover: Cover,
   manifesto: Manifesto,
   logo: LogoPage,

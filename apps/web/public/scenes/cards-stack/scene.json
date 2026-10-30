@@ -1,0 +1,123 @@
+{
+  "id": "cards-stack",
+  "kind": "psd",
+  "schemaVersion": 3,
+  "size": {
+    "width": 2400,
+    "height": 1663
+  },
+  "layers": [
+    {
+      "type": "paint",
+      "mask": "mask-0.png",
+      "paint": [
+        "neutralLight"
+      ],
+      "opacity": 1.0
+    },
+    {
+      "type": "paint",
+      "mask": "mask-1.png",
+      "paint": [
+        "primary"
+      ],
+      "opacity": 1.0
+    },
+    {
+      "type": "image",
+      "src": "layer-2.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-3",
+      "role": "card-back",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-3.png",
+      "vv": "vv-slot-3.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-4.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-5",
+      "role": "card-front",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-5.png",
+      "vv": "vv-slot-5.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-6.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-7",
+      "role": "card-front",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-7.png",
+      "vv": "vv-slot-7.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-8.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-9",
+      "role": "card-front",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-9.png",
+      "vv": "vv-slot-9.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-10.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-11",
+      "role": "card-back",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-11.png",
+      "vv": "vv-slot-11.png"
+    },
+    {
+      "type": "image",
+      "src": "layer-12.png",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-13",
+      "role": "card-back",
+      "aspect": 1.5446,
+      "blend": "multiply",
+      "opacity": 1.0,
+      "uv": "uv-slot-13.png",
+      "vv": "vv-slot-13.png"
+    }
+  ]
+}

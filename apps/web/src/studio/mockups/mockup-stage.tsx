@@ -1,7 +1,11 @@
 'use client';
 
+import { PsdSceneSchema, type PsdScene } from '@app/contracts';
 import {
+  BLEND_CODES,
   createCompositor,
+  renderPsdScene,
+  type PsdRenderLayer,
   directScene,
   parseScene,
   placeLogo,
@@ -15,6 +19,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
+import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
 
 // Computed mockups (ADR-008, 06_MOCKUP_ENGINE v2). Each scene is a photograph whose objects are painted in
 // the brand's colours — their light, folds and grain kept — and on which the real logo file is projected
@@ -22,28 +27,41 @@ import type { BrandView } from '../workspace/brand-view';
 // art direction (which colour, finish and logo version per object) is mockup-engine's directScene. The
 // logo is never redrawn by a model: its pixels are the uploaded file's or its vector variants'.
 export const SCENES = [
+  // Photoshop mockups by designers (Firmbee, CC0), replayed layer by layer (tools/psd-mockups/bake.py).
+  'cards-floating',
+  'a4-sheet',
+  'cards-stack',
+  'poster-living',
+  'a4-flyers',
+  'mug-white',
+  'poster-held',
+  'cards-desk',
+  'poster-hanging',
+  'mug-stripes',
+  'cup-pink',
+  // Generated photographs of the hospitality pack, where a centred mark is what the object wants.
   'place-cards',
-  'stationery-flatlay',
   'menu-table',
-  'napkin-plate',
-  'paper-bag',
   'storefront-sign',
   'gift-box',
-  'apron',
-  'phone-table',
-  'invitation',
+  'paper-bag',
 ] as const;
 export type SceneId = (typeof SCENES)[number];
 
-const cache = new Map<SceneId, Promise<LoadedScene | null>>();
-function loadScene(id: SceneId): Promise<LoadedScene | null> {
+type AnyScene =
+  | { readonly kind: 'photo'; readonly loaded: LoadedScene }
+  | { readonly kind: 'psd'; readonly scene: PsdScene };
+const cache = new Map<SceneId, Promise<AnyScene | null>>();
+function loadScene(id: SceneId): Promise<AnyScene | null> {
   const known = cache.get(id);
   if (known !== undefined) return known;
   const loading = fetch(`/scenes/${id}/scene.json`)
     .then((response) => (response.ok ? response.json() : null))
-    .then((json: unknown) => {
+    .then((json: unknown): AnyScene | null => {
+      const psd = PsdSceneSchema.safeParse(json);
+      if (psd.success) return { kind: 'psd', scene: psd.data };
       const parsed = parseScene(json);
-      return parsed.ok ? parsed.value : null;
+      return parsed.ok ? { kind: 'photo', loaded: parsed.value } : null;
     })
     .catch(() => null)
     .then((loaded) => {
@@ -112,15 +130,76 @@ async function logoTexture(src: string): Promise<{ canvas: HTMLCanvasElement; as
   return { canvas, aspect };
 }
 
-async function renderScene(
+const PAINT_ORDER = ['primary', 'accent', 'neutralLight', 'neutralDark'] as const;
+
+/** A Photoshop mockup: its layers replayed, the brand's artwork in every slot, its fields painted. */
+async function renderPsd(
   id: SceneId,
+  scene: PsdScene,
   view: BrandView,
+  words: ArtworkWords,
   node: HTMLCanvasElement,
   alive: () => boolean,
 ): Promise<readonly SurfaceDirection[] | null> {
-  const loaded = await loadScene(id);
-  if (loaded === null) throw new Error('scene');
-  const { scene, homographies } = loaded;
+  const file = (name: string) => loadImage(`/scenes/${id}/${name}`);
+  const logos = await loadLogos(view);
+  const layers: PsdRenderLayer[] = [];
+  for (const layer of scene.layers) {
+    if (layer.type === 'image') {
+      layers.push({
+        kind: 'image',
+        image: await file(layer.src),
+        mode: BLEND_CODES[layer.blend],
+        opacity: layer.opacity,
+      });
+    } else if (layer.type === 'paint') {
+      const role = PAINT_ORDER.find((entry) => layer.paint.includes(entry)) ?? 'neutralLight';
+      layers.push({
+        kind: 'paint',
+        mask: await file(layer.mask),
+        color: view.colors[role],
+        opacity: layer.opacity,
+      });
+    } else {
+      const [u, v, artwork] = await Promise.all([
+        file(layer.uv),
+        file(layer.vv),
+        drawArtwork(layer.role, layer.aspect, view, logos, words),
+      ]);
+      layers.push({
+        kind: 'slot',
+        u,
+        v,
+        artwork,
+        mode: BLEND_CODES[layer.blend],
+        opacity: layer.opacity,
+      });
+    }
+  }
+  if (!alive()) return null;
+  const run = queue.then(() => {
+    const gl = sharedCanvas(scene.size.width, scene.size.height);
+    if (!renderPsdScene(gl, layers)) throw new Error('webgl2');
+    node.width = scene.size.width;
+    node.height = scene.size.height;
+    node.getContext('2d')?.drawImage(gl, 0, 0);
+  });
+  queue = run.catch(() => undefined);
+  await run;
+  return [];
+}
+
+async function renderScene(
+  id: SceneId,
+  view: BrandView,
+  words: ArtworkWords,
+  node: HTMLCanvasElement,
+  alive: () => boolean,
+): Promise<readonly SurfaceDirection[] | null> {
+  const any = await loadScene(id);
+  if (any === null) throw new Error('scene');
+  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive);
+  const { scene, homographies } = any.loaded;
   const directions = directScene(scene, view.colors, brandInks(view));
   const base = await loadImage(`/scenes/${id}/base.webp`);
   const layers: CompositorLayer[] = [];
@@ -163,6 +242,13 @@ async function renderScene(
 }
 
 let shared: { canvas: HTMLCanvasElement; compositor: Compositor } | null = null;
+let psdCanvas: HTMLCanvasElement | null = null;
+function sharedCanvas(width: number, height: number): HTMLCanvasElement {
+  psdCanvas ??= document.createElement('canvas');
+  psdCanvas.width = width;
+  psdCanvas.height = height;
+  return psdCanvas;
+}
 let queue: Promise<void> = Promise.resolve();
 function sharedCompositor(width: number, height: number) {
   if (shared === null) {
@@ -202,6 +288,8 @@ export function MockupStage({
   readonly proof?: boolean;
 }) {
   const t = useTranslations('workspace.proof');
+  const a = useTranslations('workspace.artwork');
+  const [size, setSize] = useState({ width: 1920, height: 1088 });
   const [directions, setDirections] = useState<readonly SurfaceDirection[]>([]);
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(view);
@@ -217,9 +305,18 @@ export function MockupStage({
     let alive = true;
     const node = canvas.current;
     if (node === null) return;
-    renderScene(id, latest.current, node, () => alive)
+    const words: ArtworkWords = {
+      name: a('name'),
+      title: a('title'),
+      phone: a('phone'),
+      email: a('email'),
+      address: a('address'),
+      dear: a('dear'),
+    };
+    renderScene(id, latest.current, words, node, () => alive)
       .then((done) => {
         if (alive && done !== null) {
+          setSize({ width: node.width, height: node.height });
           setDirections(done);
           setStage('ready');
         }
@@ -230,14 +327,15 @@ export function MockupStage({
     return () => {
       alive = false;
     };
-  }, [id, attempt, key]);
+  }, [id, attempt, key, a]);
 
   return (
     <figure className={`m-0 ${className}`}>
       <div
         role="img"
         aria-label={label}
-        className="relative aspect-[1920/1088] w-full overflow-hidden bg-preview"
+        className="relative w-full overflow-hidden bg-preview"
+        style={{ aspectRatio: `${String(size.width)} / ${String(size.height)}` }}
       >
         <canvas
           ref={canvas}

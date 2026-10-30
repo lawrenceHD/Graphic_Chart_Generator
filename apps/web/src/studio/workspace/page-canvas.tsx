@@ -128,7 +128,6 @@ function SheetSlot({
   const portrait = page.overrides.format === 'portrait';
   const words = SHEET_WORDS[view.language];
   const style: CSSProperties & Record<'--d', string> = { '--d': `${String(index * 0.07)}s` };
-  if (type === 'mockup') return null;
   const Renderer = RENDERERS[type];
   return (
     <div className="sheet-in min-w-0" style={style}>
@@ -223,8 +222,7 @@ export function PageCanvas({
   }, []);
 
   const view = document !== null && project !== null ? brandView(document, project) : null;
-  const pages =
-    document === null ? [] : orderedPages(document).filter((page) => page.type !== 'mockup');
+  const pages = document === null ? [] : orderedPages(document);
   const empty = phase === 'empty' || (phase === 'sending' && document === null);
 
   return (

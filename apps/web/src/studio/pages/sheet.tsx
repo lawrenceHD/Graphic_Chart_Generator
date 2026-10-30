@@ -233,7 +233,9 @@ export function useTintedLogo(mono: string | null, hex: string): string | null {
 
 /** Logo version that reads on a background: white on dark, black on light colour, colour otherwise. */
 export function logoOn(view: BrandView, background: string, neutral = false): string {
-  if (isDark(background)) return view.logo['mono-white'] ?? view.logo.color;
+  // A brand field takes the mark reversed in white as soon as it holds at 2.2:1 (a mark, not body text).
+  if (isDark(background) || contrastRatio('#FFFFFF', background) >= 2.2)
+    return view.logo['mono-white'] ?? view.logo.color;
   if (!neutral) return view.logo['mono-black'] ?? view.logo.color;
   return view.logo.color;
 }

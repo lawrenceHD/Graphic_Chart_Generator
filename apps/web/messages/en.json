@@ -250,7 +250,18 @@
       "gift-box": "Gift box",
       "apron": "Apron",
       "phone-table": "App",
-      "invitation": "Invitation"
+      "invitation": "Invitation",
+      "cards-floating": "Business cards",
+      "a4-sheet": "Letterhead",
+      "cards-stack": "Cards, front and back",
+      "poster-living": "Poster",
+      "a4-flyers": "A4 stationery",
+      "mug-white": "Cup",
+      "poster-held": "Held poster",
+      "cards-desk": "Cards on the desk",
+      "poster-hanging": "Hanging poster",
+      "mug-stripes": "Mug",
+      "cup-pink": "Takeaway cup"
     },
     "inspector": {
       "label": "Inspector",
@@ -354,6 +365,14 @@
         "white": "white logo"
       },
       "stock": "original stock"
+    },
+    "artwork": {
+      "name": "First Last",
+      "title": "Position",
+      "phone": "+00 0 00 00 00 00",
+      "email": "hello@yourbrand.com",
+      "address": "Brand address",
+      "dear": "Dear Sir or Madam,"
     }
   },
   "landing": {

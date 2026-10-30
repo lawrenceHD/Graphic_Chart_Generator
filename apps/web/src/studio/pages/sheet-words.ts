@@ -20,7 +20,9 @@ export interface SheetWords {
     readonly tone: string;
     readonly tokens: string;
     readonly mockup: string;
+    readonly applications: string;
   };
+  readonly applications: { readonly alt: string; readonly failed: string; readonly retry: string };
   readonly manifesto: {
     readonly mission: string;
     readonly vision: string;
@@ -117,6 +119,8 @@ const FR: SheetWords = {
     tone: 'Comment la marque parle.',
     tokens: 'Les valeurs de la charte, prêtes pour le code et Figma.',
     mockup: 'La marque en situation.',
+    applications:
+      'La marque sur ses supports : papeterie, affichage, objets. Les visuels suivent la charte.',
   },
   manifesto: {
     mission: 'Mission',
@@ -126,6 +130,11 @@ const FR: SheetWords = {
     pendingNote:
       'Le copilote le rédige à partir de votre brief ; vous pouvez aussi l’écrire dans l’inspecteur.',
     fromBrief: 'Votre brief',
+  },
+  applications: {
+    alt: 'la marque sur ses supports',
+    failed: 'Cette mise en situation n’a pas pu être chargée.',
+    retry: 'Relancer',
   },
   logo: {
     primary: 'Version principale',
@@ -219,6 +228,8 @@ const EN: SheetWords = {
     tone: 'How the brand speaks.',
     tokens: 'The guideline values, ready for code and Figma.',
     mockup: 'The brand in context.',
+    applications:
+      'The brand on its collateral: stationery, posters, objects. Every piece follows the guideline.',
   },
   manifesto: {
     mission: 'Mission',
@@ -227,6 +238,11 @@ const EN: SheetWords = {
     pending: 'Manifesto to write',
     pendingNote: 'The copilot writes it from your brief; you can also write it in the inspector.',
     fromBrief: 'Your brief',
+  },
+  applications: {
+    alt: 'the brand on its collateral',
+    failed: 'This mockup could not be loaded.',
+    retry: 'Retry',
   },
   logo: {
     primary: 'Primary version',

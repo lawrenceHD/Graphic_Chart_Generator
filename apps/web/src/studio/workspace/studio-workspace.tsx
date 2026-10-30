@@ -56,11 +56,7 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
       document !== null && studio.project !== null ? brandView(document, studio.project) : null,
     [document, studio.project],
   );
-  const pages = useMemo(
-    () =>
-      document === null ? [] : orderedPages(document).filter((page) => page.type !== 'mockup'),
-    [document],
-  );
+  const pages = useMemo(() => (document === null ? [] : orderedPages(document)), [document]);
 
   // The first page is selected when the guideline arrives, so the inspector is never empty.
   useEffect(() => {
@@ -250,7 +246,6 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
       {view === null ? null : (
         <div className="print-only" aria-hidden="true">
           {pages.map((page, index) => {
-            if (page.type === 'mockup') return null;
             const Renderer = RENDERERS[page.type];
             const portrait = page.overrides.format === 'portrait';
             return (

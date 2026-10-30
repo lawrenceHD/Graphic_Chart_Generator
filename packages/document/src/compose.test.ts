@@ -74,6 +74,7 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
       'contrast',
       'typography',
       'tone-of-voice',
+      'mockup',
       'tokens',
     ]);
     expect(pages.map((page) => page.id)).toEqual(pages.map((page) => `page-${page.type}`));
