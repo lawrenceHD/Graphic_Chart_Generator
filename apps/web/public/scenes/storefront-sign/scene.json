@@ -10,49 +10,24 @@
     {
       "id": "panel",
       "quad": [
-        [
-          575,
-          215
-        ],
-        [
-          1241,
-          151
-        ],
-        [
-          1256,
-          848
-        ],
-        [
-          574,
-          834
-        ]
+        [575, 215],
+        [1241, 151],
+        [1256, 848],
+        [574, 834]
       ],
       "logoBox": {
         "aspect": 1.027,
         "fit": "contain",
         "paddingRatio": 0.2
       },
-      "baseTint": [
-        0.784,
-        0.796,
-        0.827
-      ],
+      "baseTint": [0.784, 0.796, 0.827],
       "light": {
-        "direction": [
-          0.3986,
-          -0.299,
-          0.867
-        ]
+        "direction": [0.3986, -0.299, 0.867]
       },
-      "finishes": [
-        "foil",
-        "print"
-      ],
+      "finishes": ["foil", "print"],
       "mask": "mask-panel.png",
       "material": "metal",
-      "paint": [
-        "neutralDark"
-      ]
+      "paint": ["neutralDark"]
     }
   ]
 }

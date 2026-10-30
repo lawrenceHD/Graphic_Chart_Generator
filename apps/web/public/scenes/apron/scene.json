@@ -10,48 +10,24 @@
     {
       "id": "apron",
       "quad": [
-        [
-          800,
-          330
-        ],
-        [
-          1080,
-          330
-        ],
-        [
-          1080,
-          540
-        ],
-        [
-          800,
-          540
-        ]
+        [800, 330],
+        [1080, 330],
+        [1080, 540],
+        [800, 540]
       ],
       "logoBox": {
         "aspect": 1.333,
         "fit": "contain",
         "paddingRatio": 0.06
       },
-      "baseTint": [
-        0.878,
-        0.878,
-        0.875
-      ],
+      "baseTint": [0.878, 0.878, 0.875],
       "light": {
-        "direction": [
-          -0.4993,
-          -0.3994,
-          0.7689
-        ]
+        "direction": [-0.4993, -0.3994, 0.7689]
       },
-      "finishes": [
-        "embroidery"
-      ],
+      "finishes": ["embroidery"],
       "mask": "mask-apron.png",
       "material": "fabric",
-      "paint": [
-        "neutralDark"
-      ]
+      "paint": ["neutralDark"]
     }
   ]
 }

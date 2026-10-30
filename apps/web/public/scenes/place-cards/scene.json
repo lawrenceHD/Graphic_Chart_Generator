@@ -10,152 +10,68 @@
     {
       "id": "left",
       "quad": [
-        [
-          299,
-          422
-        ],
-        [
-          677,
-          436
-        ],
-        [
-          651,
-          789
-        ],
-        [
-          229,
-          760
-        ]
+        [299, 422],
+        [677, 436],
+        [651, 789],
+        [229, 760]
       ],
       "logoBox": {
         "aspect": 1.146,
         "fit": "contain",
         "paddingRatio": 0.24
       },
-      "baseTint": [
-        0.839,
-        0.843,
-        0.855
-      ],
+      "baseTint": [0.839, 0.843, 0.855],
       "light": {
-        "direction": [
-          -0.3006,
-          -0.501,
-          0.8116
-        ]
+        "direction": [-0.3006, -0.501, 0.8116]
       },
-      "finishes": [
-        "foil",
-        "emboss",
-        "print"
-      ],
+      "finishes": ["foil", "emboss", "print"],
       "mask": "mask-left.png",
       "material": "card",
-      "paint": [
-        "primary",
-        "neutralLight",
-        "neutralDark"
-      ]
+      "paint": ["primary", "neutralLight", "neutralDark"]
     },
     {
       "id": "centre",
       "quad": [
-        [
-          733,
-          410
-        ],
-        [
-          1209,
-          452
-        ],
-        [
-          1188,
-          823
-        ],
-        [
-          715,
-          796
-        ]
+        [733, 410],
+        [1209, 452],
+        [1188, 823],
+        [715, 796]
       ],
       "logoBox": {
         "aspect": 1.255,
         "fit": "contain",
         "paddingRatio": 0.24
       },
-      "baseTint": [
-        0.839,
-        0.835,
-        0.843
-      ],
+      "baseTint": [0.839, 0.835, 0.843],
       "light": {
-        "direction": [
-          -0.3006,
-          -0.501,
-          0.8116
-        ]
+        "direction": [-0.3006, -0.501, 0.8116]
       },
-      "finishes": [
-        "foil",
-        "emboss",
-        "print"
-      ],
+      "finishes": ["foil", "emboss", "print"],
       "mask": "mask-centre.png",
       "material": "card",
-      "paint": [
-        "primary",
-        "neutralLight",
-        "neutralDark"
-      ]
+      "paint": ["primary", "neutralLight", "neutralDark"]
     },
     {
       "id": "right",
       "quad": [
-        [
-          1255,
-          443
-        ],
-        [
-          1625,
-          423
-        ],
-        [
-          1683,
-          756
-        ],
-        [
-          1203,
-          769
-        ]
+        [1255, 443],
+        [1625, 423],
+        [1683, 756],
+        [1203, 769]
       ],
       "logoBox": {
         "aspect": 1.273,
         "fit": "contain",
         "paddingRatio": 0.24
       },
-      "baseTint": [
-        0.929,
-        0.937,
-        0.945
-      ],
+      "baseTint": [0.929, 0.937, 0.945],
       "light": {
-        "direction": [
-          -0.3006,
-          -0.501,
-          0.8116
-        ]
+        "direction": [-0.3006, -0.501, 0.8116]
       },
-      "finishes": [
-        "foil",
-        "emboss",
-        "print"
-      ],
+      "finishes": ["foil", "emboss", "print"],
       "mask": "mask-right.png",
       "material": "card",
-      "paint": [
-        "primary",
-        "neutralLight",
-        "neutralDark"
-      ]
+      "paint": ["primary", "neutralLight", "neutralDark"]
     }
   ]
 }
