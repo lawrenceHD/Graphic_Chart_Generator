@@ -187,8 +187,20 @@ def main():
             layers.append({"type": "image", "src": name, "blend": "normal", "opacity": 1})
             run = None
 
+    # The base is Photoshop's own composite of everything under the first slot, adjustment layers
+    # (curves, hue, channel mixer) included; the replay starts above it.
+    ordered = [layer for layer, _ in flat_layers(psd)]
+    first = next((i for i, l in enumerate(ordered) if l.kind == "smartobject" and l.name in slots), len(ordered))
+    below = set(id(l) for l in ordered[:first] if l.name not in hidden and l.name not in paints)
+    if not paints and below:
+        base = psd.composite(layer_filter=lambda l: l.is_group() or id(l) in below)
+        if base is not None:
+            base.convert("RGB").resize(size, Image.LANCZOS).save(out / "base.webp", "WEBP", quality=90, method=6)
+            layers.append({"type": "image", "src": "base.webp", "blend": "normal", "opacity": 1})
+            print("  base: Photoshop composite under the first slot", flush=True)
+    skip = below if layers else set()
     for layer, alpha in flat_layers(psd):
-        if layer.name in hidden:
+        if layer.name in hidden or id(layer) in skip:
             continue
         blend = BLENDS.get(getattr(layer.blend_mode, "name", "NORMAL"), "normal")
         if layer.kind == "smartobject" and layer.name in slots:
@@ -202,7 +214,15 @@ def main():
             stored = layer_rgba(layer, psd.size, scale, size)
             iou = None
             coverage = valid.astype(np.float64)
-            if stored is not None:
+            mark = slots[layer.name].endswith("logo")
+            if stored is not None and mark:
+                # A logo slot holds a sample mark, not a filled rectangle: its pixels must fall inside the
+                # computed surface, and the coverage is the surface itself (the artwork is transparent).
+                a = stored[..., 3] > 0.5
+                iou = float((a & valid).sum() / max(1, a.sum()))
+                if iou < MIN_IOU:
+                    raise SystemExit(f"slot {layer.name}: sample mark {iou:.3f} inside, below {MIN_IOU}")
+            elif stored is not None:
                 a = stored[..., 3] > 0.5
                 iou = float((a & valid).sum() / max(1, (a | valid).sum()))
                 if iou < MIN_IOU:

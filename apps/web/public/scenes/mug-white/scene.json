@@ -1,0 +1,27 @@
+{
+  "id": "mug-white",
+  "kind": "psd",
+  "schemaVersion": 3,
+  "size": {
+    "width": 2400,
+    "height": 1594
+  },
+  "layers": [
+    {
+      "type": "image",
+      "src": "base.webp",
+      "blend": "normal",
+      "opacity": 1
+    },
+    {
+      "type": "slot",
+      "id": "slot-1",
+      "role": "mug-logo",
+      "aspect": 1.0,
+      "blend": "normal",
+      "opacity": 1.0,
+      "uv": "uv-slot-1.png",
+      "vv": "vv-slot-1.png"
+    }
+  ]
+}
