@@ -335,16 +335,13 @@ function ClearSpace({ context }: { readonly context: SheetContext }) {
         </div>
       }
     >
-      <div
-        className="relative grid h-full place-items-center border"
-        style={{ background: view.colors.neutralLight, borderRadius: 0, ...hairline(ink) }}
-      >
+      <div className="relative grid h-full place-items-center" style={{ containerType: 'size' }}>
         <div
           className="relative"
           style={{
+            // The drawing keeps its proportions inside both limits of the page (no overflow).
             aspectRatio: `${String(totalWidth)} / ${String(totalHeight)}`,
-            height: '74%',
-            maxWidth: '88%',
+            width: `min(88cqw, ${String((74 * totalWidth) / totalHeight)}cqh)`,
           }}
         >
           <div
