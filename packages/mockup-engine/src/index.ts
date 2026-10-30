@@ -4,3 +4,5 @@ export * from './scene.js';
 export * from './direct.js';
 export * from './render/uniforms.js';
 export * from './render/compositor.js';
+export * from './render/psd.js';
+export * from './render/psd-compositor.js';
