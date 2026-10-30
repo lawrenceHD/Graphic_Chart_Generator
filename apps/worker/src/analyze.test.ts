@@ -17,6 +17,7 @@ import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { memoryStorage } from './memory-storage.js';
+import { createVtracer } from './vectorizer.js';
 
 const adminUrl = integrationDatabaseUrl();
 const id = (): string => uuidV7(Date.now(), randomBytes(10));
@@ -41,7 +42,13 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
   const rasterizer = createNodeRasterizer();
   const run = (analysisId: string) =>
     analyzeProject(
-      { orm: test.database.orm, storage: memoryStorage(objects), rasterizer, normalizeRaster },
+      {
+        orm: test.database.orm,
+        storage: memoryStorage(objects),
+        rasterizer,
+        normalizeRaster,
+        vectorizer: createVtracer(),
+      },
       analysisId,
     );
 
@@ -186,20 +193,25 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     expect(await documentRow()).toEqual(before);
   });
 
-  it('analyses a raster logo; its variants wait for vectorisation', async () => {
+  it('traces a raster logo, then draws its variants from the traced SVG', async () => {
     const image = await rasterizer.rasterize(new TextDecoder().decode(LOGO), 200);
     if (!image.ok) throw new Error(image.error.reason);
-    const cursor = await lastEventId();
     const analysisId = await start(image.value.png, 'image/png');
     await run(analysisId);
 
     expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
-    expect(await variants((await runRow(analysisId))?.logoAssetId ?? '')).toEqual([]);
-    expect((await eventsAfter(cursor)).map((stored) => stored.event.data)).toContainEqual({
-      step: 2,
-      state: 'done',
-      code: 'VARIANTS_NEED_VECTOR',
-    });
+    const rows = await variants((await runRow(analysisId))?.logoAssetId ?? '');
+    expect(rows.map((row) => String(Reflect.get(Object(row.meta), 'variant'))).sort()).toEqual([
+      'black',
+      'vector',
+      'white',
+    ]);
+    const vector = rows.find((row) => Reflect.get(Object(row.meta), 'variant') === 'vector');
+    expect(Reflect.get(Object(vector?.meta), 'fidelity')).toBeGreaterThan(0.97);
+    const svg = new TextDecoder().decode(objects.get(vector?.storageKey ?? '') ?? new Uint8Array());
+    // Both inks of the logo, traced as paths.
+    expect(svg).toContain('#1F4BFF');
+    expect(svg).toContain('#FF7A00');
   });
 
   it('fails the run with a stable code when the logo has no visible colour', async () => {

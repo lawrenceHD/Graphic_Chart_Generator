@@ -4,6 +4,7 @@ import { startJobQueue } from '@app/db/queue';
 import { createR2Storage } from '@app/storage';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
+import { createVtracer } from './vectorizer.js';
 import { createLogger, errorSummary } from './logger.js';
 import { purge } from './purge.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
@@ -46,6 +47,7 @@ const scanDeps = {
   ),
   rasterizer: createNodeRasterizer(),
   normalizeRaster,
+  vectorizer: createVtracer(),
 };
 
 await queue.work('asset.scan', async ({ assetId }, attempt) => {

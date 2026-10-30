@@ -25,6 +25,7 @@
     "@app/logo-kit": "workspace:*",
     "@app/storage": "workspace:*",
     "@app/svg-engine": "workspace:*",
+    "@neplex/vectorizer": "0.1.0",
     "pino": "10.4.0",
     "zod": "4.6.7"
   }

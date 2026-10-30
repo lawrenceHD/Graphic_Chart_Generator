@@ -38,7 +38,8 @@ export const ToneAxisSchema = z
   .strict();
 export type ToneAxis = z.infer<typeof ToneAxisSchema>;
 
-export const VARIANT_KINDS = ['color', 'mono-black', 'mono-white', 'favicon'] as const;
+// vector: the traced SVG of a raster upload (T-011), scored against it; never shown as the original.
+export const VARIANT_KINDS = ['color', 'vector', 'mono-black', 'mono-white', 'favicon'] as const;
 export const VariantKindSchema = z.enum(VARIANT_KINDS);
 export type VariantKind = z.infer<typeof VariantKindSchema>;
 

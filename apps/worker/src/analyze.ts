@@ -6,6 +6,7 @@ import type {
   RasterError,
   RasterImage,
   Rasterizer,
+  Vectorizer,
 } from '@app/contracts';
 import {
   analysisRuns,
@@ -26,6 +27,7 @@ import {
   measureLogo,
   monochromeVariant,
   STRUCTURE_THRESHOLD,
+  vectorizeRaster,
   type MonoTarget,
 } from '@app/logo-kit';
 import { z } from 'zod';
@@ -45,6 +47,7 @@ export interface AnalyzeDeps {
   readonly storage: ObjectStorage;
   readonly rasterizer: Rasterizer;
   readonly normalizeRaster: (bytes: Uint8Array) => Promise<Result<RasterImage, RasterError>>;
+  readonly vectorizer: Vectorizer;
 }
 
 const MAX_LOGO_BYTES = 10 * 1024 * 1024; // 01_PRODUCT_MVP.md §3
@@ -118,16 +121,59 @@ async function palette(
   });
 }
 
+// A raster upload is traced first (T-011, logo-kit vectorizeRaster): its monochrome variants, rules and
+// exports are drawn from the traced SVG, scored against the upload. Below this score the drawing is shown
+// for review: it may have lost a detail too thin for the upload's pixels.
+const VECTOR_WIDTH = 2048;
+export const VECTOR_FIDELITY = 0.97;
+
+async function tracedLogo(
+  deps: AnalyzeDeps,
+  logo: Asset,
+  bytes: Uint8Array,
+): Promise<Result<{ svg: string; fidelity: number } | null, string>> {
+  const [fresh] = await deps.orm.select().from(assets).where(eq(assets.id, logo.id));
+  const stored = StoredClusters.safeParse(fresh?.meta);
+  if (!stored.success) return err('PALETTE_MISSING');
+  const raster = await deps.normalizeRaster(bytes);
+  if (!raster.ok) return err(raster.error.code);
+  const { clusters, background } = stored.data.palette;
+  const traced = await vectorizeRaster(
+    raster.value,
+    { colors: clusters.map(({ hex }) => hex), background, width: VECTOR_WIDTH },
+    deps.vectorizer,
+    deps.rasterizer,
+  );
+  // A logo the tracer cannot read keeps its upload alone: the analysis goes on, the step says why.
+  if (!traced.ok) return ok(null);
+  return ok({ svg: traced.value.svg, fidelity: traced.value.fidelity });
+}
+
 async function variants(
   deps: AnalyzeDeps,
   logo: Asset,
   bytes: Uint8Array,
 ): Promise<Result<StepDone, string>> {
-  // Raster logos get their variants once vectorised (T-011).
-  if (logo.mime !== SVG)
-    return ok({ save: () => Promise.resolve(undefined), code: 'VARIANTS_NEED_VECTOR' });
-  const svg = new TextDecoder().decode(bytes);
   const made: Variant[] = [];
+  let svg: string;
+  if (logo.mime === SVG) svg = new TextDecoder().decode(bytes);
+  else {
+    const traced = await tracedLogo(deps, logo, bytes);
+    if (!traced.ok) return traced;
+    if (traced.value === null)
+      return ok({ save: () => Promise.resolve(undefined), code: 'VARIANTS_NEED_VECTOR' });
+    svg = traced.value.svg;
+    made.push({
+      name: 'vector',
+      svg: new TextEncoder().encode(svg),
+      meta: {
+        logoAssetId: logo.id,
+        variant: 'vector',
+        fidelity: traced.value.fidelity,
+        warnings: [],
+      },
+    });
+  }
   for (const [name, target] of VARIANTS) {
     const variant = await monochromeVariant(svg, target, deps.rasterizer);
     if (!variant.ok) return err(variant.error.code);
@@ -200,15 +246,24 @@ const StoredPalette = z.object({
     }),
   }),
 });
-const StoredVariant = z.object({
-  variant: z.enum(['black', 'white']),
-  structure: z.number().nullable(),
-  warnings: z.array(z.string()),
+const StoredVariant = z.union([
+  z.object({
+    variant: z.enum(['black', 'white']),
+    structure: z.number().nullable(),
+    warnings: z.array(z.string()),
+  }),
+  z.object({ variant: z.literal('vector'), fidelity: z.number(), warnings: z.array(z.string()) }),
+]);
+const StoredClusters = z.object({
+  palette: z.object({
+    clusters: z.array(z.object({ hex: z.string() })),
+    background: z.string().nullable(),
+  }),
 });
 
 type VariantRefs = {
   assetId: string;
-  kind: 'mono-black' | 'mono-white';
+  kind: 'vector' | 'mono-black' | 'mono-white';
   needsReview: boolean;
   fidelity?: number;
 }[];
@@ -230,7 +285,17 @@ async function variantRefs(deps: AnalyzeDeps, logo: Asset): Promise<Result<Varia
   for (const row of rows) {
     const meta = StoredVariant.safeParse(row.meta);
     if (!meta.success) return err('VARIANT_META_INVALID');
-    const { variant, structure, warnings } = meta.data;
+    const stored = meta.data;
+    if (stored.variant === 'vector') {
+      refs.push({
+        assetId: row.id,
+        kind: 'vector',
+        needsReview: stored.fidelity < VECTOR_FIDELITY,
+        fidelity: Math.min(1, Math.max(0, stored.fidelity)),
+      });
+      continue;
+    }
+    const { variant, structure, warnings } = stored;
     refs.push({
       assetId: row.id,
       kind: variant === 'black' ? 'mono-black' : 'mono-white',
@@ -248,8 +313,17 @@ const Language = z.enum(['fr', 'en']);
 // R6, R7 of 16_GUIDELINE_RULES.md: clear space and minimum size measured on an SVG logo. A raster logo, or
 // one the measure cannot read, keeps the document defaults; the step says so with its code.
 async function logoRules(deps: AnalyzeDeps, logo: Asset, bytes: Uint8Array) {
-  if (logo.mime !== SVG) return undefined;
-  const measured = await measureLogo(new TextDecoder().decode(bytes), deps.rasterizer);
+  // A raster logo is measured on its traced drawing.
+  let svg: Uint8Array | null = logo.mime === SVG ? bytes : null;
+  if (svg === null) {
+    const traced = await deps.storage.get(
+      `${logo.storageKey.replace(/\/sanitized$/, '')}/vector`,
+      MAX_LOGO_BYTES,
+    );
+    svg = traced.ok ? traced.value : null;
+  }
+  if (svg === null) return undefined;
+  const measured = await measureLogo(new TextDecoder().decode(svg), deps.rasterizer);
   if (!measured.ok) return undefined;
   const { bbox, clearSpace, minimum } = measured.value;
   return {
