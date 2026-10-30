@@ -21,6 +21,7 @@ import {
   sql,
   type createDatabase,
 } from '@app/db';
+import { analyzeBrand, BrandAnalysisSchema, type GeminiTransport } from '@app/ai';
 import { composeInitialDocument, CURRENT_SCHEMA_VERSION } from '@app/document';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
 import {
@@ -48,6 +49,8 @@ export interface AnalyzeDeps {
   readonly rasterizer: Rasterizer;
   readonly normalizeRaster: (bytes: Uint8Array) => Promise<Result<RasterImage, RasterError>>;
   readonly vectorizer: Vectorizer;
+  /** Gemini (07_AI_COPILOT.md §2); absent without AI_API_KEY. */
+  readonly ai?: { readonly transport: GeminiTransport; readonly model: string };
 }
 
 const MAX_LOGO_BYTES = 10 * 1024 * 1024; // 01_PRODUCT_MVP.md §3
@@ -217,21 +220,66 @@ async function variants(
   });
 }
 
-// Step 3 until the AI exists: nothing is guessed. The scene category takes its fallback (07_AI_COPILOT.md
-// §3.3 point 4); texts stay empty in the document for the user to write.
-function brandAnalysis(_deps: AnalyzeDeps, logo: Asset): Promise<Result<StepDone, string>> {
-  return Promise.resolve(
-    ok({
-      code: 'AI_NOT_CONFIGURED',
-      save: async (tx: Tx) => {
-        await tx
-          .update(projects)
-          .set({ sceneCategory: sql`coalesce(${projects.sceneCategory}, 'generic')` })
-          .where(eq(projects.id, logo.projectId));
-        return undefined;
-      },
-    }),
+// Step 3 (07_AI_COPILOT.md §3): Gemini reads the logo, its measured palette and the brief and writes the
+// brand's texts and catalogue choices, stored in the logo's meta for step 4. Without a key, or when the
+// call fails, nothing is guessed: the step says why and the document keeps its explicit empty defaults.
+const LOGO_FOR_AI = 1024;
+
+async function brandAnalysis(
+  deps: AnalyzeDeps,
+  logo: Asset,
+  bytes: Uint8Array,
+): Promise<Result<StepDone, string>> {
+  const fallback = (code: string): StepDone => ({
+    code,
+    save: async (tx: Tx) => {
+      await tx
+        .update(projects)
+        .set({ sceneCategory: sql`coalesce(${projects.sceneCategory}, 'generic')` })
+        .where(eq(projects.id, logo.projectId));
+      return undefined;
+    },
+  });
+  if (deps.ai === undefined) return ok(fallback('AI_NOT_CONFIGURED'));
+  const [project] = await deps.orm.select().from(projects).where(eq(projects.id, logo.projectId));
+  if (!project) return err('PROJECT_MISSING');
+  const [fresh] = await deps.orm.select().from(assets).where(eq(assets.id, logo.id));
+  const stored = StoredClusters.safeParse(fresh?.meta);
+  if (!stored.success) return err('PALETTE_MISSING');
+  const image =
+    logo.mime === SVG
+      ? await deps.rasterizer.rasterize(new TextDecoder().decode(bytes), LOGO_FOR_AI)
+      : await deps.normalizeRaster(bytes);
+  if (!image.ok) return err(image.error.code);
+  const language = Language.safeParse(project.language);
+  const analysis = await analyzeBrand(
+    deps.ai.transport,
+    {
+      brandName: project.title,
+      language: language.success ? language.data : 'fr',
+      palette: stored.data.palette.clusters.map(({ hex }) => hex),
+      brief: project.briefText ?? '',
+      logo: { data: image.value.png, mimeType: 'image/png' },
+    },
+    deps.ai.model,
   );
+  if (!analysis.ok) return ok(fallback(analysis.error.code));
+  const value = analysis.value;
+  return ok({
+    save: async (tx: Tx) => {
+      await tx
+        .update(projects)
+        .set({ sceneCategory: value.sceneCategory, industryLabel: value.industryLabel })
+        .where(eq(projects.id, logo.projectId));
+      await tx
+        .update(assets)
+        .set({
+          meta: sql`${assets.meta} || ${JSON.stringify({ brandAnalysis: value })}::jsonb`,
+        })
+        .where(eq(assets.id, logo.id));
+      return undefined;
+    },
+  });
 }
 
 const Color = z.object({ hex: z.string(), source: z.enum(['extracted', 'derived']) });
@@ -307,6 +355,7 @@ async function variantRefs(deps: AnalyzeDeps, logo: Asset): Promise<Result<Varia
 }
 
 const Language = z.enum(['fr', 'en']);
+const StoredBrand = z.object({ brandAnalysis: BrandAnalysisSchema });
 
 // Step 4: the document of the project, composed once. A project that already has one (a new analysis of
 // another logo) keeps it: it may hold the user's edits.
@@ -354,8 +403,20 @@ async function composeDocument(
   const refs = await variantRefs(deps, logo);
   if (!refs.ok) return refs;
   const rules = await logoRules(deps, logo, bytes);
+  const written = StoredBrand.safeParse(fresh?.meta);
+  const brand = written.success
+    ? {
+        mission: written.data.brandAnalysis.mission,
+        vision: written.data.brandAnalysis.vision,
+        values: written.data.brandAnalysis.values,
+        archetype: written.data.brandAnalysis.archetype,
+        tone: written.data.brandAnalysis.tone,
+        pairingId: written.data.brandAnalysis.typographyPairingId,
+      }
+    : undefined;
   const document = composeInitialDocument({
     ...(rules === undefined ? {} : { logoRules: rules }),
+    ...(brand === undefined ? {} : { brand }),
     brandName: project.title,
     language: language.data,
     logoSanitizedId: logo.id,

@@ -1,3 +1,4 @@
+import { createGeminiTransport } from '@app/ai';
 import { loadEnv } from '@app/contracts';
 import { createDatabase } from '@app/db';
 import { startJobQueue } from '@app/db/queue';
@@ -25,7 +26,12 @@ const {
   R2_SECRET_ACCESS_KEY,
   R2_BUCKET,
   R2_ENDPOINT,
+  AI_API_KEY,
+  AI_MODEL,
 } = env.value;
+// The placeholders of .env.example mean "no AI": step 3 keeps its explicit defaults (07 §3.3).
+const aiConfigured =
+  !/^(replace-me|development)/u.test(AI_API_KEY) && !/^(replace-me|development)/u.test(AI_MODEL);
 
 const database = createDatabase(env.value, (error) => {
   logger.error({ event: 'database_pool_error', error: errorSummary(error) });
@@ -48,7 +54,24 @@ const scanDeps = {
   rasterizer: createNodeRasterizer(),
   normalizeRaster,
   vectorizer: createVtracer(),
+  ...(aiConfigured
+    ? {
+        ai: {
+          model: AI_MODEL,
+          transport: createGeminiTransport({
+            apiKey: AI_API_KEY,
+            fetch: (url, init) => fetch(url, init),
+            sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+          }),
+        },
+      }
+    : {}),
 };
+logger.info({
+  event: 'ai_configuration',
+  configured: aiConfigured,
+  model: aiConfigured ? AI_MODEL : null,
+});
 
 await queue.work('asset.scan', async ({ assetId }, attempt) => {
   try {

@@ -329,6 +329,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@app/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@app/color-engine':
         specifier: workspace:*
         version: link:../../packages/color-engine

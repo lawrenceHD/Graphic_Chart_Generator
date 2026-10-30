@@ -15,7 +15,7 @@ import { uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
+import { analyzeProject, failTimedOutAnalysis, type AnalyzeDeps } from './analyze.js';
 import { memoryStorage } from './memory-storage.js';
 import { createVtracer } from './vectorizer.js';
 
@@ -40,7 +40,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
   let guestId = '';
   const objects = new Map<string, Uint8Array>();
   const rasterizer = createNodeRasterizer();
-  const run = (analysisId: string) =>
+  const run = (analysisId: string, ai?: AnalyzeDeps['ai']) =>
     analyzeProject(
       {
         orm: test.database.orm,
@@ -48,6 +48,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
         rasterizer,
         normalizeRaster,
         vectorizer: createVtracer(),
+        ...(ai === undefined ? {} : { ai }),
       },
       analysisId,
     );
@@ -224,6 +225,59 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
       step: 1,
       state: 'failed',
       code: 'EMPTY_IMAGE',
+    });
+  });
+
+  it('step 3 writes the brand analysis of Gemini into the document (07_AI_COPILOT.md §3)', async () => {
+    projectId = id();
+    await test.database.orm.insert(projects).values({
+      id: projectId,
+      guestSessionId: guestId,
+      title: 'La Mèza',
+      briefText: 'Des dîners entre inconnus, autour d’une même table.',
+    });
+    const analysis = {
+      industryLabel: 'Dîners entre inconnus',
+      sceneCategory: 'hospitality',
+      archetype: 'caregiver',
+      mission: 'Réunir des inconnus autour d’une même table.',
+      vision: 'Une table de rencontre dans chaque ville.',
+      values: ['Hospitalité', 'Élégance', 'Bienveillance', 'Partage'].map((label) => ({
+        label,
+        description: `${label} à chaque dîner.`,
+      })),
+      tone: {
+        axes: ['formal-casual', 'serious-playful', 'classic-avantgarde', 'sober-expressive'].map(
+          (axis) => ({ id: axis, value: 40 }),
+        ),
+        examples: ['Bienvenue à table.', 'Six chaises.', 'Une place pour vous.'],
+      },
+      typographyPairingId: 'warm-serif',
+      rationale: 'Le brief parle d’hospitalité ; la palette est chaleureuse.',
+    };
+    const prompts: string[] = [];
+    const transport: NonNullable<AnalyzeDeps['ai']>['transport'] = (_model, _method, body) => {
+      prompts.push(JSON.stringify(body));
+      return Promise.resolve({
+        ok: true,
+        value: { candidates: [{ content: { parts: [{ text: JSON.stringify(analysis) }] } }] },
+      });
+    };
+    const analysisId = await start(LOGO, 'image/svg+xml');
+    await run(analysisId, { transport, model: 'gemini-test' });
+
+    expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+    expect(prompts[0]).toContain('Des dîners entre inconnus');
+    const document = BrandDocumentSchema.parse((await documentRow())?.body);
+    expect(document.brand).toMatchObject({ mission: analysis.mission, archetype: 'caregiver' });
+    expect(document.tokens.typography.pairingId).toBe('warm-serif');
+    const [project] = await test.database.orm
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    expect(project).toMatchObject({
+      sceneCategory: 'hospitality',
+      industryLabel: 'Dîners entre inconnus',
     });
   });
 
