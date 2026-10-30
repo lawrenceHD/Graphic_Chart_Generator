@@ -10,7 +10,7 @@ another blend mode stays a layer of its own; a smart object named in `slots` bec
 giving, for every output pixel, the point of the artwork it shows — the smart object's perspective
 (nonAffineTransform) and its custom warp mesh (bicubic Bezier patches) included. The artwork itself is
 the brand's, drawn by the studio; it is never part of the scene. Each slot is checked against the pixels
-Photoshop stored for that layer (coverage IoU) and the bake fails below 0.97.
+Photoshop stored for that layer (coverage IoU) and the bake fails below 0.95.
 
 Output: scene.json (kind "psd"), layer images (webp/png), uv-<slot>.png and vv-<slot>.png (u and v in
 16 bits: high byte in R, low byte in G; coverage in B), preview.jpg, LICENSE.md.
@@ -26,7 +26,9 @@ from psd_tools import PSDImage
 from psd_tools.constants import Tag
 from scipy.interpolate import LinearNDInterpolator
 
-MIN_IOU = 0.97
+# A smart object may hold transparent margins around the paper (A4 sheets): the stored coverage cuts
+# the artwork to the paper, so a few percent of the rectangle legitimately falls outside it.
+MIN_IOU = 0.95
 BLENDS = {"NORMAL": "normal", "PASS_THROUGH": "normal", "MULTIPLY": "multiply", "SCREEN": "screen",
           "OVERLAY": "overlay", "SOFT_LIGHT": "soft-light", "DARKEN": "darken", "LIGHTEN": "lighten",
           "LINEAR_BURN": "multiply", "COLOR_BURN": "multiply", "LINEAR_DODGE": "screen"}
