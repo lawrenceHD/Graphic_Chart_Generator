@@ -1,10 +1,19 @@
 'use client';
 
-import { Braces, FileCode2, FileText, Image as ImageIcon, Palette, X } from 'lucide-react';
+import {
+  Braces,
+  FileArchive,
+  FileCode2,
+  FileText,
+  Image as ImageIcon,
+  Palette,
+  X,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BrandView } from './brand-view';
 import { cssTokens, download, dtcgTokens, fileStem, tailwindTheme } from './export-files';
+import { buildLogoKit } from './logo-kit-export';
 
 // Export (09 §7 ExportDialog): a native <dialog> (focus trap, Escape, inert page) with the files a designer
 // or a developer takes away. The PDF is the browser's print of the same sheets the canvas shows.
@@ -56,12 +65,25 @@ export function ExportDialog({
     if (!open && node.open) node.close();
   }, [open]);
 
+  const [kit, setKit] = useState<'idle' | 'busy' | 'failed'>('idle');
   const stem = view === null ? 'brand' : fileStem(view.name);
+  const downloadKit = (brand: BrandView) => {
+    setKit('busy');
+    buildLogoKit(brand)
+      .then((zip) => {
+        download(`${stem}-logo.zip`, zip, 'application/zip');
+        setKit('idle');
+      })
+      .catch(() => {
+        setKit('failed');
+      });
+  };
   const logos =
     view === null
       ? []
       : ([
           ['color', view.logo.color],
+          ['vector', view.logo.vector],
           ['mono-black', view.logo['mono-black']],
           ['mono-white', view.logo['mono-white']],
           ['favicon', view.logo.favicon],
@@ -109,6 +131,23 @@ export function ExportDialog({
               }}
             >
               {t('pdfAction')}
+            </button>
+          </Row>
+          <Row
+            icon={<FileArchive aria-hidden="true" className="size-5" />}
+            title={t('kit')}
+            detail={kit === 'failed' ? t('kitFailed') : t('kitDetail')}
+          >
+            <button
+              type="button"
+              disabled={kit === 'busy'}
+              aria-busy={kit === 'busy'}
+              className={`${action} disabled:opacity-60`}
+              onClick={() => {
+                downloadKit(view);
+              }}
+            >
+              {kit === 'busy' ? t('kitBusy') : t('kitAction')}
             </button>
           </Row>
           <Row

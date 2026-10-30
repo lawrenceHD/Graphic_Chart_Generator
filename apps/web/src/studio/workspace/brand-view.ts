@@ -65,6 +65,7 @@ export function brandView(document: BrandDocument, project: ProjectSummary): Bra
     pairing: PAIRINGS[document.tokens.typography.pairingId],
     logo: {
       color: variant('color') ?? assetUrl(document.assets.logoSanitizedId),
+      vector: variant('vector'),
       'mono-black': variant('mono-black'),
       'mono-white': variant('mono-white'),
       favicon: variant('favicon'),

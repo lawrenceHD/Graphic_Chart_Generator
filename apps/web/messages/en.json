@@ -310,13 +310,19 @@
         "color": "Colour",
         "mono-black": "Black",
         "mono-white": "White",
-        "favicon": "Favicon"
+        "favicon": "Favicon",
+        "vector": "Traced SVG"
       },
       "css": "CSS variables",
       "cssDetail": "Colours, scale, fonts and logo rules.",
       "figma": "Design tokens",
       "figmaDetail": "W3C format (DTCG), importable in Figma.",
-      "note": "In the print window, choose “Save as PDF”."
+      "note": "In the print window, choose “Save as PDF”.",
+      "kit": "Complete logo kit",
+      "kitDetail": "Colour, black, white and primary colour, as SVG and PNG from 512 to 2,048 px, with the usage rules.",
+      "kitAction": "Download the .zip",
+      "kitBusy": "Preparing…",
+      "kitFailed": "The kit could not be prepared: a logo file did not respond. Try again."
     },
     "oneColumn": "One page per row",
     "twoColumns": "Two pages per row",

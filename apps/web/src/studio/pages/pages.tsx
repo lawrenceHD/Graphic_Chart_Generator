@@ -22,6 +22,7 @@ import {
   logoOn,
   u,
   useImageAspect,
+  useTintedLogo,
   type SheetContext,
 } from './sheet';
 
@@ -266,49 +267,77 @@ function LogoPage({ context }: { readonly context: SheetContext }) {
   const ink = inkOn(context.background ?? PAPER);
   const review = (kind: 'mono-black' | 'mono-white'): string =>
     view.needsReview.includes(kind) ? ` · ${words.logo.review}` : '';
+  const black = view.logo['mono-black'];
+  const white = view.logo['mono-white'];
+  // R5: the official versions — colour, black, white, one brand colour, reversed out of the primary.
+  const tint = useTintedLogo(black, view.colors.primary);
+  const versions: readonly {
+    readonly key: string;
+    readonly background: string;
+    readonly src: string | null;
+    readonly label: string;
+  }[] = [
+    {
+      key: 'black',
+      background: '#FFFFFF',
+      src: black,
+      label: `${words.logo.black}${review('mono-black')}`,
+    },
+    {
+      key: 'white',
+      background: view.colors.neutralDark,
+      src: white,
+      label: `${words.logo.white}${review('mono-white')}`,
+    },
+    { key: 'tint', background: view.colors.neutralLight, src: tint, label: words.logo.tint },
+    { key: 'reversed', background: view.colors.primary, src: white, label: words.logo.reversed },
+  ];
+  const monochrome = black !== null && white !== null;
   return (
     <SheetFrame context={context} lead={words.lead.logo}>
-      <div className="grid h-full grid-cols-6 grid-rows-[1.5fr_1fr]" style={{ gap: u(1.4) }}>
+      <div
+        className={`grid h-full ${monochrome ? 'grid-cols-4' : 'grid-cols-6'} grid-rows-[1.5fr_1fr]`}
+        style={{ gap: u(1.4) }}
+      >
         <Tile
           background={view.colors.neutralLight}
           ink={ink}
           label={words.logo.primary}
-          className="col-span-6"
+          className={monochrome ? 'col-span-4' : 'col-span-6'}
         >
           <LogoImage src={view.logo.color} alt={view.name} className="h-[66%] w-[60%]" />
         </Tile>
-        <Tile
-          background={view.colors.primary}
-          ink={ink}
-          label={words.logo.onColor}
-          className="col-span-2"
-        >
-          <LogoImage src={logoOn(view, view.colors.primary)} className="h-[56%] w-[70%]" />
-        </Tile>
-        <Tile
-          background="#FFFFFF"
-          ink={ink}
-          label={
-            view.logo['mono-black'] === null
-              ? words.logo.onLight
-              : `${words.logo.black}${review('mono-black')}`
-          }
-          className="col-span-2"
-        >
-          <LogoImage src={view.logo['mono-black'] ?? view.logo.color} className="h-[56%] w-[70%]" />
-        </Tile>
-        <Tile
-          background={view.colors.neutralDark}
-          ink={ink}
-          label={
-            view.logo['mono-white'] === null
-              ? words.logo.onDark
-              : `${words.logo.white}${review('mono-white')}`
-          }
-          className="col-span-2"
-        >
-          <LogoImage src={view.logo['mono-white'] ?? view.logo.color} className="h-[56%] w-[70%]" />
-        </Tile>
+        {monochrome ? (
+          versions.map((version) => (
+            <Tile key={version.key} background={version.background} ink={ink} label={version.label}>
+              {version.src === null ? null : (
+                <LogoImage src={version.src} className="h-[56%] w-[76%]" />
+              )}
+            </Tile>
+          ))
+        ) : (
+          <>
+            <Tile
+              background={view.colors.primary}
+              ink={ink}
+              label={words.logo.onColor}
+              className="col-span-2"
+            >
+              <LogoImage src={logoOn(view, view.colors.primary)} className="h-[56%] w-[70%]" />
+            </Tile>
+            <Tile background="#FFFFFF" ink={ink} label={words.logo.onLight} className="col-span-2">
+              <LogoImage src={view.logo.color} className="h-[56%] w-[70%]" />
+            </Tile>
+            <Tile
+              background={view.colors.neutralDark}
+              ink={ink}
+              label={words.logo.onDark}
+              className="col-span-2"
+            >
+              <LogoImage src={view.logo.color} className="h-[56%] w-[70%]" />
+            </Tile>
+          </>
+        )}
       </div>
     </SheetFrame>
   );

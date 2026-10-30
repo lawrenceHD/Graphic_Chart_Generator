@@ -310,13 +310,19 @@
         "color": "Couleur",
         "mono-black": "Noir",
         "mono-white": "Blanc",
-        "favicon": "Favicon"
+        "favicon": "Favicon",
+        "vector": "SVG tracé"
       },
       "css": "Variables CSS",
       "cssDetail": "Couleurs, échelle, polices et règles du logo.",
       "figma": "Design tokens",
       "figmaDetail": "Format W3C (DTCG), importable dans Figma.",
-      "note": "Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF »."
+      "note": "Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF ».",
+      "kit": "Kit logo complet",
+      "kitDetail": "Couleur, noir, blanc et couleur principale, en SVG et en PNG de 512 à 2 048 px, avec les règles d’usage.",
+      "kitAction": "Télécharger le .zip",
+      "kitBusy": "Préparation…",
+      "kitFailed": "Le kit n’a pas pu être préparé : un fichier du logo n’a pas répondu. Réessayez."
     },
     "oneColumn": "Une page par ligne",
     "twoColumns": "Deux pages par ligne",

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { contrastRatio, inkOn, isDark } from '../../brand/color';
+import { svgDataUrl, tintSvg } from '../../brand/logo-tint';
 import type { BrandView } from '../workspace/brand-view';
 import type { SheetWords } from './sheet-words';
 
@@ -180,6 +181,30 @@ export function LogoImage({
       style={style}
     />
   );
+}
+
+/**
+ * The black monochrome variant repainted in a brand colour (a data: URL), or null while it loads, when
+ * the project has no monochrome variant or when the file does not load.
+ */
+export function useTintedLogo(mono: string | null, hex: string): string | null {
+  const [tinted, setTinted] = useState<{ readonly key: string; readonly url: string } | null>(null);
+  const key = `${mono ?? ''}|${hex}`;
+  useEffect(() => {
+    if (mono === null) return;
+    let alive = true;
+    void fetch(mono)
+      .then((response) => (response.ok ? response.text() : null))
+      .then((svg) => {
+        const painted = svg === null ? null : tintSvg(svg, hex);
+        if (alive && painted !== null) setTinted({ key, url: svgDataUrl(painted) });
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [mono, hex, key]);
+  return tinted?.key === key ? tinted.url : null;
 }
 
 /** Logo version that reads on a background: white on dark, black on light colour, colour otherwise. */

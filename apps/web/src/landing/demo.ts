@@ -96,6 +96,6 @@ export const DEMO_VIEW: BrandView = (() => {
   return {
     ...view,
     written: true,
-    logo: { color: LOGO, 'mono-black': null, 'mono-white': null, favicon: null },
+    logo: { color: LOGO, vector: null, 'mono-black': null, 'mono-white': null, favicon: null },
   };
 })();

@@ -76,8 +76,9 @@ export function dtcgTokens(view: BrandView): string {
 }
 
 /** Starts a download of generated text in the browser. */
-export function download(fileName: string, text: string, type: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type }));
+export function download(fileName: string, data: string | Uint8Array, type: string): void {
+  const part = typeof data === 'string' ? data : data.slice().buffer;
+  const url = URL.createObjectURL(new Blob([part], { type }));
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;

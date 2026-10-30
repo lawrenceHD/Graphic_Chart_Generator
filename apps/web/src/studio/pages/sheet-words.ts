@@ -36,6 +36,8 @@ export interface SheetWords {
     readonly white: string;
     readonly onLight: string;
     readonly onDark: string;
+    readonly tint: string;
+    readonly reversed: string;
     readonly favicon: string;
     readonly review: string;
   };
@@ -132,6 +134,8 @@ const FR: SheetWords = {
     white: 'Blanc',
     onLight: 'Sur fond clair',
     onDark: 'Sur fond sombre',
+    tint: 'Une couleur',
+    reversed: 'En réserve',
     favicon: 'Favicon',
     review: 'à vérifier',
   },
@@ -231,6 +235,8 @@ const EN: SheetWords = {
     white: 'White',
     onLight: 'On a light background',
     onDark: 'On a dark background',
+    tint: 'One colour',
+    reversed: 'Reversed',
     favicon: 'Favicon',
     review: 'to check',
   },
