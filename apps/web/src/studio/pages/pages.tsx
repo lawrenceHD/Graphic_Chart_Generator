@@ -629,13 +629,13 @@ function Palette({ context }: { readonly context: SheetContext }) {
                 className="tabular m-0 grid grid-cols-[auto_1fr] font-mono"
                 style={{ fontSize: u(0.8), columnGap: u(0.6), rowGap: u(0.2), lineHeight: 1.35 }}
               >
-                <dt style={{ opacity: 0.7 }}>HEX</dt>
+                <dt style={{ opacity: 0.82 }}>HEX</dt>
                 <dd className="m-0">{hex}</dd>
-                <dt style={{ opacity: 0.7 }}>RVB</dt>
+                <dt style={{ opacity: 0.82 }}>RVB</dt>
                 <dd className="m-0">{rgbOf(hex).join(' ')}</dd>
-                <dt style={{ opacity: 0.7 }}>OKLCH</dt>
+                <dt style={{ opacity: 0.82 }}>OKLCH</dt>
                 <dd className="m-0 truncate">{formatOklch(hex)}</dd>
-                <dt style={{ opacity: 0.7 }}>CMJN</dt>
+                <dt style={{ opacity: 0.82 }}>CMJN</dt>
                 <dd className="m-0">{[c, m, y, k].join(' ')}</dd>
               </dl>
             </div>
