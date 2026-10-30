@@ -403,6 +403,11 @@ async function composeDocument(
   const refs = await variantRefs(deps, logo);
   if (!refs.ok) return refs;
   const rules = await logoRules(deps, logo, bytes);
+  // A raster upload on an opaque background is shown cut out: its traced drawing has no background.
+  const opaque =
+    logo.mime !== SVG && StoredClusters.safeParse(fresh?.meta).data?.palette.background;
+  const traced = refs.value.find((ref) => ref.kind === 'vector');
+  const colorId = typeof opaque === 'string' && traced !== undefined ? traced.assetId : logo.id;
   const written = StoredBrand.safeParse(fresh?.meta);
   const brand = written.success
     ? {
@@ -421,7 +426,7 @@ async function composeDocument(
     language: language.data,
     logoSanitizedId: logo.id,
     colors: palette.data.palette.roles,
-    variants: [{ assetId: logo.id, kind: 'color', needsReview: false }, ...refs.value],
+    variants: [{ assetId: colorId, kind: 'color', needsReview: false }, ...refs.value],
   });
   if (!document.ok) return err(document.error.code);
   return ok({

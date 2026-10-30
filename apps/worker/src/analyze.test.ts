@@ -228,6 +228,27 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     });
   });
 
+  it('shows a raster logo on an opaque background through its traced, transparent drawing', async () => {
+    projectId = id();
+    await test.database.orm
+      .insert(projects)
+      .values({ id: projectId, guestSessionId: guestId, title: 'Fond blanc' });
+    const boxed = sanitized(
+      '<rect width="100" height="100" fill="#FFFFFF"/><path d="M10 10 L90 10 L50 90 Z" fill="#1F4BFF"/><circle cx="50" cy="35" r="12" fill="#FF7A00"/>',
+    );
+    const image = await rasterizer.rasterize(new TextDecoder().decode(boxed), 200);
+    if (!image.ok) throw new Error(image.error.reason);
+    const analysisId = await start(image.value.png, 'image/png');
+    await run(analysisId);
+
+    const document = BrandDocumentSchema.parse((await documentRow())?.body);
+    const color = document.assets.variants.find((variant) => variant.kind === 'color');
+    const vector = document.assets.variants.find((variant) => variant.kind === 'vector');
+    expect(vector).toBeDefined();
+    // The white box of the upload is not part of the logo: the colour version is the cut-out drawing.
+    expect(color?.assetId).toBe(vector?.assetId);
+  });
+
   it('step 3 writes the brand analysis of Gemini into the document (07_AI_COPILOT.md §3)', async () => {
     projectId = id();
     await test.database.orm.insert(projects).values({

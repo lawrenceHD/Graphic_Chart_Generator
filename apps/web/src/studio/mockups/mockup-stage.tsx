@@ -35,7 +35,6 @@ export const SCENES = [
   'a4-flyers',
   'mug-white',
   'poster-held',
-  'cards-desk',
   'poster-hanging',
   'mug-stripes',
   'cup-pink',
