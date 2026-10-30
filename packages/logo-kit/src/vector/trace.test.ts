@@ -114,7 +114,11 @@ function boxVectorizer(seen: BinaryMask[]): Vectorizer {
             x1 = Math.max(x1, x + 1);
             y1 = Math.max(y1, y + 1);
           }
-      const path: TracedPath = { d: `M0 0 H${String(x1 - x0)} V${String(y1 - y0)} H0 Z`, dx: x0, dy: y0 };
+      const path: TracedPath = {
+        d: `M0 0 H${String(x1 - x0)} V${String(y1 - y0)} H0 Z`,
+        dx: x0,
+        dy: y0,
+      };
       return Promise.resolve(ok(x1 < 0 ? [] : [path]));
     },
   };
