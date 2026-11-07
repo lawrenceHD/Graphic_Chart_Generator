@@ -50,8 +50,8 @@ export function buildExample(example: DemoExample): BuiltExample {
       logo: {
         color: example.logo,
         vector: null,
-        'mono-black': null,
-        'mono-white': null,
+        'mono-black': example.monoLogos?.black ?? null,
+        'mono-white': example.monoLogos?.white ?? null,
         favicon: null,
       },
     },
