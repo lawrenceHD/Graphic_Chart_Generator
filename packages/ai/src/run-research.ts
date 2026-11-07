@@ -1,15 +1,10 @@
-import { HexColor, type IndexedReference } from '@app/contracts';
+import { HexColor, type ChartPlan, type IndexedReference } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 import { z } from 'zod';
 import type { FontFamily } from './fonts/catalogue.js';
 import type { ImageInput } from './gemini/logo-reading.js';
 import type { AiError, GeminiTransport } from './gemini/transport.js';
-import {
-  defaultChartPlan,
-  directionToChartPlan,
-  type ChartPlanDraft,
-  type PlanLanguage,
-} from './plan/chart-plan.js';
+import { defaultChartPlan, directionToChartPlan } from './plan/chart-plan.js';
 import { parseReferenceIndex } from './references/library.js';
 import { createRecording, findRecording, type ResearchRecording } from './replay/recording.js';
 import { researchBrand, type BrandResearch } from './research.js';
@@ -40,7 +35,7 @@ export type ResearchSource = 'live' | 'replay' | 'default';
 
 export interface ResearchOutcome {
   source: ResearchSource;
-  plan: ChartPlanDraft;
+  plan: ChartPlan;
   // Absent when neither the live research nor a recording produced one.
   research?: BrandResearch;
   issues: ResearchIssue[];
@@ -55,7 +50,6 @@ export interface RunResearchDeps {
   catalogue: readonly FontFamily[];
   // Content of the index.jsonl of the private library (corpus-reel, outside Git); undefined when absent.
   readIndex: () => Promise<string | undefined>;
-  language: PlanLanguage;
   // 'replay' never touches the network. Default 'live'.
   mode?: 'live' | 'replay';
   recordings?: readonly ResearchRecording[];
@@ -101,7 +95,7 @@ function replayed(
   const research = cleanDirection(recording.research, issues);
   return {
     source: 'replay',
-    plan: directionToChartPlan(research.direction, deps.language),
+    plan: directionToChartPlan(research.direction),
     research,
     issues,
     usage: NO_USAGE,
@@ -116,7 +110,7 @@ function degraded(
 ): ResearchOutcome {
   return {
     source: 'default',
-    plan: defaultChartPlan(deps.language),
+    plan: defaultChartPlan(),
     ...(research ? { research } : {}),
     issues,
     usage,
@@ -221,7 +215,7 @@ export async function runResearch(
   if (library.length === 0) return ok(degraded(deps, issues, usage, research));
   return ok({
     source: 'live',
-    plan: directionToChartPlan(research.direction, deps.language),
+    plan: directionToChartPlan(research.direction),
     research,
     issues,
     ...(deps.now ? { recording: createRecording(research, input.logo, deps.now()) } : {}),
