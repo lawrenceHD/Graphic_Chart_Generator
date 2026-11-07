@@ -97,8 +97,14 @@ const PAIRINGS =
 
 /** Neutralises angle brackets so user data cannot open or close a block of the prompt (§3.4). */
 export function escapeData(text: string): string {
-  return text.replaceAll('<', '‹').replaceAll('>', '›');
+  // Zero-width, bidi and control characters (line breaks and tabs excepted) hide or reorder instructions.
+  return text
+    .replace(/[\p{Cf}\p{Cc}]/gu, (char) => (char === '\n' || char === '\t' ? char : ''))
+    .replaceAll('<', '‹')
+    .replaceAll('>', '›');
 }
+
+const BRAND_NAME_MAX = 120;
 
 function prompt(input: AnalyzeInput): string {
   const language = input.language === 'fr' ? 'French' : 'English';
@@ -112,7 +118,7 @@ RULES:
 - tone.axes: the 4 axes ${TONE_AXIS_IDS.join(', ')}, each 0 (left word) to 100 (right word); tone.examples: 3 short lines the brand would say.
 - typographyPairingId and sceneCategory only from the lists; industryLabel max 80 characters; rationale max 300 characters, citing the brief and the palette.
 CATALOGUES: <pairings>${PAIRINGS}</pairings> <scene_categories>${SceneCategory.options.join(', ')}</scene_categories>
-<brand_name>${escapeData(input.brandName)}</brand_name>
+<brand_name>${escapeData(input.brandName.slice(0, BRAND_NAME_MAX))}</brand_name>
 <logo_palette>${input.palette.join(' ')}</logo_palette>
 <brief>${escapeData(input.brief.slice(0, 8000))}</brief>`;
 }
