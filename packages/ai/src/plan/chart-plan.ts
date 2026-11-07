@@ -3,6 +3,7 @@ import {
   MAX_SECTION_EVIDENCE,
   type ChartPlan,
   type GuidelineSection,
+  PAGE_TYPES,
   type PageType,
 } from '@app/contracts';
 import { buildArtDirection, type ArtDirection } from '../references/direction.js';
@@ -95,9 +96,59 @@ const tokensSection = (): ChartPlan['sections'][number] => ({
   evidence: [],
 });
 
-function buildPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan | undefined {
+// Pages the studio fills with distinct content per type (apps/web/src/studio/pages): beyond it a page would
+// say there is nothing more to show. Defined here until it moves to packages/contracts (docs/team/QUEUE.md);
+// chart-plan.test.ts pins the values, so a change in the studio has to be mirrored on purpose.
+export const PAGE_CAPACITY: Record<PageType, number> = {
+  cover: 1,
+  manifesto: 4,
+  logo: 4,
+  'clear-space': 3,
+  'do-dont': 16,
+  palette: 12,
+  contrast: 2,
+  typography: 11,
+  'tone-of-voice': 1,
+  mockup: 13,
+  tokens: 1,
+};
+
+type PlanSection = ChartPlan['sections'][number];
+
+/** Keeps, per page type, the best supported sections up to the capacity; the order is unchanged. */
+export function capSections(sections: readonly PlanSection[]): {
+  sections: PlanSection[];
+  dropped: number;
+} {
+  const dropped = new Set<number>();
+  for (const type of PAGE_TYPES) {
+    const ranked = sections
+      .map((section, index) => ({ section, index }))
+      .filter((entry) => entry.section.type === type)
+      .sort((a, b) => b.section.evidence.length - a.section.evidence.length || a.index - b.index);
+    for (const entry of ranked.slice(PAGE_CAPACITY[type])) dropped.add(entry.index);
+  }
+  return {
+    sections: sections.filter((_, index) => !dropped.has(index)),
+    dropped: dropped.size,
+  };
+}
+
+/** Caps the sections, then ends the plan with the tokens page. */
+export function planFromSections(sections: readonly PlanSection[]): {
+  plan: ChartPlan;
+  capped: number;
+} {
+  const capped = capSections(sections.filter((section) => section.type !== 'tokens'));
+  const tokens = sections.find((section) => section.type === 'tokens') ?? tokensSection();
+  return { plan: { sections: [...capped.sections, tokens] }, capped: capped.dropped };
+}
+
+function buildPlan(
+  direction: Pick<ArtDirection, 'sections'>,
+): { plan: ChartPlan; capped: number } | undefined {
   const seen = new Set<GuidelineSection>();
-  const sections: ChartPlan['sections'] = [];
+  const sections: PlanSection[] = [];
   for (const planned of direction.sections) {
     if (seen.has(planned.section)) continue;
     seen.add(planned.section);
@@ -107,9 +158,10 @@ function buildPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan | undef
       evidence: cleanEvidence(planned.evidence),
     });
   }
-  if (sections.length > 0) sections.push(tokensSection());
-  const parsed = ChartPlanSchema.safeParse({ sections });
-  return parsed.success ? parsed.data : undefined;
+  if (sections.length === 0) return undefined;
+  const built = planFromSections(sections);
+  const parsed = ChartPlanSchema.safeParse(built.plan);
+  return parsed.success ? { plan: parsed.data, capped: built.capped } : undefined;
 }
 
 // Last resort, fixed and tested against the contract: reached only if the common core itself is refused.
@@ -125,16 +177,20 @@ export const FALLBACK_CHART_PLAN: ChartPlan = {
 
 /** The sections every professional guideline contains: used when no sourced direction is available. */
 export function defaultChartPlan(): ChartPlan {
-  return buildPlan(buildArtDirection([])) ?? FALLBACK_CHART_PLAN;
+  return buildPlan(buildArtDirection([]))?.plan ?? FALLBACK_CHART_PLAN;
 }
 
 /** Never throws: an empty or refused plan becomes the default plan, flagged as degraded. */
 export function planFromDirection(direction: Pick<ArtDirection, 'sections'>): {
   plan: ChartPlan;
   degraded: boolean;
+  // Sections left out because their page type was full (PAGE_CAPACITY).
+  capped: number;
 } {
-  const plan = buildPlan(direction);
-  return plan ? { plan, degraded: false } : { plan: defaultChartPlan(), degraded: true };
+  const built = buildPlan(direction);
+  return built
+    ? { plan: built.plan, degraded: false, capped: built.capped }
+    : { plan: defaultChartPlan(), degraded: true, capped: 0 };
 }
 
 /** Converts a sourced art direction into the contract's page plan, in guideline order, evidence kept. */

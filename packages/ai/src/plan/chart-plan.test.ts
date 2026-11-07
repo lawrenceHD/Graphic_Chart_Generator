@@ -1,4 +1,4 @@
-import { ChartPlanSchema, GUIDELINE_SECTIONS, PAGE_TYPES } from '@app/contracts';
+import { ChartPlanSchema, GUIDELINE_SECTIONS, PAGE_TYPES, type PageType } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
 import { buildArtDirection, type ArtDirection } from '../references/direction.js';
 import { direction as axis, reference } from '../references/fixtures.js';
@@ -6,7 +6,10 @@ import { rankReferences } from '../references/rank.js';
 import {
   defaultChartPlan,
   directionToChartPlan,
+  capSections,
   FALLBACK_CHART_PLAN,
+  PAGE_CAPACITY,
+  planFromSections,
   planFromDirection,
   SECTION_PAGE_TYPE,
 } from './chart-plan.js';
@@ -68,6 +71,75 @@ describe('directionToChartPlan', () => {
     expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
     expect(plan.sections[0]?.evidence).toHaveLength(20);
     expect(plan.sections[0]?.evidence[0]).toBe('x'.repeat(64));
+  });
+});
+
+describe('PAGE_CAPACITY', () => {
+  it('pins the content capacities of the studio pages (apps/web/src/studio/pages)', () => {
+    expect(PAGE_CAPACITY).toEqual({
+      cover: 1,
+      manifesto: 4,
+      logo: 4,
+      'clear-space': 3,
+      'do-dont': 16,
+      palette: 12,
+      contrast: 2,
+      typography: 11,
+      'tone-of-voice': 1,
+      mockup: 13,
+      tokens: 1,
+    });
+  });
+
+  it('is never exceeded by the sections the mapping can send to a type', () => {
+    for (const type of PAGE_TYPES) {
+      const count = GUIDELINE_SECTIONS.filter((section) => SECTION_PAGE_TYPE[section] === type);
+      expect(count.length, type).toBeLessThanOrEqual(PAGE_CAPACITY[type]);
+    }
+  });
+});
+
+describe('capSections', () => {
+  const make = (type: PageType, title: string, evidence: number) => ({
+    type,
+    title,
+    evidence: Array.from({ length: evidence }, (_, index) => `${title}-${String(index)}`),
+  });
+
+  it('keeps at most 13 mockup pages, the best supported, in the original order', () => {
+    const sections = Array.from({ length: 16 }, (_, index) =>
+      make('mockup', `m${String(index)}`, index < 3 ? 0 : 1),
+    );
+    const { sections: kept, dropped } = capSections(sections);
+    expect(kept).toHaveLength(13);
+    expect(dropped).toBe(3);
+    expect(kept.map((section) => section.title)).toEqual(
+      sections.slice(3).map((section) => section.title),
+    );
+  });
+
+  it('gives 4 manifesto pages out of 5 and drops the weakest', () => {
+    const sections = [
+      make('manifesto', 'a', 1),
+      make('manifesto', 'b', 0),
+      make('logo', 'l', 0),
+      make('manifesto', 'c', 3),
+      make('manifesto', 'd', 2),
+      make('manifesto', 'e', 1),
+    ];
+    const { sections: kept, dropped } = capSections(sections);
+    expect(kept.map((section) => section.title)).toEqual(['a', 'l', 'c', 'd', 'e']);
+    expect(dropped).toBe(1);
+  });
+
+  it('leaves tokens last and the plan valid', () => {
+    const sections = [
+      ...Array.from({ length: 6 }, (_, i) => make('manifesto', `x${String(i)}`, 1)),
+    ];
+    const { plan, capped } = planFromSections([...sections, make('tokens', 'T', 0)]);
+    expect(capped).toBe(2);
+    expect(plan.sections.at(-1)?.type).toBe('tokens');
+    expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
   });
 });
 
