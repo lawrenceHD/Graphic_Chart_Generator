@@ -31,6 +31,10 @@
     "cta": "Start my guidelines"
   },
   "analysis": {
+    "notice": {
+      "standard": "Reference research was not available: the guideline uses the standard plan. You can adjust it page by page, or run the analysis again later.",
+      "partial": "Reference research returned only part of its result: some pages use the standard plan. You can adjust them page by page."
+    },
     "steps": {
       "read": "Reading the logo and checking the file…",
       "palette": "Extracting the palette and computing contrast…",

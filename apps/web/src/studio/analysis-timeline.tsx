@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Button } from '../components/button';
-import { timelineStatus, type StepState, type Timeline } from './timeline';
+import { analysisNotice, timelineStatus, type StepState, type Timeline } from './timeline';
 
 // Timeline of the studio mock-up (prototypes/studio, Studio.tsx `Timeline` and `StepRow`), fed by the
 // real SSE events (AC-04.1). State = icon + words + colour, never colour alone (09 §5).
@@ -43,6 +43,34 @@ function StepMark({ state }: { readonly state: StepState }) {
         </svg>
       )}
     </span>
+  );
+}
+
+/** Honest, non-blocking notice of a degraded run (research unavailable); nothing for a clean run. */
+export function AnalysisNotice({ warnings }: { readonly warnings: readonly string[] }) {
+  const t = useTranslations('analysis');
+  const notice = analysisNotice(warnings);
+  if (notice === null) return null;
+  return (
+    <p
+      role="status"
+      data-testid="analysis-notice"
+      className="m-0 flex items-start gap-2 rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-ink-2"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="mt-0.5 size-4 shrink-0 text-warning"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M10 2a8 8 0 1 0 0 16a8 8 0 1 0 0-16 M10 9v5 M10 6v.5" />
+      </svg>
+      <span>{t(`notice.${notice}`)}</span>
+    </p>
   );
 }
 
@@ -99,6 +127,7 @@ export function AnalysisTimeline({
           );
         })}
       </ol>
+      <AnalysisNotice warnings={timeline.warnings} />
       {failed === undefined ? null : (
         <div className="flex flex-col items-start gap-3">
           <p role="alert" className="m-0 text-sm text-danger">

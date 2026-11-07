@@ -31,6 +31,10 @@
     "cta": "Démarrer ma charte"
   },
   "analysis": {
+    "notice": {
+      "standard": "La recherche de références n’était pas disponible : la charte utilise le plan standard. Vous pouvez l’ajuster page par page, ou relancer l’analyse plus tard.",
+      "partial": "La recherche de références n’a donné qu’un résultat partiel : certaines pages utilisent le plan standard. Vous pouvez les ajuster page par page."
+    },
     "steps": {
       "read": "Lecture du logo et vérification du fichier…",
       "palette": "Extraction de la palette et calcul des contrastes…",
