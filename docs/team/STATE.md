@@ -52,3 +52,9 @@ Après validation des décisions 1 à 3 : sauvegarde du prototype, `.gitignore`,
 ## 6. Journal
 
 - 2026-11-07 : réanalyse du projet, trois agents (Analyste, Architecte, Outils), deux tours de consensus, roster consolidé dans `docs/team/`. Aucun code modifié.
+- 2026-11-07 (R5, branche `comp/r5-front-produit`, non poussée) : accueil, tarifs, connexion, inscription, projets portés en composants Next.
+  - Routes : `/` (hero, atelier interactif, méthode, garanties), `/tarifs` (statique, prix « à valider »), `/connexion`, `/inscription` (Better Auth client, Zod, invité vers `/start`, inscription puis connexion enchaînée, rattachement `guest-sessions/claim`), `/projets` (liste `GET /api/v1/projects`, quatre états).
+  - `/start` : message `QUOTA_PROJECTS` avec lien vers `/tarifs` (le repli invité ne s'applique plus à ce 403).
+  - Messages : `apps/web/messages/product.{fr,en}.json` (fusionnés dans `i18n/request.ts`), plus deux clés `start.quota*` dans `fr.json`/`en.json`.
+  - Atelier : lit `landing/example-source.ts` (interface `LandingExample`). Une seule source tant que R7 n'a pas mergé `landing/examples` : `demo.ts` (La Mèza). Brancher R7 = changer `listExamples()` et rendre `DemoSheet` générique.
+  - Vérifié : tests ciblés, typecheck, lint, build. Rendu desktop capturé (thème nuit, Chromium headless). Mobile, thème jour et formulaires en navigateur : non vérifiés.
