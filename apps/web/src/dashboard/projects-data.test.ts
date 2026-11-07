@@ -30,16 +30,26 @@ describe('loadProjects', () => {
     expect(await loadProjects(answer(401, {}))).toEqual({ kind: 'signed-out' });
   });
 
-  it('refuses an answer that does not match the contract', async () => {
+  it('tells an answer that does not match the contract (invalid), not a network failure', async () => {
     expect(await loadProjects(answer(200, { items: [{ id: 3 }], nextCursor: null }))).toEqual({
-      kind: 'error',
+      kind: 'invalid',
+    });
+    expect(
+      await loadProjects(() => Promise.resolve(new Response('<html>', { status: 200 }))),
+    ).toEqual({
+      kind: 'invalid',
     });
   });
 
-  it('reports a network failure and a server error', async () => {
+  it('tells a network failure (no answer) from a server error (HTTP 5xx)', async () => {
     expect(await loadProjects(() => Promise.reject(new TypeError('offline')))).toEqual({
-      kind: 'error',
+      kind: 'network',
     });
-    expect(await loadProjects(answer(500, {}))).toEqual({ kind: 'error' });
+    expect(await loadProjects(answer(500, {}))).toEqual({ kind: 'server' });
+    expect(await loadProjects(answer(503, {}))).toEqual({ kind: 'server' });
+  });
+
+  it('does not hide a programming error as a network failure', async () => {
+    await expect(loadProjects(() => Promise.reject(new RangeError('bug')))).rejects.toThrow('bug');
   });
 });

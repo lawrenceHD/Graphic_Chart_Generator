@@ -107,10 +107,12 @@ export function ProjectsView({ fetcher = browserFetch }: { readonly fetcher?: Li
           <PillLink href="/connexion">{t('signedOut.cta')}</PillLink>
         </Notice>
       );
-    case 'error':
+    case 'network':
+    case 'server':
+    case 'invalid':
       return (
         <div role="alert">
-          <Notice title={t('error.title')} text={t('error.text')}>
+          <Notice title={t(`error.${state.kind}.title`)} text={t(`error.${state.kind}.text`)}>
             <Button variant="secondary" className="rounded-full" onClick={load}>
               {t('error.retry')}
             </Button>

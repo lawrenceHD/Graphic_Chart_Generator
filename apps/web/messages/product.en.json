@@ -197,8 +197,18 @@
       "text": "Drop a logo to compose your first guideline."
     },
     "error": {
-      "title": "Your projects could not be loaded.",
-      "text": "The server did not answer as expected. Your guidelines are not lost.",
+      "network": {
+        "title": "The server cannot be reached.",
+        "text": "Check your connection, then try again. Your guidelines are not lost."
+      },
+      "server": {
+        "title": "The server hit an error.",
+        "text": "It is not your connection. Wait a moment, then try again. Your guidelines are not lost."
+      },
+      "invalid": {
+        "title": "The server's answer was unexpected.",
+        "text": "Your project list could not be read. Reload the page; if it keeps happening, the app may be updating."
+      },
       "retry": "Try again"
     },
     "signedOut": {

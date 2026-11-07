@@ -197,8 +197,18 @@
       "text": "Déposez un logo pour composer votre première charte."
     },
     "error": {
-      "title": "Vos projets n’ont pas pu être chargés.",
-      "text": "Le serveur n’a pas répondu comme prévu. Vos chartes ne sont pas perdues.",
+      "network": {
+        "title": "Le serveur est injoignable.",
+        "text": "Vérifiez votre connexion, puis réessayez. Vos chartes ne sont pas perdues."
+      },
+      "server": {
+        "title": "Le serveur a rencontré une erreur.",
+        "text": "Ce n’est pas lié à votre connexion. Patientez un instant, puis réessayez. Vos chartes ne sont pas perdues."
+      },
+      "invalid": {
+        "title": "La réponse du serveur est inattendue.",
+        "text": "La liste de vos projets n’a pas pu être lue. Rechargez la page ; si cela continue, l’application est peut-être en cours de mise à jour."
+      },
       "retry": "Réessayer"
     },
     "signedOut": {
