@@ -1,6 +1,7 @@
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createAuth, type Auth } from './auth';
+import { trustClientIp } from './client-ip';
 import { createLoginThrottle, throttledSignIn } from './login-throttle';
 
 const adminUrl = integrationDatabaseUrl();
@@ -23,7 +24,7 @@ describe.runIf(adminUrl !== '')('per-account sign-in limit (SEC-05)', () => {
       await auth.api.signUpEmail({ body: { email, password: 'the right passphrase', name: 'x' } });
     }
     signIn = throttledSignIn(
-      (request) => auth.handler(request),
+      trustClientIp((request) => auth.handler(request), 1),
       createLoginThrottle(test.database.orm, () => clock),
     );
   });

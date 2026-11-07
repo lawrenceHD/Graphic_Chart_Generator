@@ -52,7 +52,7 @@ export function guestHandlers(deps: GuestRouteDeps) {
     async create(request: Request): Promise<Response> {
       const rejected = checkOrigin(request, deps.appUrl);
       if (rejected) return rejected;
-      const ip = clientIp(request);
+      const ip = clientIp(request, deps.trustedProxyHops);
       // Before Turnstile, so that a flood costs neither verification calls nor rows.
       const wait = await deps.limiter.hit([
         { key: `guest-session:${ip ?? 'unknown'}`, limit: GUEST_SESSIONS_PER_IP },

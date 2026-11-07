@@ -15,6 +15,7 @@ import { eventHandlers } from './event-routes';
 import { guestActorFromCookie } from './guest-service';
 import { createLoginThrottle, type LoginThrottle } from './login-throttle';
 import { guestCookieOf, guestHandlers } from './guest-routes';
+import { parseTrustedProxyHops } from './client-ip';
 import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
 import { createRateLimiter, type RateLimiter } from './rate-limiter';
@@ -23,6 +24,11 @@ import { createRateLimiter, type RateLimiter } from './rate-limiter';
 let auth: Auth | undefined;
 let handlers: ReturnType<typeof documentHandlers> | undefined;
 let projectRoutes: ReturnType<typeof projectHandlers> | undefined;
+
+/** TRUSTED_PROXY_HOPS (client-ip.ts); validated on first use, absent means 0. */
+export function getTrustedProxyHops(): number {
+  return parseTrustedProxyHops(process.env.TRUSTED_PROXY_HOPS);
+}
 
 export function getAuth(): Auth {
   auth ??= createAuth(getDatabase().orm, getRuntimeEnv());
@@ -44,6 +50,7 @@ export function getDocumentHandlers(): ReturnType<typeof documentHandlers> {
     orm: getDatabase().orm,
     appUrl: getRuntimeEnv().APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
   });
   return handlers;
 }
@@ -53,6 +60,7 @@ export function getProjectHandlers(): ReturnType<typeof projectHandlers> {
     orm: getDatabase().orm,
     appUrl: getRuntimeEnv().APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
   });
   return projectRoutes;
 }
@@ -65,6 +73,7 @@ export function getGuestHandlers(): ReturnType<typeof guestHandlers> {
     orm: getDatabase().orm,
     appUrl: env.APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
     // The HMAC label in guest-token.ts separates this use of AUTH_SECRET from Better Auth's.
     guestSecret: env.AUTH_SECRET,
     verifyTurnstile: createTurnstileVerifier(env.TURNSTILE_SECRET),
@@ -106,6 +115,7 @@ export function getAnalysisHandlers(): ReturnType<typeof analysisHandlers> {
     orm: getDatabase().orm,
     appUrl: getRuntimeEnv().APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
     queue: lazyQueue,
     limiter: getRateLimiter(),
   });
@@ -118,6 +128,7 @@ export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
     orm: getDatabase().orm,
     appUrl: env.APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
     storage: createR2Storage(
       {
         accountId: env.R2_ACCOUNT_ID,
@@ -150,6 +161,7 @@ export function getEventHandlers(): ReturnType<typeof eventHandlers> {
     orm: getDatabase().orm,
     appUrl: getRuntimeEnv().APP_URL,
     resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
     hub: eventHub,
     onError: logError('project_events_stream_error'),
   });

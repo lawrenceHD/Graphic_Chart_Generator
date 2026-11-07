@@ -14,6 +14,8 @@ export interface RouteDeps {
   readonly orm: Orm;
   readonly appUrl: string;
   readonly resolveActor: (request: Request) => Promise<Actor | null>;
+  /** Proxies appending to X-Forwarded-For (client-ip.ts); 0 or absent ignores the header. */
+  readonly trustedProxyHops?: number;
 }
 export type RouteParams = Promise<Record<string, string | string[] | undefined>>;
 

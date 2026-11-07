@@ -32,6 +32,7 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
       now: () => clock,
       limiter: createRateLimiter(test.database.orm, () => clock),
       resolveActor: () => Promise.resolve(signedIn),
+      trustedProxyHops: 1,
     });
   });
   afterAll(async () => {
@@ -88,6 +89,41 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     expect((await routes.create(post('/guest-sessions', { turnstileToken: 'ok' }))).status).toBe(
       201,
     );
+  });
+
+  it('cannot dodge the 5/h limit by forging X-Forwarded-For behind one proxy', async () => {
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const response = await routes.create(
+        post(
+          '/guest-sessions',
+          { turnstileToken: 'ok' },
+          '',
+          APP_URL,
+          `192.0.2.${String(attempt + 1)}, 203.0.113.60`,
+        ),
+      );
+      statuses.push(response.status);
+    }
+    expect(statuses).toEqual([201, 201, 201, 201, 201, 429]);
+  });
+
+  it('shares one bucket when no proxy is trusted: the header is ignored', async () => {
+    const untrusting = guestHandlers({
+      orm: test.database.orm,
+      appUrl: APP_URL,
+      guestSecret: SECRET,
+      verifyTurnstile: () => Promise.resolve(true),
+      now: () => clock,
+      limiter: createRateLimiter(test.database.orm, () => clock),
+      resolveActor: () => Promise.resolve(null),
+    });
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1)
+      statuses.push(
+        (await untrusting.create(post('/guest-sessions', { turnstileToken: 'ok' }))).status,
+      );
+    expect(statuses).toEqual([201, 201, 201, 201, 201, 429]);
   });
 
   it('resolves the guest actor from its cookie only while valid', async () => {

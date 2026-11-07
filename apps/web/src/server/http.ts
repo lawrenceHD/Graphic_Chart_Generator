@@ -74,10 +74,19 @@ export async function readJson<T>(
     : err(problemResponse(request, 400, 'INVALID_BODY', 'body does not match the contract'));
 }
 
-/** Client address as reported by the hosting proxy (first X-Forwarded-For entry), or null. */
-export function clientIp(request: Request): string | null {
-  const first = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return first === undefined || first === '' ? null : first;
+/**
+ * Client address behind `hops` trusted proxies. X-Forwarded-For is written by the client first and appended to
+ * by each proxy, so only entries from the right are trustworthy: with N proxies the real address is the Nth
+ * from the end. With 0 hops the header is ignored (null). The right value depends on the hosting; verify it at
+ * deployment (docs/team/QUEUE.md).
+ */
+export function clientIp(request: Request, hops = 0): string | null {
+  if (hops < 1) return null;
+  const entries = (request.headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '');
+  return entries[entries.length - hops] ?? null;
 }
 
 /** 429 with Retry-After (04_API_CONTRACTS.md §7). */

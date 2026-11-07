@@ -52,12 +52,24 @@ describe.runIf(adminUrl !== '')('rate limiter (04_API_CONTRACTS.md §7, SEC-24)'
   });
 });
 
-describe('client IP', () => {
-  it('takes the first X-Forwarded-For entry, or null', () => {
-    const request = (value?: string) =>
-      new Request('http://x', value === undefined ? {} : { headers: { 'x-forwarded-for': value } });
-    expect(clientIp(request(' 203.0.113.9 , 10.0.0.1'))).toBe('203.0.113.9');
-    expect(clientIp(request())).toBeNull();
-    expect(clientIp(request(''))).toBeNull();
+describe('client IP behind TRUSTED_PROXY_HOPS proxies', () => {
+  const request = (value?: string) =>
+    new Request('http://x', value === undefined ? {} : { headers: { 'x-forwarded-for': value } });
+
+  it('ignores X-Forwarded-For with no trusted proxy (the client writes it)', () => {
+    expect(clientIp(request('198.51.100.1'))).toBeNull();
+    expect(clientIp(request('198.51.100.1'), 0)).toBeNull();
+  });
+
+  it('counts N entries from the right, where the proxies append the real address', () => {
+    expect(clientIp(request(' 6.6.6.6 , 203.0.113.9 '), 1)).toBe('203.0.113.9');
+    expect(clientIp(request('6.6.6.6, 203.0.113.9, 10.0.0.1'), 2)).toBe('203.0.113.9');
+    expect(clientIp(request('203.0.113.9'), 1)).toBe('203.0.113.9');
+  });
+
+  it('is null when the chain is shorter than the hops or the header is empty', () => {
+    expect(clientIp(request('203.0.113.9'), 2)).toBeNull();
+    expect(clientIp(request(), 1)).toBeNull();
+    expect(clientIp(request(''), 1)).toBeNull();
   });
 });

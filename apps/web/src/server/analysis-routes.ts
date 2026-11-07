@@ -85,7 +85,10 @@ export function analysisHandlers(deps: AnalysisRouteDeps) {
             : actor.kind;
       const wait = await deps.limiter.hit([
         { key: `analyze:${identity}`, limit: actor.kind === 'guest' ? GUEST : ACCOUNT },
-        { key: `analyze-ip:${clientIp(request) ?? 'unknown'}`, limit: ACCOUNT },
+        {
+          key: `analyze-ip:${clientIp(request, deps.trustedProxyHops) ?? 'unknown'}`,
+          limit: ACCOUNT,
+        },
       ]);
       if (wait > 0) return tooManyRequests(request, wait);
 
