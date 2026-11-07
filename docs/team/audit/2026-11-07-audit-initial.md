@@ -60,9 +60,18 @@ Note outillage : un premier `trivy fs` sans exclusions a expiré (parcours de `.
 
 ## 6. Semgrep
 
-Voir mise à jour ci-dessous (§6.1).
+### 6.1 Résultat (CONSTATÉ)
 
-SEMGREP_PLACEHOLDER
+Semgrep 1.184.0 (venv hors dépôt, `PYTHONUTF8=1`), règles `p/typescript` + `p/nextjs` + `p/owasp-top-ten`, sur `apps/*/src` et `packages/*/src` hors tests : **288 fichiers analysés, 0 résultat, 0 erreur**. Un premier essai sur `apps packages` entiers n'a pas abouti en 35 min (arrêté, exit 255) ; l'exécution restreinte aux sources (`--max-target-bytes 300000 --timeout 10 --jobs 2`) a abouti. Aucun résultat à trier (0 reproduit, 0 faux positif, 0 à investiguer). Limite : tests et fichiers > 300 Ko exclus.
+
+## 6.2 Mise à jour (reprise, HEAD 29090d2)
+
+- **Gitleaks historique** : 262 commits, 7,89 Mo, **0 fuite** (premier scan : 206 commits).
+- **Gitleaks arbre de travail** (`gitleaks dir`, exclusions node_modules, .next, dist, .claude/worktrees, corpus-reel, .cache, `gemini key.txt`, .venv, lockfile) : 22,76 Mo, **2 résultats `generic-api-key`** : `.env.local` et `prototypes/studio/.env.local`. Les deux fichiers sont ignorés par Git (`.gitignore:17`, `prototypes/studio/.gitignore:5`) et non suivis (0 fichier `env.local` dans `git ls-files`) : secrets locaux attendus, **pas une fuite**. Valeurs non copiées.
+- **D-1 corrigé** : `gemini key.txt` figure dans `.gitignore:56`.
+- **R-1/R-2 (X-Forwarded-For) corrigés** : `clientIp(request, hops)` lit la n-ième entrée **depuis la droite** et renvoie `null` si `TRUSTED_PROXY_HOPS` = 0 (`http.ts:83-90`) ; `trustClientIp` supprime et réécrit l'en-tête lu par Better Auth (`client-ip.ts:17-27`). Valeur invalide = erreur au démarrage. Tests `rate-limiter`, `guest-routes`, `auth-flow`, `login-throttle`, `project-routes` : 36 tests verts. A vérifier au déploiement : la valeur réelle de `TRUSTED_PROXY_HOPS` de l'hébergeur.
+- **D-4 corrigé** : `claimGuestSession` verrouille l'utilisateur, contrôle le quota (`QUOTA_PROJECTS`) et ferme la session par `UPDATE ... WHERE claimed_by_user_id IS NULL RETURNING` (un seul gagnant) ; tests verts.
+- **Recherche rejouable (NOUVEAU)** : `RESEARCH_REPLAY_FILE`, `RESEARCH_CORPUS_DIR`, `RESEARCH_RECORD_DIR` viennent de l'environnement de l'opérateur (Zod, `index.ts:53-55`), jamais d'une entrée utilisateur : pas de traversée exploitable à distance. Lecture : `join(dir, name)` avec `name` issu de `readdir` (`corpus.ts:35-44`) ; écriture : nom de fichier dérivé de la clé par `replaceAll(/[^A-Za-z0-9_-]/gu,'_')` (`corpus.ts:57`), donc ni `.` ni séparateur. Injection de prompt : enregistrements en Zod `strict` aux longueurs bornées (`replay/recording.ts`), puis `cleanDirection` applique `looksLikeInjection` et `sanitizeUntrusted` aux insights (`run-research.ts:79-91`). Aucune faille constatée. Dette basse R-4 : `readdir(root, {recursive:true})` suit l'arborescence du corpus privé sans plafond de taille/nombre (opérateur seulement).
 
 ## 7. Hors périmètre / non fait
 - Pas d'exécution dynamique de l'application ni de test d'intrusion réseau (aucun déploiement).
