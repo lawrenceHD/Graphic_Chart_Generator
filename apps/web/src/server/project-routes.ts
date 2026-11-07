@@ -4,6 +4,7 @@ import { authorizationResponse, problemResponse, readJson } from './http';
 import {
   countGuestProjects,
   createProject,
+  createProjectWithinQuota,
   deleteProject,
   getProject,
   listProjects,
@@ -12,6 +13,7 @@ import {
   updateProject,
   type ProjectRow,
 } from './project-service';
+import { ACCOUNT_PLAN } from './plans';
 import { authenticate, guardProject, type RouteDeps, type RouteParams } from './route-guard';
 
 // 04_API_CONTRACTS.md §3 "Projets" and the revision history of "Document".
@@ -76,14 +78,25 @@ export function projectHandlers(deps: RouteDeps) {
       if (denied) return denied;
       const body = await readJson(request, CreateBody);
       if (!body.ok) return body.error;
-      const owner =
-        actor.value.kind === 'guest'
-          ? { kind: 'guest' as const, guestSessionId: actor.value.guestSessionId }
-          : actor.value.kind === 'user'
-            ? { kind: 'user' as const, userId: actor.value.userId }
-            : null;
-      if (owner === null)
+      if (actor.value.kind === 'user') {
+        const row = await createProjectWithinQuota(
+          deps.orm,
+          actor.value.userId,
+          body.value,
+          ACCOUNT_PLAN.maxProjects,
+        );
+        return row === null
+          ? problemResponse(
+              request,
+              403,
+              'QUOTA_PROJECTS',
+              `the free plan allows ${String(ACCOUNT_PLAN.maxProjects)} projects`,
+            )
+          : Response.json({ project: publicProject(row) }, { status: 201 });
+      }
+      if (actor.value.kind !== 'guest')
         return problemResponse(request, 403, 'FORBIDDEN', 'action not allowed for this actor');
+      const owner = { kind: 'guest' as const, guestSessionId: actor.value.guestSessionId };
       return Response.json(
         { project: publicProject(await createProject(deps.orm, owner, body.value)) },
         { status: 201 },
