@@ -1,5 +1,6 @@
 import { ChartPlanSchema, type ChartPlan } from '@app/contracts';
 import { standardChartPlan } from '@app/document';
+import type { ResearchOutcome as AiOutcome, ResearchRecording, RunResearchInput } from '@app/ai';
 import { err, ok, type Result } from '@app/kernel';
 
 // The research stage of project.analyze: obtains the ChartPlan that drives the pages of the charter. The
@@ -7,6 +8,11 @@ import { err, ok, type Result } from '@app/kernel';
 // `planWithFallback`): it degrades to the standard plan and says so.
 export type ResearchErrorCode =
   'RESEARCH_UNAVAILABLE' | 'RESEARCH_FAILED' | 'RESEARCH_PLAN_INVALID' | 'RESEARCH_REPLAY_INVALID';
+
+const eventCode = (issue: string): string => {
+  const code = issue.toUpperCase().replaceAll('-', '_');
+  return code.startsWith('RESEARCH_') ? code : `RESEARCH_${code}`;
+};
 
 export interface ResearchError {
   readonly code: ResearchErrorCode;
@@ -18,15 +24,23 @@ export interface ResearchInput {
   readonly brandName: string;
   /** Palette roles of the logo, #RRGGBB, primary first. */
   readonly palette: readonly string[];
+  /** The logo as a PNG, for the AI research; absent when it could not be rendered. */
+  readonly logo?: { readonly data: Uint8Array; readonly mimeType: 'image/png' };
+}
+
+/** A plan and the warnings of its making (`RESEARCH_*` codes, reported in the events of the project). */
+export interface ResearchResult {
+  readonly plan: ChartPlan;
+  readonly warnings: readonly string[];
 }
 
 export interface ResearchPort {
-  plan(input: ResearchInput): Promise<Result<ChartPlan, ResearchError>>;
+  plan(input: ResearchInput): Promise<Result<ResearchResult, ResearchError>>;
 }
 
 /** No research configured: the 16-page standard plan, in the language of the project. */
 export const defaultResearch: ResearchPort = {
-  plan: (input) => Promise.resolve(ok(standardChartPlan(input.language))),
+  plan: (input) => Promise.resolve(ok({ plan: standardChartPlan(input.language), warnings: [] })),
 };
 
 const failure = (code: ResearchErrorCode, message: string): ResearchError => ({ code, message });
@@ -35,7 +49,7 @@ const failure = (code: ResearchErrorCode, message: string): ResearchError => ({ 
 export function replayResearch(recorded: unknown): Result<ResearchPort, ResearchError> {
   const plan = ChartPlanSchema.safeParse(recorded);
   if (!plan.success) return err(failure('RESEARCH_REPLAY_INVALID', 'recorded plan is invalid'));
-  return ok({ plan: () => Promise.resolve(ok(plan.data)) });
+  return ok({ plan: () => Promise.resolve(ok({ plan: plan.data, warnings: [] })) });
 }
 
 function parseJson(text: string): unknown {
@@ -60,52 +74,72 @@ export async function loadRecordedResearch(
   return replayResearch(parseJson(text));
 }
 
-type ProducedPlan = Result<unknown, { readonly code: string }>;
+export interface AiResearchOptions {
+  /** `runResearch` of @app/ai with its dependencies bound (transport, catalogue, corpus, clock). */
+  readonly run: (input: RunResearchInput) => Promise<Result<AiOutcome, { readonly code: string }>>;
+  /** Keeps the recording of a fresh live research (demo plans); a failure is a warning. */
+  readonly record?: (recording: ResearchRecording) => Promise<void>;
+}
 
 /**
- * Adapter for the research of @app/ai: `call` is the function that produces a plan (to be wired once
- * packages/ai exposes it). Its output is untrusted, a throw is a failure, never an exception.
+ * Adapter for the research of @app/ai. Its output is untrusted (the plan is validated again), a throw is
+ * a failure, never an exception; each typed issue of the outcome becomes a warning.
  */
-export function aiResearch(call: (input: ResearchInput) => Promise<ProducedPlan>): ResearchPort {
+export function aiResearch(options: AiResearchOptions): ResearchPort {
   return {
     plan: async (input) => {
-      let produced: ProducedPlan;
+      if (input.logo === undefined) {
+        return err(failure('RESEARCH_UNAVAILABLE', 'logo could not be rendered'));
+      }
+      let produced: Result<AiOutcome, { readonly code: string }>;
       try {
-        produced = await call(input);
+        produced = await options.run({ logo: input.logo, palette: [...input.palette] });
       } catch {
         return err(failure('RESEARCH_FAILED', 'research threw'));
       }
       if (!produced.ok) return err(failure('RESEARCH_FAILED', produced.error.code));
-      const plan = ChartPlanSchema.safeParse(produced.value);
-      return plan.success
-        ? ok(plan.data)
-        : err(failure('RESEARCH_PLAN_INVALID', 'research returned an invalid plan'));
+      const plan = ChartPlanSchema.safeParse(produced.value.plan);
+      if (!plan.success) {
+        return err(failure('RESEARCH_PLAN_INVALID', 'research returned an invalid plan'));
+      }
+      const warnings = produced.value.issues.map((issue) => eventCode(issue.code));
+      const { recording } = produced.value;
+      if (produced.value.source === 'live' && recording !== undefined && options.record) {
+        try {
+          await options.record(recording);
+        } catch {
+          warnings.push('RESEARCH_RECORDING_FAILED');
+        }
+      }
+      return ok({ plan: plan.data, warnings });
     },
   };
 }
 
-export interface ResearchOutcome {
+export interface PlanOutcome {
   readonly plan: ChartPlan;
-  /** Set when the plan is the standard one because research failed: reported in the project events. */
-  readonly warning?: ResearchErrorCode;
+  /** Typed warnings, most important first; the standard plan is used when research failed. */
+  readonly warnings: readonly string[];
 }
 
 /** Degraded mode: a failing, throwing or invalid research yields the standard plan plus a typed warning. */
 export async function planWithFallback(
   port: ResearchPort,
   input: ResearchInput,
-): Promise<ResearchOutcome> {
-  const standard = (warning: ResearchErrorCode): ResearchOutcome => ({
+): Promise<PlanOutcome> {
+  const standard = (warning: string): PlanOutcome => ({
     plan: standardChartPlan(input.language),
-    warning,
+    warnings: [warning],
   });
-  let produced: Result<ChartPlan, ResearchError>;
+  let produced: Result<ResearchResult, ResearchError>;
   try {
     produced = await port.plan(input);
   } catch {
     return standard('RESEARCH_FAILED');
   }
   if (!produced.ok) return standard(produced.error.code);
-  const plan = ChartPlanSchema.safeParse(produced.value);
-  return plan.success ? { plan: plan.data } : standard('RESEARCH_PLAN_INVALID');
+  const plan = ChartPlanSchema.safeParse(produced.value.plan);
+  return plan.success
+    ? { plan: plan.data, warnings: produced.value.warnings }
+    : standard('RESEARCH_PLAN_INVALID');
 }
