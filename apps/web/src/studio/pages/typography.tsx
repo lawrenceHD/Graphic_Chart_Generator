@@ -3,7 +3,8 @@
 import { contrastRatio, inkOn } from '../../brand/color';
 import { Measure, PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
-import { typeFocus } from './variant';
+import { BeyondPage } from './beyond';
+import { typeView, type GlyphSet } from './variant';
 
 interface Row {
   readonly label: string;
@@ -14,10 +15,15 @@ interface Row {
   readonly name: boolean;
 }
 
-export function Typography({ context }: { readonly context: SheetContext }) {
+function TypeSheet({
+  context,
+  focus,
+}: {
+  readonly context: SheetContext;
+  readonly focus: 'both' | 'headings' | 'text';
+}) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
-  const focus = typeFocus(occurrenceOf(context));
   const display = view.pairing.display;
   const text = view.pairing.text;
   const sizes: readonly Row[] =
@@ -131,4 +137,66 @@ export function Typography({ context }: { readonly context: SheetContext }) {
       </div>
     </SheetFrame>
   );
+}
+
+const GLYPHS: Readonly<Record<GlyphSet, { readonly text: string; readonly size: number }>> = {
+  upper: { text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', size: 7.2 },
+  lower: { text: 'abcdefghijklmnopqrstuvwxyz', size: 7.2 },
+  figures: { text: '0123456789 + − × ÷ = % € $ . , ; : ! ? « » ( ) & @ #', size: 6 },
+  accents: { text: 'À Â Æ Ç É È Ê Ë Î Ï Ô Œ Ù Û Ü Ÿ à â æ ç é è ê ë î ï ô œ ù û ü ÿ', size: 5.6 },
+};
+
+// The alphabet of one family, one set per page: capitals, lower case, figures and signs, accents.
+function Glyphs({
+  context,
+  family,
+  set,
+}: {
+  readonly context: SheetContext;
+  readonly family: 'display' | 'text';
+  readonly set: GlyphSet;
+}) {
+  const { view, words } = context;
+  const face = view.pairing[family];
+  const ink = inkOn(context.background ?? PAPER);
+  const glyphs = GLYPHS[set];
+  return (
+    <SheetFrame
+      context={context}
+      lead={words.lead.typography}
+      aside={
+        <div className="border-t" style={{ ...hairline(ink), paddingTop: u(0.8) }}>
+          <p
+            className="m-0"
+            style={{ fontFamily: face.css, fontSize: u(1.6), fontWeight: 600, lineHeight: 1.15 }}
+          >
+            {face.name}
+          </p>
+          <Measure style={{ opacity: 0.62 }}>
+            {family === 'display' ? words.type.display : words.type.text} · {words.type.glyphs[set]}
+          </Measure>
+        </div>
+      }
+    >
+      <p
+        className="m-0 flex h-full items-center text-balance break-words"
+        style={{
+          fontFamily: face.css,
+          fontSize: u(glyphs.size),
+          lineHeight: 1.12,
+          fontWeight: family === 'display' ? 600 : 400,
+        }}
+      >
+        {glyphs.text}
+      </p>
+    </SheetFrame>
+  );
+}
+
+export function Typography({ context }: { readonly context: SheetContext }) {
+  const shown = typeView(occurrenceOf(context));
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  if (shown.kind === 'glyphs')
+    return <Glyphs context={context} family={shown.family} set={shown.set} />;
+  return <TypeSheet context={context} focus={shown.kind} />;
 }

@@ -6,13 +6,23 @@ import {
   Measure,
   PAPER,
   SheetFrame,
+  occurrenceOf,
   u,
   useImageAspect,
   type SheetContext,
 } from './sheet';
 import { hairline } from './common';
+import { BeyondPage } from './beyond';
+import { clearSpaceView } from './variant';
 
-export function ClearSpace({ context }: { readonly context: SheetContext }) {
+function Drawing({
+  context,
+  withMinimum,
+}: {
+  readonly context: SheetContext;
+  /** The overview carries the minimum sizes under the zone note; the zone page leaves them to their own page. */
+  readonly withMinimum: boolean;
+}) {
   const { view, words } = context;
   const measured = useImageAspect(view.logo.color);
   const aspect = typeof measured === 'number' ? measured : 2;
@@ -31,28 +41,30 @@ export function ClearSpace({ context }: { readonly context: SheetContext }) {
           <p className="m-0" style={{ fontSize: u(1.1), opacity: 0.72 }}>
             {words.clearSpace.zone(Math.round(ratio * 100))}
           </p>
-          <div className="border-t" style={{ ...hairline(ink), paddingTop: u(1.2) }}>
-            <p
-              className="m-0 uppercase"
-              style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
-            >
-              {words.clearSpace.minimum}
-            </p>
-            <div className="flex items-end" style={{ gap: u(2.4), marginTop: u(1) }}>
-              <MinSize
-                label={words.clearSpace.screen}
-                value={`${String(view.rules.minSizePx)} px`}
-                src={view.logo.color}
-                height={2.4}
-              />
-              <MinSize
-                label={words.clearSpace.print}
-                value={`${String(view.rules.minSizeMm)} mm`}
-                src={view.logo.color}
-                height={1.6}
-              />
+          {withMinimum ? (
+            <div className="border-t" style={{ ...hairline(ink), paddingTop: u(1.2) }}>
+              <p
+                className="m-0 uppercase"
+                style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
+              >
+                {words.clearSpace.minimum}
+              </p>
+              <div className="flex items-end" style={{ gap: u(2.4), marginTop: u(1) }}>
+                <MinSize
+                  label={words.clearSpace.screen}
+                  value={`${String(view.rules.minSizePx)} px`}
+                  src={view.logo.color}
+                  height={2.4}
+                />
+                <MinSize
+                  label={words.clearSpace.print}
+                  value={`${String(view.rules.minSizeMm)} mm`}
+                  src={view.logo.color}
+                  height={1.6}
+                />
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       }
     >
@@ -134,4 +146,47 @@ function MinSize({
       </Measure>
     </div>
   );
+}
+
+// The minimum sizes alone: the logo at the smallest size allowed, then at twice and four times that size.
+function Minimum({ context }: { readonly context: SheetContext }) {
+  const { view, words } = context;
+  const rows = [
+    { label: words.clearSpace.screen, unit: 'px', base: view.rules.minSizePx, height: 2.4 },
+    { label: words.clearSpace.print, unit: 'mm', base: view.rules.minSizeMm, height: 1.6 },
+  ];
+  return (
+    <SheetFrame context={context} lead={words.lead.clearSpace}>
+      <div className="grid h-full grid-rows-2" style={{ gap: u(2.4) }}>
+        {rows.map((row) => (
+          <div key={row.unit} className="flex min-h-0 flex-col" style={{ gap: u(1) }}>
+            <p
+              className="m-0 uppercase"
+              style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
+            >
+              {words.clearSpace.minimum} · {row.label}
+            </p>
+            <div className="flex min-h-0 flex-1 items-end" style={{ gap: u(5) }}>
+              {[1, 2, 4].map((factor) => (
+                <MinSize
+                  key={factor}
+                  label={factor === 1 ? words.clearSpace.minimum : `× ${String(factor)}`}
+                  value={`${String(row.base * factor)} ${row.unit}`}
+                  src={view.logo.color}
+                  height={row.height * factor}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </SheetFrame>
+  );
+}
+
+export function ClearSpace({ context }: { readonly context: SheetContext }) {
+  const shown = clearSpaceView(occurrenceOf(context));
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  if (shown.kind === 'minimum') return <Minimum context={context} />;
+  return <Drawing context={context} withMinimum={shown.kind === 'overview'} />;
 }

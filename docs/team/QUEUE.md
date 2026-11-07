@@ -38,3 +38,8 @@
 - [ ] R5 → R7 : `landing/examples` + `DemoSheet` générique (prop d'exemple), et retirer les clés `landing.*` de `messages/{fr,en}.json` devenues inutilisées (critère : `listExamples()` renvoie les 3 marques, atelier sans importer `demo.ts`).
 - [ ] R5 → R0 : exclure `prototypes/showcase-flow` de `prettier --check` (`.prettierignore`), `pnpm verify` échoue sur 13 fichiers du prototype (critère : `pnpm format:check` vert).
 - [ ] R5 → R7 : `product.*.json` est ma fusion de messages ; l'intégrer dans `fr.json`/`en.json` si vous préférez un seul fichier.
+
+## R4 (charte, studio)
+
+- [ ] R4 → R2 (packages/ai) : le rang d'une page vient de son id (`page-<type>`, `page-<type>-n`, stable à la suppression ou au déplacement). Contenu propre par type, au-delà duquel la page affiche « pas d'autre contenu » : palette 12, typographie 11, do-dont 16, mockup 13, manifesto 4, logo 4, clear-space 3, contrast 2 (critère de fin : `SECTION_PAGE_TYPE` n'envoie jamais plus de pages vers un type que cette capacité ; aujourd'hui OK : manifesto 4, logo 4, clear-space 2, typography 3, mockup 11).
+- [ ] R4 → R5 : dans l'atelier de la landing, `aria-live="polite"` est posé sur le conteneur de `DemoSheet`, ce qui fait annoncer toute la feuille ; le remplacer par un court statut dédié (critère de fin : le lecteur d'écran annonce une phrase, pas la feuille).
