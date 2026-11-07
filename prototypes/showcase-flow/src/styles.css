@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource/dm-serif-display';
+
+@theme inline {
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-preview: var(--bg-preview);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--accent-contrast);
+  --color-focus: var(--focus-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+@theme {
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-serif: 'Fraunces Variable', serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+}
+
+:root, [data-theme="light"] {
+  --bg-canvas: oklch(0.975 0.006 85);
+  --bg-surface: oklch(1 0 0);
+  --bg-elevated: oklch(0.95 0.008 85);
+  --bg-preview: oklch(0.92 0.005 85);
+  --border-subtle: oklch(0.88 0.008 85);
+  --border-strong: oklch(0.35 0.01 60);
+  --text-primary: oklch(0.18 0.01 60);
+  --text-secondary: oklch(0.42 0.01 60);
+  --text-muted: oklch(0.56 0.01 60);
+  --accent: oklch(0.25 0.02 60);
+  --accent-contrast: oklch(0.98 0 0);
+  --focus-ring: oklch(0.58 0.22 260);
+  --success: oklch(0.55 0.16 145);
+  --warning: oklch(0.65 0.16 75);
+  --danger: oklch(0.58 0.22 25);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg-canvas: oklch(0.14 0.01 60);
+  --bg-surface: oklch(0.18 0.01 60);
+  --bg-elevated: oklch(0.24 0.012 60);
+  --bg-preview: oklch(0.12 0.008 60);
+  --border-subtle: oklch(0.28 0.01 60);
+  --border-strong: oklch(0.75 0.01 85);
+  --text-primary: oklch(0.96 0.005 85);
+  --text-secondary: oklch(0.75 0.008 85);
+  --text-muted: oklch(0.55 0.008 85);
+  --accent: oklch(0.92 0.01 85);
+  --accent-contrast: oklch(0.15 0.01 60);
+  --focus-ring: oklch(0.65 0.2 260);
+  --success: oklch(0.62 0.16 145);
+  --warning: oklch(0.72 0.16 75);
+  --danger: oklch(0.65 0.22 25);
+  color-scheme: dark;
+}
+
+/* Background blueprint grid */
+.bg-blueprint {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, oklch(0.5 0.01 60 / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.5 0.01 60 / 0.08) 1px, transparent 1px);
+}
+
+/* Hard offset neo-brutalist shadow */
+.shadow-brutal {
+  box-shadow: 4px 4px 0px 0px oklch(0.18 0.01 60);
+}
+.shadow-brutal-sm {
+  box-shadow: 2px 2px 0px 0px oklch(0.18 0.01 60);
+}
+.shadow-brutal-lg {
+  box-shadow: 6px 6px 0px 0px oklch(0.18 0.01 60);
+}
+
+/* Illustrator Artboard Elevation */
+.shadow-artboard {
+  box-shadow: 0 12px 36px -8px oklch(0.15 0.01 60 / 0.18), 0 4px 12px -2px oklch(0.15 0.01 60 / 0.08);
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

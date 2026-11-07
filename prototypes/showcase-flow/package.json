@@ -1,0 +1,11 @@
+{
+  "name": "showcase-flow",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port 5190",
+    "build": "vite build",
+    "preview": "vite preview --host --port 5191"
+  }
+}
