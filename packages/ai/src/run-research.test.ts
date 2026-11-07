@@ -185,6 +185,54 @@ describe('runResearch', () => {
     expect(calls).toBe(0);
   });
 
+  it('flags a recording served from the wildcard key as coming from another logo', async () => {
+    const live = await researchBrand(
+      {
+        transport: okTransport,
+        visionModel: 'gemini-test',
+        library: refs,
+        catalogue: loadFontCatalogue(),
+      },
+      input,
+    );
+    if (!live.ok) throw new Error('setup');
+    const wildcard = {
+      ...createRecording(live.value, { data: new Uint8Array([7]), mimeType: 'image/png' }, 'x'),
+      key: '*',
+    };
+    const failed = await runResearch(
+      deps({ transport: quotaTransport, recordings: [wildcard] }),
+      input,
+    );
+    const replay = await runResearch(deps({ mode: 'replay', recordings: [wildcard] }), input);
+    for (const result of [failed, replay]) {
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.issues.map((issue) => issue.code)).toContain('replayed-wildcard');
+      }
+    }
+    const exact = createRecording(live.value, image, 'x');
+    const own = await runResearch(deps({ mode: 'replay', recordings: [exact] }), input);
+    if (own.ok)
+      expect(own.value.issues.map((issue) => issue.code)).not.toContain('replayed-wildcard');
+  });
+
+  it('keeps the outcome and reports it when the injected clock throws', async () => {
+    const result = await runResearch(
+      deps({
+        now: () => {
+          throw new Error('clock');
+        },
+      }),
+      input,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.source).toBe('live');
+    expect(result.value.recording).toBeUndefined();
+    expect(result.value.issues.map((issue) => issue.code)).toContain('recording-failed');
+  });
+
   it('rejects a malformed palette at the boundary', async () => {
     const result = await runResearch(deps(), { logo: image, palette: ['red'] });
     expect(result.ok).toBe(false);
