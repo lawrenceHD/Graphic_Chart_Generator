@@ -1,13 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { assignRoles, brandClusters, extractPalette, type PaletteRoles } from '@app/color-engine';
-import type {
-  ObjectStorage,
-  ProjectEvent,
-  RasterError,
-  RasterImage,
-  Rasterizer,
-  Vectorizer,
-} from '@app/contracts';
+import type { ObjectStorage, ProjectEvent, Vectorizer } from '@app/contracts';
 import {
   analysisRuns,
   and,
@@ -32,7 +25,7 @@ import {
   type MonoTarget,
 } from '@app/logo-kit';
 import { z } from 'zod';
-import { defaultResearch, planWithFallback, type ResearchPort } from './research.js';
+import { LOGO_FOR_AI, researchStep, type ResearchStepDeps } from './research-step.js';
 
 // Job project.analyze (02_ARCHITECTURE.md §5.2, decision T-019 part 2): 1 palette (color-engine) stored in
 // the meta of the logo_sanitized asset, 2 black and white variants (logo-kit) stored as logo_variant assets,
@@ -44,16 +37,12 @@ type Tx = Parameters<Parameters<Orm['transaction']>[0]>[0];
 type Run = typeof analysisRuns.$inferSelect;
 type Asset = typeof assets.$inferSelect;
 
-export interface AnalyzeDeps {
+export interface AnalyzeDeps extends ResearchStepDeps {
   readonly orm: Orm;
   readonly storage: ObjectStorage;
-  readonly rasterizer: Rasterizer;
-  readonly normalizeRaster: (bytes: Uint8Array) => Promise<Result<RasterImage, RasterError>>;
   readonly vectorizer: Vectorizer;
   /** Gemini (07_AI_COPILOT.md §2); absent without AI_API_KEY. */
   readonly ai?: { readonly transport: GeminiTransport; readonly model: string };
-  /** Research of the chart plan (injected by the composition root); absent means `defaultResearch`. */
-  readonly research?: ResearchPort;
 }
 
 const MAX_LOGO_BYTES = 10 * 1024 * 1024; // 01_PRODUCT_MVP.md §3
@@ -88,6 +77,7 @@ type Step = (
   deps: AnalyzeDeps,
   logo: Asset,
   bytes: Uint8Array,
+  analysisId: string,
 ) => Promise<Result<StepDone, string>>;
 
 const stepEvent = (step: number, state: 'running' | 'done' | 'failed', code?: string) =>
@@ -226,21 +216,7 @@ async function variants(
 // Step 3 (07_AI_COPILOT.md §3): Gemini reads the logo, its measured palette and the brief and writes the
 // brand's texts and catalogue choices, stored in the logo's meta for step 4. Without a key, or when the
 // call fails, nothing is guessed: the step says why and the document keeps its explicit empty defaults.
-const LOGO_FOR_AI = 1024;
 const COMPOSE_STEP = 4;
-
-/** The logo as a PNG for the research; undefined when it cannot be rendered (research then degrades). */
-async function renderLogoPng(
-  deps: AnalyzeDeps,
-  logo: Asset,
-  bytes: Uint8Array,
-): Promise<Uint8Array | undefined> {
-  const image =
-    logo.mime === SVG
-      ? await deps.rasterizer.rasterize(new TextDecoder().decode(bytes), LOGO_FOR_AI)
-      : await deps.normalizeRaster(bytes);
-  return image.ok ? image.value.png : undefined;
-}
 
 async function brandAnalysis(
   deps: AnalyzeDeps,
@@ -403,6 +379,7 @@ async function composeDocument(
   deps: AnalyzeDeps,
   logo: Asset,
   bytes: Uint8Array,
+  analysisId: string,
 ): Promise<Result<StepDone, string>> {
   const [existing] = await deps.orm
     .select({ seq: documents.seq })
@@ -439,20 +416,22 @@ async function composeDocument(
   // Research comes after the variants and before the composition: it never fails the run, a failure
   // degrades to the standard plan and its typed warning is the code of this step.
   const { roles } = palette.data.palette;
-  const logoPng = await renderLogoPng(deps, logo, bytes);
-  const researched = await planWithFallback(deps.research ?? defaultResearch, {
-    language: language.data,
-    brandName: project.title,
-    palette: [
-      roles.primary,
-      roles.accent,
-      roles.neutralLight,
-      roles.neutralDark,
-      ...roles.extra,
-    ].map((color) => color.hex),
-    ...(logoPng === undefined ? {} : { logo: { data: logoPng, mimeType: 'image/png' as const } }),
-  });
-  const [warning, ...others] = researched.warnings;
+  const researched = await researchStep(
+    deps,
+    { analysisId, projectId: logo.projectId, isSvg: logo.mime === SVG, logoBytes: bytes },
+    {
+      language: language.data,
+      brandName: project.title,
+      palette: [
+        roles.primary,
+        roles.accent,
+        roles.neutralLight,
+        roles.neutralDark,
+        ...roles.extra,
+      ].map((color) => color.hex),
+    },
+  );
+  const [warning, ...others] = researched.codes;
   // The contract carries one code per event: the first warning rides on the step's `done`, the others
   // follow as further `done` events of the same step, before `analysis.done`.
   const extraWarnings = others.map((code) => stepEvent(COMPOSE_STEP, 'done', code));
@@ -510,7 +489,9 @@ async function finish(
     .set({ status: 'ready' })
     .where(and(eq(projects.id, projectId), isNull(projects.deletedAt)));
   const done = { type: 'analysis.done', data: { seq: current.seq } } satisfies ProjectEvent;
-  return created ? { after: [...warnings, done] } : { code: 'DOCUMENT_KEPT', after: [done] };
+  return created
+    ? { after: [...warnings, done] }
+    : { code: 'DOCUMENT_KEPT', after: [...warnings, done] };
 }
 
 async function failRun(orm: Orm, run: Run, step: number, code: string): Promise<void> {
@@ -555,14 +536,21 @@ export async function analyzeProject(deps: AnalyzeDeps, analysisId: string): Pro
     await orm.transaction((tx) =>
       appendProjectEvent(tx, run.projectId, stepEvent(step, 'running')),
     );
-    const outcome = await work(deps, asset, bytes);
+    const outcome = await work(deps, asset, bytes, analysisId);
     if (!outcome.ok) return failRun(orm, run, step, outcome.error);
     await orm.transaction(async (tx) => {
       const saved = await outcome.value.save(tx);
       const status: Run['status'] = step === steps.length ? 'done' : 'running';
       await tx.update(analysisRuns).set({ step, status }).where(eq(analysisRuns.id, run.id));
-      const code = saved?.code ?? outcome.value.code;
+      // Two codes may compete (DOCUMENT_KEPT and a research warning): the first rides on `done`, the other
+      // follows as a further `done` of the same step, so neither hides the other.
+      const [code, ...hidden] = [...new Set([saved?.code, outcome.value.code])].filter(
+        (value) => value !== undefined,
+      );
       await appendProjectEvent(tx, run.projectId, stepEvent(step, 'done', code));
+      for (const value of hidden) {
+        await appendProjectEvent(tx, run.projectId, stepEvent(step, 'done', value));
+      }
       for (const event of saved?.after ?? []) await appendProjectEvent(tx, run.projectId, event);
     });
   }

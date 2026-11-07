@@ -15,15 +15,16 @@ import {
   type ResearchRecording,
   type RunResearchDeps,
 } from '@app/ai';
-import { BrandDocumentSchema } from '@app/document';
+import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION, standardChartPlan } from '@app/document';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
-import { uuidV7 } from '@app/kernel';
+import { err, ok, uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { analyzeProject, failTimedOutAnalysis, type AnalyzeDeps } from './analyze.js';
 import { memoryStorage } from './memory-storage.js';
 import { aiResearch, replayResearch } from './research.js';
+import type { ResearchLogEntry } from './research-step.js';
 import { indexText, okTransport, quotaTransport } from './research-fixtures.js';
 import { createVtracer } from './vectorizer.js';
 
@@ -48,7 +49,12 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
   let guestId = '';
   const objects = new Map<string, Uint8Array>();
   const rasterizer = createNodeRasterizer();
-  const run = (analysisId: string, ai?: AnalyzeDeps['ai'], research?: AnalyzeDeps['research']) =>
+  const run = (
+    analysisId: string,
+    ai?: AnalyzeDeps['ai'],
+    research?: AnalyzeDeps['research'],
+    extra: Partial<AnalyzeDeps> = {},
+  ) =>
     analyzeProject(
       {
         orm: test.database.orm,
@@ -58,6 +64,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
         vectorizer: createVtracer(),
         ...(ai === undefined ? {} : { ai }),
         ...(research === undefined ? {} : { research }),
+        ...extra,
       },
       analysisId,
     );
@@ -130,9 +137,12 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     { type: 'analysis.done', data: { seq: 0 } },
   ];
 
-  const run0 = async (research: NonNullable<AnalyzeDeps['research']>): Promise<string> => {
+  const run0 = async (
+    research: NonNullable<AnalyzeDeps['research']>,
+    extra: Partial<AnalyzeDeps> = {},
+  ): Promise<string> => {
     const analysisId = await start(LOGO, 'image/svg+xml');
-    await run(analysisId, undefined, research);
+    await run(analysisId, undefined, research, extra);
     return analysisId;
   };
 
@@ -344,6 +354,64 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     });
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
     expect(document.pages).toHaveLength(16);
+  });
+
+  describe('research warnings are never lost', () => {
+    const fresh = async (title: string): Promise<number> => {
+      projectId = id();
+      await test.database.orm
+        .insert(projects)
+        .values({ id: projectId, guestSessionId: guestId, title });
+      return lastEventId();
+    };
+    const stepCodes = async (cursor: number): Promise<(string | undefined)[]> =>
+      (await eventsAfter(cursor)).flatMap(({ event }) =>
+        event.type === 'analysis.step' && event.data.step === 4 && event.data.state === 'done'
+          ? [event.data.code]
+          : [],
+      );
+
+    it('emits them when another analysis composed the document first (DOCUMENT_KEPT)', async () => {
+      const cursor = await fresh('Race');
+      const research: NonNullable<AnalyzeDeps['research']> = {
+        plan: async () => {
+          await test.database.orm
+            .insert(documents)
+            .values({ projectId, schemaVersion: CURRENT_SCHEMA_VERSION, body: {}, seq: 0 });
+          return ok({
+            plan: standardChartPlan('fr'),
+            warnings: [{ code: 'RESEARCH_FAILED' }, { code: 'RESEARCH_REPLAYED' }],
+          });
+        },
+      };
+      await run0(research);
+      expect(await stepCodes(cursor)).toEqual(
+        expect.arrayContaining(['DOCUMENT_KEPT', 'RESEARCH_FAILED', 'RESEARCH_REPLAYED']),
+      );
+    });
+
+    it('logs each warning with its cause and the run, and the logo render failure', async () => {
+      await fresh('Logs');
+      const logged: ResearchLogEntry[] = [];
+      const research: NonNullable<AnalyzeDeps['research']> = {
+        plan: () => Promise.reject(new TypeError('boom')),
+      };
+      const failing: AnalyzeDeps['rasterizer'] = {
+        bbox: (svg) => rasterizer.bbox(svg),
+        rasterize: (svg, width) =>
+          width === 1024
+            ? Promise.resolve(err({ code: 'RASTER_FAILED', reason: 'test' }))
+            : rasterizer.rasterize(svg, width),
+      };
+      const analysisId = await run0(research, {
+        rasterizer: failing,
+        onResearchWarning: (entry) => logged.push(entry),
+      });
+      expect(logged).toEqual([
+        { analysisId, projectId, code: 'RESEARCH_LOGO_UNRENDERABLE', detail: 'RASTER_FAILED' },
+        { analysisId, projectId, code: 'RESEARCH_FAILED', cause: 'TypeError' },
+      ]);
+    });
   });
 
   describe('AI research with a simulated Gemini (no network)', () => {

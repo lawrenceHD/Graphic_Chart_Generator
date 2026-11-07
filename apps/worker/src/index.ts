@@ -9,6 +9,7 @@ import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { createVtracer } from './vectorizer.js';
 import { z } from 'zod';
 import { createLogger, errorSummary } from './logger.js';
+import type { ResearchLogEntry } from './research-step.js';
 import { loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
 import {
   aiResearch,
@@ -83,7 +84,14 @@ if (replayFile !== undefined) {
   researchMode = 'replay';
 } else if (geminiTransport !== undefined) {
   const transport = geminiTransport;
-  const loaded = recordDir === undefined ? undefined : await loadRecordings(recordDir);
+  // An unreadable recordings directory is a configuration error: refused at start, with its cause.
+  const loaded =
+    recordDir === undefined
+      ? undefined
+      : await loadRecordings(recordDir).catch((cause: unknown) => {
+          logger.fatal({ event: 'invalid_research_recordings', error: errorSummary(cause) });
+          return process.exit(1);
+        });
   for (const file of loaded?.rejected ?? []) {
     logger.warn({ event: 'research_recording_rejected', file });
   }
@@ -131,6 +139,9 @@ const scanDeps = {
   normalizeRaster,
   vectorizer: createVtracer(),
   research,
+  onResearchWarning: (entry: ResearchLogEntry) => {
+    logger.warn({ event: 'research_warning', ...entry });
+  },
   ...(geminiTransport !== undefined
     ? {
         ai: {
@@ -193,5 +204,11 @@ async function shutdown(): Promise<void> {
   await database.pool.end();
   logger.info({ event: 'worker_stopped' });
 }
-process.once('SIGTERM', () => void shutdown());
-process.once('SIGINT', () => void shutdown());
+function stop(): void {
+  shutdown().catch((cause: unknown) => {
+    logger.fatal({ event: 'worker_shutdown_failed', error: errorSummary(cause) });
+    process.exit(1);
+  });
+}
+process.once('SIGTERM', stop);
+process.once('SIGINT', stop);
