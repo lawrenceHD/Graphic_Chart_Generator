@@ -17,6 +17,7 @@ import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { analyzeProject, failTimedOutAnalysis, type AnalyzeDeps } from './analyze.js';
 import { memoryStorage } from './memory-storage.js';
+import { replayResearch } from './research.js';
 import { createVtracer } from './vectorizer.js';
 
 const adminUrl = integrationDatabaseUrl();
@@ -40,7 +41,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
   let guestId = '';
   const objects = new Map<string, Uint8Array>();
   const rasterizer = createNodeRasterizer();
-  const run = (analysisId: string, ai?: AnalyzeDeps['ai']) =>
+  const run = (analysisId: string, ai?: AnalyzeDeps['ai'], research?: AnalyzeDeps['research']) =>
     analyzeProject(
       {
         orm: test.database.orm,
@@ -49,6 +50,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
         normalizeRaster,
         vectorizer: createVtracer(),
         ...(ai === undefined ? {} : { ai }),
+        ...(research === undefined ? {} : { research }),
       },
       analysisId,
     );
@@ -120,6 +122,12 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     },
     { type: 'analysis.done', data: { seq: 0 } },
   ];
+
+  const run0 = async (research: NonNullable<AnalyzeDeps['research']>): Promise<string> => {
+    const analysisId = await start(LOGO, 'image/svg+xml');
+    await run(analysisId, undefined, research);
+    return analysisId;
+  };
 
   it('stores the palette and the variants, composes the document and reports each step', async () => {
     const cursor = await lastEventId();
@@ -300,6 +308,53 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
       sceneCategory: 'hospitality',
       industryLabel: 'Dîners entre inconnus',
     });
+  });
+
+  it('step 4 composes the 16-page standard plan by default, without warning', async () => {
+    projectId = id();
+    await test.database.orm
+      .insert(projects)
+      .values({ id: projectId, guestSessionId: guestId, title: 'Standard' });
+    await run(await start(LOGO, 'image/svg+xml'));
+    const document = BrandDocumentSchema.parse((await documentRow())?.body);
+    expect(document.pages).toHaveLength(16);
+  });
+
+  it('degrades to the standard plan and reports RESEARCH_FAILED when research fails', async () => {
+    projectId = id();
+    await test.database.orm
+      .insert(projects)
+      .values({ id: projectId, guestSessionId: guestId, title: 'Degraded' });
+    const cursor = await lastEventId();
+    const research: NonNullable<AnalyzeDeps['research']> = {
+      plan: () => Promise.reject(new Error('quota')),
+    };
+    const analysisId = await run0(research);
+    expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+    expect(await eventsAfter(cursor)).toContainEqual({
+      type: 'analysis.step',
+      data: { step: 4, state: 'done', code: 'RESEARCH_FAILED' },
+    });
+    const document = BrandDocumentSchema.parse((await documentRow())?.body);
+    expect(document.pages).toHaveLength(16);
+  });
+
+  it('replays a recorded plan: its sections become the pages', async () => {
+    projectId = id();
+    await test.database.orm
+      .insert(projects)
+      .values({ id: projectId, guestSessionId: guestId, title: 'Replay' });
+    const replay = replayResearch({
+      sections: [
+        { type: 'cover', title: 'Couverture', evidence: [] },
+        { type: 'logo', title: 'Le logo', evidence: ['ref-1'] },
+      ],
+    });
+    if (!replay.ok) throw new Error(replay.error.code);
+    const analysisId = await run0(replay.value);
+    expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+    const document = BrandDocumentSchema.parse((await documentRow())?.body);
+    expect(document.pages.map((page) => page.title)).toEqual(['Couverture', 'Le logo']);
   });
 
   it('fails step 4 with a stable code when a variant no longer reads back', async () => {

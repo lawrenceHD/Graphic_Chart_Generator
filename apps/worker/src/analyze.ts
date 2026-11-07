@@ -32,6 +32,7 @@ import {
   type MonoTarget,
 } from '@app/logo-kit';
 import { z } from 'zod';
+import { defaultResearch, planWithFallback, type ResearchPort } from './research.js';
 
 // Job project.analyze (02_ARCHITECTURE.md §5.2, decision T-019 part 2): 1 palette (color-engine) stored in
 // the meta of the logo_sanitized asset, 2 black and white variants (logo-kit) stored as logo_variant assets,
@@ -51,6 +52,8 @@ export interface AnalyzeDeps {
   readonly vectorizer: Vectorizer;
   /** Gemini (07_AI_COPILOT.md §2); absent without AI_API_KEY. */
   readonly ai?: { readonly transport: GeminiTransport; readonly model: string };
+  /** Research of the chart plan (injected by the composition root); absent means `defaultResearch`. */
+  readonly research?: ResearchPort;
 }
 
 const MAX_LOGO_BYTES = 10 * 1024 * 1024; // 01_PRODUCT_MVP.md §3
@@ -419,17 +422,35 @@ async function composeDocument(
         pairingId: written.data.brandAnalysis.typographyPairingId,
       }
     : undefined;
-  const document = composeInitialDocument({
-    ...(rules === undefined ? {} : { logoRules: rules }),
-    ...(brand === undefined ? {} : { brand }),
-    brandName: project.title,
+  // Research comes after the variants and before the composition: it never fails the run, a failure
+  // degrades to the standard plan and its typed warning is the code of this step.
+  const { roles } = palette.data.palette;
+  const researched = await planWithFallback(deps.research ?? defaultResearch, {
     language: language.data,
-    logoSanitizedId: logo.id,
-    colors: palette.data.palette.roles,
-    variants: [{ assetId: colorId, kind: 'color', needsReview: false }, ...refs.value],
+    brandName: project.title,
+    palette: [
+      roles.primary,
+      roles.accent,
+      roles.neutralLight,
+      roles.neutralDark,
+      ...roles.extra,
+    ].map((color) => color.hex),
   });
+  const document = composeInitialDocument(
+    {
+      ...(rules === undefined ? {} : { logoRules: rules }),
+      ...(brand === undefined ? {} : { brand }),
+      brandName: project.title,
+      language: language.data,
+      logoSanitizedId: logo.id,
+      colors: roles,
+      variants: [{ assetId: colorId, kind: 'color', needsReview: false }, ...refs.value],
+    },
+    researched.plan,
+  );
   if (!document.ok) return err(document.error.code);
   return ok({
+    ...(researched.warning === undefined ? {} : { code: researched.warning }),
     save: async (tx: Tx) => {
       const created = await tx
         .insert(documents)

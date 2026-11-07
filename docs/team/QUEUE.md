@@ -20,3 +20,10 @@
   - **Suppression** : `DELETE /api/v1/projects/:id` → `204`.
   - Limite : `QUOTA_PROJECTS` et le décompte (3) sont dans `apps/web/src/server/plans.ts`, pas dans `contracts` ; ne pas dupliquer le nombre 3 dans l'interface, l'afficher depuis la réponse d'erreur (`detail`) ou une page statique.
 - [x] R2 → R1 : réconcilier `ChartPlan`. Fait : `directionToChartPlan()` et `defaultChartPlan()` retournent le `ChartPlan` du contrat (`packages/ai/src/plan/chart-plan.ts`). Les 30 `GuidelineSection` sont mappées vers les 11 types de page par `SECTION_PAGE_TYPE` (table exhaustive testée) ; `contrast` ne vient que de `color-ratio`, `tokens` n'est produit par aucune section. Le format de rejeu ne change pas : il stocke la direction, le plan est recalculé au rejeu.
+(vide)
+
+## R3 (worker) : à brancher quand R2 aura mergé
+
+- [ ] R3 → R2/R0 : brancher la recherche IA au worker. `apps/worker/src/research.ts` expose `ResearchPort`, `defaultResearch` (plan standard 16 pages), `replayResearch`/`loadRecordedResearch` (rejeu) et l'adaptateur `aiResearch(call)`. Quand `@app/ai` exposera une fonction qui produit un `ChartPlan`, ajouter dans `apps/worker/src/index.ts` : `research = aiResearch((input) => <fonction R2>(deps, input))` quand `aiConfigured` et pas de rejeu. Aucun autre fichier à changer (critère de fin : un test d'intégration avec transport simulé obtient un plan non standard).
+- [ ] R3 → R1 : le contrat `analysis.step` plafonne `step` à 4 (`project-events.ts`) ; la recherche est donc faite dans l'étape 4 et son avertissement (`RESEARCH_UNAVAILABLE`, `RESEARCH_FAILED`, `RESEARCH_PLAN_INVALID`) est le `code` de l'événement `done` de l'étape 4. Si une étape 5 ou un événement `analysis.warning` dédié est souhaité, R1 doit étendre le contrat, puis le web (timeline) suivra.
+- Configuration du rejeu (démo) : variable `RESEARCH_REPLAY_FILE` = chemin d'un JSON validé par `ChartPlanSchema`. Fichier illisible ou invalide : le worker refuse de démarrer (erreur de configuration, pas de repli silencieux).

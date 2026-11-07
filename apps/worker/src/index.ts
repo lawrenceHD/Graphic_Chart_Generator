@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { createGeminiTransport } from '@app/ai';
 import { loadEnv } from '@app/contracts';
 import { createDatabase } from '@app/db';
@@ -6,7 +7,9 @@ import { createR2Storage } from '@app/storage';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { createVtracer } from './vectorizer.js';
+import { z } from 'zod';
 import { createLogger, errorSummary } from './logger.js';
+import { defaultResearch, loadRecordedResearch, type ResearchPort } from './research.js';
 import { purge } from './purge.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
 
@@ -33,6 +36,24 @@ const {
 const aiConfigured =
   !/^(replace-me|development)/u.test(AI_API_KEY) && !/^(replace-me|development)/u.test(AI_MODEL);
 
+// Demo mode: RESEARCH_REPLAY_FILE names a recorded ChartPlan (JSON) served without any network call. An
+// unreadable or invalid file is a configuration error, refused at start rather than hidden by a fallback.
+// Without it the standard plan is used; the adapter for @app/ai (aiResearch) is wired once R2 has merged.
+const replayFile = z.string().min(1).optional().parse(process.env.RESEARCH_REPLAY_FILE);
+let research: ResearchPort = defaultResearch;
+if (replayFile !== undefined) {
+  const replay = await loadRecordedResearch((path) => readFile(path, 'utf8'), replayFile);
+  if (!replay.ok) {
+    logger.fatal({ event: 'invalid_research_replay', code: replay.error.code });
+    process.exit(1);
+  }
+  research = replay.value;
+}
+logger.info({
+  event: 'research_configuration',
+  mode: replayFile === undefined ? 'standard' : 'replay',
+});
+
 const database = createDatabase(env.value, (error) => {
   logger.error({ event: 'database_pool_error', error: errorSummary(error) });
 });
@@ -54,6 +75,7 @@ const scanDeps = {
   rasterizer: createNodeRasterizer(),
   normalizeRaster,
   vectorizer: createVtracer(),
+  research,
   ...(aiConfigured
     ? {
         ai: {
