@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { contrastVerdict } from '../../brand/color';
 import { PAIRINGS } from '../../brand/pairings';
+import { AnalysisNotice } from '../analysis-timeline';
 import type { Timeline } from '../timeline';
 import { insightsOf, suggestionsOf, type Insight, type Suggestion } from './insights';
 import { readIntent, type Reply } from './intents';
@@ -44,7 +45,7 @@ function Swatch({ hex }: { readonly hex: string }) {
   );
 }
 
-function StepList({
+export function StepList({
   timeline,
   journal,
   onRetry,
@@ -66,71 +67,76 @@ function StepList({
     return entry === undefined ? null : entry.at;
   };
   return (
-    <ol className="m-0 flex list-none flex-col gap-1 p-0" aria-label={t('title')}>
-      {timeline.steps.map((step, index) => {
-        const key = STEP_KEYS[index] ?? 'read';
-        const at = doneAt(index + 1);
-        return (
-          <li
-            key={key}
-            className={`relative flex items-start gap-3 overflow-hidden rounded-lg px-3 py-2.5 ${step.state === 'running' ? 'bg-elevated' : ''}`}
-          >
-            {step.state === 'running' ? (
-              <span aria-hidden="true" className="sweep absolute inset-0" />
-            ) : null}
-            <span
-              className={`relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
-                step.state === 'done'
-                  ? 'border-success bg-success text-canvas'
-                  : step.state === 'failed'
-                    ? 'border-danger bg-danger text-canvas'
-                    : step.state === 'running'
-                      ? 'border-ink text-ink'
-                      : 'border-line-strong text-ink-3'
-              }`}
+    <>
+      <ol className="m-0 flex list-none flex-col gap-1 p-0" aria-label={t('title')}>
+        {timeline.steps.map((step, index) => {
+          const key = STEP_KEYS[index] ?? 'read';
+          const at = doneAt(index + 1);
+          return (
+            <li
+              key={key}
+              className={`relative flex items-start gap-3 overflow-hidden rounded-lg px-3 py-2.5 ${step.state === 'running' ? 'bg-elevated' : ''}`}
             >
-              {step.state === 'done' ? (
-                <Check aria-hidden="true" className="size-3" strokeWidth={3} />
-              ) : step.state === 'failed' ? (
-                <X aria-hidden="true" className="size-3" strokeWidth={3} />
-              ) : step.state === 'running' ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="size-3 animate-spin motion-reduce:animate-none"
-                />
-              ) : (
-                <span className="font-mono text-[10px]">{index + 1}</span>
-              )}
-            </span>
-            <div className="relative min-w-0 flex-1">
-              <p
-                className={`m-0 text-sm leading-snug ${step.state === 'pending' ? 'text-ink-3' : 'text-ink'}`}
-              >
-                {t(`steps.${key}`)}
-              </p>
-              <p className="m-0 flex items-center gap-2 text-xs text-ink-3">
-                {t(`state.${step.state}`)}
-                {at === null ? null : (
-                  <span className="tabular font-mono">
-                    {tw('at', { seconds: (at / 1000).toFixed(1) })}
-                  </span>
-                )}
-              </p>
-              {step.state === 'failed' ? (
-                <button
-                  type="button"
-                  onClick={onRetry}
-                  className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs text-ink hover:bg-elevated"
-                >
-                  <RotateCcw aria-hidden="true" className="size-3.5" />
-                  {t('retry')}
-                </button>
+              {step.state === 'running' ? (
+                <span aria-hidden="true" className="sweep absolute inset-0" />
               ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+              <span
+                className={`relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${
+                  step.state === 'done'
+                    ? 'border-success bg-success text-canvas'
+                    : step.state === 'failed'
+                      ? 'border-danger bg-danger text-canvas'
+                      : step.state === 'running'
+                        ? 'border-ink text-ink'
+                        : 'border-line-strong text-ink-3'
+                }`}
+              >
+                {step.state === 'done' ? (
+                  <Check aria-hidden="true" className="size-3" strokeWidth={3} />
+                ) : step.state === 'failed' ? (
+                  <X aria-hidden="true" className="size-3" strokeWidth={3} />
+                ) : step.state === 'running' ? (
+                  <Loader2
+                    aria-hidden="true"
+                    className="size-3 animate-spin motion-reduce:animate-none"
+                  />
+                ) : (
+                  <span className="font-mono text-[10px]">{index + 1}</span>
+                )}
+              </span>
+              <div className="relative min-w-0 flex-1">
+                <p
+                  className={`m-0 text-sm leading-snug ${step.state === 'pending' ? 'text-ink-3' : 'text-ink'}`}
+                >
+                  {t(`steps.${key}`)}
+                </p>
+                <p className="m-0 flex items-center gap-2 text-xs text-ink-3">
+                  {t(`state.${step.state}`)}
+                  {at === null ? null : (
+                    <span className="tabular font-mono">
+                      {tw('at', { seconds: (at / 1000).toFixed(1) })}
+                    </span>
+                  )}
+                </p>
+                {step.state === 'failed' ? (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs text-ink hover:bg-elevated"
+                  >
+                    <RotateCcw aria-hidden="true" className="size-3.5" />
+                    {t('retry')}
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="mt-3 empty:hidden">
+        <AnalysisNotice warnings={timeline.warnings} />
+      </div>
+    </>
   );
 }
 
