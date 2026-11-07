@@ -4,13 +4,17 @@ import { parseRecording, serializeRecording, type ResearchRecording } from '@app
 
 // Disk access of the research, kept here: the worker has the disk, @app/ai does not.
 
+// Only a missing path means "absent"; EACCES, EIO and the like are relayed so they are not misdiagnosed.
+const isMissing = (cause: unknown): boolean => Reflect.get(Object(cause), 'code') === 'ENOENT';
+
 /** Content of every `index.jsonl` under `root` (the private corpus, outside Git); undefined when absent. */
 export async function readCorpusIndex(root: string): Promise<string | undefined> {
   let entries: string[];
   try {
     entries = await readdir(root, { recursive: true });
-  } catch {
-    return undefined;
+  } catch (cause) {
+    if (isMissing(cause)) return undefined;
+    throw cause;
   }
   const files = entries.filter((entry) => /(^|[\\/])index\.jsonl$/u.test(entry)).sort();
   if (files.length === 0) return undefined;
@@ -29,15 +33,20 @@ export async function loadRecordings(dir: string): Promise<LoadedRecordings> {
   let names: string[];
   try {
     names = (await readdir(dir)).filter((name) => name.endsWith('.json')).sort();
-  } catch {
-    return { recordings: [], rejected: [] };
+  } catch (cause) {
+    if (isMissing(cause)) return { recordings: [], rejected: [] };
+    throw cause;
   }
   const recordings: ResearchRecording[] = [];
   const rejected: string[] = [];
   for (const name of names) {
-    const parsed = parseRecording(await readFile(join(dir, name), 'utf8'));
-    if (parsed.ok) recordings.push(parsed.value);
-    else rejected.push(name);
+    try {
+      const parsed = parseRecording(await readFile(join(dir, name), 'utf8'));
+      if (parsed.ok) recordings.push(parsed.value);
+      else rejected.push(name);
+    } catch {
+      rejected.push(name);
+    }
   }
   return { recordings, rejected };
 }

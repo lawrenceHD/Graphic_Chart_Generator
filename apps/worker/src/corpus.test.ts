@@ -23,6 +23,13 @@ describe('corpus index', () => {
     expect(await readCorpusIndex(root)).toBeUndefined();
   });
 
+  it('relays a read failure other than a missing directory instead of calling it absent', async () => {
+    const root = await temp();
+    const file = join(root, 'not-a-dir');
+    await writeFile(file, 'x');
+    await expect(readCorpusIndex(file)).rejects.toMatchObject({ code: 'ENOTDIR' });
+  });
+
   it('concatenates every index.jsonl found under the root', async () => {
     const root = await temp();
     await mkdir(join(root, 'a'));
@@ -54,6 +61,19 @@ describe('recordings on disk', () => {
     const loaded = await loadRecordings(join(dir, 'rec'));
     expect(loaded.rejected).toEqual([]);
     expect(loaded.recordings.map((entry) => entry.key)).toEqual([recording.key]);
+  });
+
+  it('reports an unreadable recording file by name instead of crashing the worker', async () => {
+    const dir = await temp();
+    await mkdir(join(dir, 'unreadable.json'));
+    expect(await loadRecordings(dir)).toEqual({ recordings: [], rejected: ['unreadable.json'] });
+  });
+
+  it('relays a directory read failure other than a missing directory', async () => {
+    const dir = await temp();
+    const file = join(dir, 'file');
+    await writeFile(file, 'x');
+    await expect(loadRecordings(file)).rejects.toMatchObject({ code: 'ENOTDIR' });
   });
 
   it('reports a file that is not a recording instead of skipping it silently', async () => {
