@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { ChartPlanSchema, MAX_CHART_SECTIONS } from './index.js';
+import { ChartPlanSchema, MAX_CHART_SECTIONS, PAGE_CAPACITY, PAGE_TYPES } from './index.js';
+
+describe('PAGE_CAPACITY', () => {
+  it('has a positive integer capacity for every page type and no other key', () => {
+    expect(Object.keys(PAGE_CAPACITY).sort()).toEqual([...PAGE_TYPES].sort());
+    for (const type of PAGE_TYPES) {
+      expect(Number.isInteger(PAGE_CAPACITY[type]), type).toBe(true);
+      expect(PAGE_CAPACITY[type], type).toBeGreaterThan(0);
+    }
+  });
+
+  it('refuses a plan with more sections of a type than its capacity', () => {
+    const sections = (count: number) =>
+      Array.from({ length: count }, () => ({ type: 'cover', title: 'C', evidence: [] }));
+    expect(ChartPlanSchema.safeParse({ sections: sections(PAGE_CAPACITY.cover) }).success).toBe(
+      true,
+    );
+    expect(ChartPlanSchema.safeParse({ sections: sections(PAGE_CAPACITY.cover + 1) }).success).toBe(
+      false,
+    );
+  });
+});
 
 const section = { type: 'palette', title: 'Palette principale', evidence: ['ref-1', 'ref-2'] };
 

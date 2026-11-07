@@ -65,3 +65,4 @@ Après validation des décisions 1 à 3 : sauvegarde du prototype, `.gitignore`,
   - Messages : `apps/web/messages/product.{fr,en}.json` (fusionnés dans `i18n/request.ts`), plus deux clés `start.quota*` dans `fr.json`/`en.json`.
   - Atelier : lit `landing/example-source.ts` (interface `LandingExample`). Une seule source tant que R7 n'a pas mergé `landing/examples` : `demo.ts` (La Mèza). Brancher R7 = changer `listExamples()` et rendre `DemoSheet` générique.
   - Vérifié : tests ciblés, typecheck, lint, build. Rendu desktop capturé (thème nuit, Chromium headless). Mobile, thème jour et formulaires en navigateur : non vérifiés.
+- 2026-11-07 (R1) : `PAGE_CAPACITY` déplacée dans `packages/contracts` ; `ChartPlanSchema` refuse un plan au-delà de la capacité d'un type (le plan standard de 16 pages reste valide). `packages/ai` importe la table. Tests contracts 51, document 79, ai 97 verts.

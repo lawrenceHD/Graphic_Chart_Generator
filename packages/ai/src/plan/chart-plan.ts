@@ -1,6 +1,7 @@
 import {
   ChartPlanSchema,
   MAX_SECTION_EVIDENCE,
+  PAGE_CAPACITY,
   type ChartPlan,
   type GuidelineSection,
   PAGE_TYPES,
@@ -96,22 +97,8 @@ const tokensSection = (): ChartPlan['sections'][number] => ({
   evidence: [],
 });
 
-// Pages the studio fills with distinct content per type (apps/web/src/studio/pages): beyond it a page would
-// say there is nothing more to show. Defined here until it moves to packages/contracts (docs/team/QUEUE.md);
-// chart-plan.test.ts pins the values, so a change in the studio has to be mirrored on purpose.
-export const PAGE_CAPACITY: Record<PageType, number> = {
-  cover: 1,
-  manifesto: 4,
-  logo: 4,
-  'clear-space': 3,
-  'do-dont': 16,
-  palette: 12,
-  contrast: 2,
-  typography: 11,
-  'tone-of-voice': 1,
-  mockup: 13,
-  tokens: 1,
-};
+// The table lives in packages/contracts; re-exported so the importers of this module do not change.
+export { PAGE_CAPACITY };
 
 type PlanSection = ChartPlan['sections'][number];
 
