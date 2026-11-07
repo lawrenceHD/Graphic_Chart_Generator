@@ -46,7 +46,6 @@ const deps = (over: Partial<RunResearchDeps> = {}): RunResearchDeps => ({
   visionModel: 'gemini-test',
   catalogue: loadFontCatalogue(),
   readIndex: () => Promise.resolve(indexText),
-  language: 'fr',
   ...over,
 });
 const input = { logo: image, palette: ['#7A1F2B'] };
@@ -58,9 +57,9 @@ describe('runResearch', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.source).toBe('live');
-    expect(result.value.plan.sections.find((entry) => entry.type === 'menu')?.preuves).toContain(
-      'menu-1',
-    );
+    expect(
+      result.value.plan.sections.find((entry) => entry.title === 'Menu and cards')?.evidence,
+    ).toContain('menu-1');
     expect(result.value.recording?.recordedAt).toBe('2026-11-07T10:00:00.000Z');
     expect(calls).toBe(2);
   });
@@ -82,7 +81,7 @@ describe('runResearch', () => {
     expect(codes).toContain('visual-similarity-unavailable');
     expect(codes).toContain('reference-index-missing');
     expect(result.value.plan.sections.map((entry) => entry.type)).toContain('typography');
-    expect(result.value.plan.sections.every((entry) => entry.preuves.length === 0)).toBe(true);
+    expect(result.value.plan.sections.every((entry) => entry.evidence.length === 0)).toBe(true);
   });
 
   it('treats an unreadable index like a missing one, never as a crash', async () => {
