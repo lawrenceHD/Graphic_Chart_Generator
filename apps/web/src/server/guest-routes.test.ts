@@ -1,12 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import type { Actor } from '@app/contracts';
-import { eq, projects, user } from '@app/db';
+import { documents, eq, projects, revisions, user } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { guestActorFromCookie } from './guest-service';
 import { guestCookieOf, guestHandlers } from './guest-routes';
-import { createProject } from './project-service';
+import { projectResource } from './project-access';
+import { createProject, listProjects } from './project-service';
 import { createRateLimiter } from './rate-limiter';
 
 const adminUrl = integrationDatabaseUrl();
@@ -130,5 +131,92 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     expect([row?.guestSessionId, typeof row?.workspaceId]).toEqual([null, 'string']);
     const value = cookie.split('=').slice(1).join('=');
     expect(await guestActorFromCookie(test.database.orm, value, SECRET, clock)).toBeNull();
+  });
+  it('keeps the document and history of the claimed project, readable by the new owner only (AC-01.3)', async () => {
+    const orm = test.database.orm;
+    const { cookie, actor } = await newGuest();
+    if (actor?.kind !== 'guest') throw new Error('guest expected');
+    const project = await createProject(orm, actor, { title: 'Precious', language: 'fr' });
+    const body = { brand: { name: 'Precious' } };
+    await orm.insert(documents).values({ projectId: project.id, schemaVersion: 1, body, seq: 1 });
+    await orm.insert(revisions).values({
+      id: uuidV7(clock.getTime(), randomBytes(10)),
+      projectId: project.id,
+      seq: 1,
+      actor: 'user',
+      command: { type: 'SetBrandField' },
+      inverse: { type: 'SetBrandField' },
+    });
+    const owner = uuidV7(clock.getTime(), randomBytes(10));
+    const stranger = uuidV7(clock.getTime(), randomBytes(10));
+    for (const userId of [owner, stranger])
+      await orm.insert(user).values({ id: userId, name: 'x', email: `${userId}@example.invalid` });
+
+    signedIn = { kind: 'user', userId: owner, emailVerified: true };
+    expect(await (await routes.claim(post('/guest-sessions/claim', {}, cookie))).json()).toEqual({
+      claimed: 1,
+    });
+    const [doc] = await orm.select().from(documents).where(eq(documents.projectId, project.id));
+    expect([doc?.body, doc?.seq]).toEqual([body, 1]);
+    expect(
+      await orm.select().from(revisions).where(eq(revisions.projectId, project.id)),
+    ).toHaveLength(1);
+    const asOwner = await projectResource(orm, project.id, signedIn);
+    const asStranger = await projectResource(orm, project.id, {
+      kind: 'user',
+      userId: stranger,
+      emailVerified: true,
+    });
+    expect(
+      [asOwner, asStranger].map((resource) =>
+        resource.kind === 'project' ? resource.memberRole : undefined,
+      ),
+    ).toEqual(['owner', undefined]);
+
+    // A closed session cannot be claimed twice, not even by another account holding the cookie.
+    signedIn = { kind: 'user', userId: stranger, emailVerified: true };
+    expect(await (await routes.claim(post('/guest-sessions/claim', {}, cookie))).json()).toEqual({
+      claimed: 0,
+    });
+  });
+
+  it('claims even when the account already holds a full free plan, losing nothing', async () => {
+    const orm = test.database.orm;
+    const { cookie, actor } = await newGuest();
+    if (actor?.kind !== 'guest') throw new Error('guest expected');
+    const userId = uuidV7(clock.getTime(), randomBytes(10));
+    await orm.insert(user).values({ id: userId, name: 'x', email: `${userId}@example.invalid` });
+    for (const title of ['A', 'B', 'C'])
+      await createProject(orm, { kind: 'user', userId }, { title, language: 'fr' });
+    await createProject(orm, actor, { title: 'Guest draft', language: 'fr' });
+    signedIn = { kind: 'user', userId, emailVerified: false };
+    expect(await (await routes.claim(post('/guest-sessions/claim', {}, cookie))).json()).toEqual({
+      claimed: 1,
+    });
+    const kept = await listProjects(
+      orm,
+      { kind: 'user', userId, emailVerified: false },
+      { limit: 50 },
+    );
+    expect(kept.items.map((item) => item.title).sort()).toEqual(['A', 'B', 'C', 'Guest draft']);
+  });
+
+  it('claims nothing without a valid guest cookie, and refuses a foreign Origin', async () => {
+    signedIn = {
+      kind: 'user',
+      userId: uuidV7(clock.getTime(), randomBytes(10)),
+      emailVerified: false,
+    };
+    expect(await (await routes.claim(post('/guest-sessions/claim', {}))).json()).toEqual({
+      claimed: 0,
+    });
+    const forged = await routes.claim(
+      post('/guest-sessions/claim', {}, 'atelier_guest=forged.value'),
+    );
+    expect(await forged.json()).toEqual({ claimed: 0 });
+    const foreign = await routes.claim(
+      post('/guest-sessions/claim', {}, '', 'https://evil.example'),
+    );
+    expect(foreign.status).toBe(403);
   });
 });
