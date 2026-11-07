@@ -131,9 +131,9 @@
    "name": "Guideline Sheet",
    "kind": "custom",
    "refersTo": "preview-tile",
-   "description": "A 16:9 guideline page on the dotted canvas.",
-   "html": "<article class=\"ds-sheet\"><header>LA MÈZA — CHARTE GRAPHIQUE <span>03</span></header><h3>Palette</h3></article>",
-   "css": ".ds-sheet{aspect-ratio:16/9;width:320px;background:oklch(0.99 0.004 85);border-radius:24px;padding:20px;box-shadow:0 1px 2px oklch(0.2 0.01 60 / .06),0 12px 32px -12px oklch(0.2 0.01 60 / .18)}.ds-sheet header{display:flex;justify-content:space-between;font:400 10px/1.4 'Geist Mono Variable',monospace;color:oklch(0.46 0.01 60);letter-spacing:.08em}.ds-sheet h3{font:700 28px/1.05 'Bricolage Grotesque Variable',sans-serif;margin:12px 0 0;color:oklch(0.2 0.01 60)}"
+   "description": "An A4 landscape guideline page on the dotted canvas.",
+   "html": "<article class=\"ds-sheet\"><header>MARQUE — CHARTE GRAPHIQUE <span>03</span></header><h3>Palette</h3></article>",
+   "css": ".ds-sheet{aspect-ratio:297/210;width:320px;background:oklch(0.99 0.004 85);border-radius:24px;padding:20px;box-shadow:0 1px 2px oklch(0.2 0.01 60 / .06),0 12px 32px -12px oklch(0.2 0.01 60 / .18)}.ds-sheet header{display:flex;justify-content:space-between;font:400 10px/1.4 'Geist Mono Variable',monospace;color:oklch(0.46 0.01 60);letter-spacing:.08em}.ds-sheet h3{font:700 28px/1.05 'Bricolage Grotesque Variable',sans-serif;margin:12px 0 0;color:oklch(0.2 0.01 60)}"
   }
  ],
  "narrative": {
