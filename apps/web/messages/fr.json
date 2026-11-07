@@ -113,6 +113,8 @@
     "network": "La connexion a été interrompue. Vérifiez votre réseau, puis réessayez.",
     "turnstile": "La vérification anti-robot n'a pas abouti. Réessayez.",
     "rateLimited": "Trop de projets créés en peu de temps. Patientez quelques minutes, puis réessayez.",
+    "quota": "Votre plan gratuit a atteint sa limite de projets. Supprimez-en un depuis « Mes projets », ou consultez les tarifs.",
+    "quotaLink": "Voir les tarifs",
     "refused": "La création a été refusée (code {code}). Réessayez dans un instant.",
     "logoHint": "Seul champ indispensable avec le nom",
     "briefPlaceholder": "Ex. : La Mèza réunit des inconnus autour d’une même table pour des dîners conviviaux…",

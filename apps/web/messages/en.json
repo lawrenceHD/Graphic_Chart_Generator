@@ -113,6 +113,8 @@
     "network": "The connection was interrupted. Check your network, then try again.",
     "turnstile": "The anti-bot check did not complete. Try again.",
     "rateLimited": "Too many projects created in a short time. Wait a few minutes, then try again.",
+    "quota": "Your free plan has reached its project limit. Delete one from \"My projects\", or see the pricing.",
+    "quotaLink": "See pricing",
     "refused": "The request was refused (code {code}). Try again in a moment.",
     "logoHint": "The only field needed with the name",
     "briefPlaceholder": "E.g.: La Mèza brings strangers together around one table for friendly dinners…",

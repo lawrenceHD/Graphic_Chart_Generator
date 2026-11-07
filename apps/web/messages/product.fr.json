@@ -1,0 +1,207 @@
+{
+  "site": {
+    "nav": "Navigation principale",
+    "atelier": "Atelier",
+    "method": "Méthode",
+    "pricing": "Tarifs",
+    "login": "Connexion",
+    "signup": "Créer un compte",
+    "try": "Essayer sans compte",
+    "projects": "Mes projets",
+    "home": "Charta, retour à l’accueil",
+    "footerTagline": "Des chartes graphiques composées à partir d’un logo, mesurées par des moteurs et ajustables page par page.",
+    "footerProduct": "Produit",
+    "footerAccount": "Compte",
+    "rights": "© 2026 Charta"
+  },
+  "homePage": {
+    "metaTitle": "Charta · Une charte graphique complète à partir de votre logo",
+    "hero": {
+      "title": "Votre logo devient une charte complète.",
+      "lead": "Déposez le fichier : Charta mesure ses couleurs, vérifie chaque contraste, compose les pages et les mises en situation. Vous reprenez ensuite chaque page, à la main ou en parlant au copilote.",
+      "start": "Essayer sans compte",
+      "signup": "Créer un compte",
+      "note": "Sans carte bancaire. Votre logo n’est jamais redessiné."
+    },
+    "atelier": {
+      "title": "L’atelier, avec une vraie charte",
+      "lead": "Une marque d’exemple composée par les mêmes moteurs que la vôtre. Changez de page, lisez les mesures.",
+      "region": "Aperçu de l’atelier",
+      "example": "Marque d’exemple",
+      "pages": "Pages de la charte",
+      "page": {
+        "cover": "Couverture",
+        "palette": "Palette",
+        "contrast": "Contrastes",
+        "typography": "Typographie"
+      },
+      "demoNote": "Exemple de démonstration, pas un client.",
+      "colorsTitle": "Couleurs mesurées sur le logo",
+      "contrastTitle": "Contrastes",
+      "tokensTitle": "Tokens exportés",
+      "fontsTitle": "Typographie",
+      "role": {
+        "primary": "Principale",
+        "accent": "Accent",
+        "neutralLight": "Papier",
+        "neutralDark": "Encre"
+      },
+      "level": {
+        "aaa": "AAA",
+        "aa": "AA",
+        "large-ui": "Grand texte",
+        "fail": "Insuffisant"
+      },
+      "pair": "{foreground} sur {background}"
+    },
+    "method": {
+      "title": "Trois gestes, une charte.",
+      "drop": {
+        "title": "Déposez",
+        "text": "SVG, PNG, WebP ou JPEG. Le fichier est vérifié et assaini avant toute lecture, l’original reste privé."
+      },
+      "watch": {
+        "title": "Regardez",
+        "text": "L’analyse avance en direct : lecture du logo, palette et contrastes, typographie, assemblage. Les pages se posent au fur et à mesure."
+      },
+      "adjust": {
+        "title": "Ajustez",
+        "text": "Une couleur, une police, un format, ou une phrase au copilote. Chaque modification est une commande que vous pouvez annuler."
+      }
+    },
+    "promise": {
+      "logo": "Le logo n’est jamais redessiné par une IA.",
+      "measured": "Chaque valeur affichée est calculée, avec sa source.",
+      "undo": "Chaque modification s’annule et se rétablit.",
+      "export": "Export PDF, fichiers du logo et tokens CSS."
+    },
+    "final": {
+      "title": "Déposez votre logo.",
+      "lead": "La première charte se compose en quelques minutes, sans compte."
+    }
+  },
+  "pricing": {
+    "metaTitle": "Tarifs",
+    "title": "Des tarifs simples, pensés pour grandir.",
+    "lead": "Commencez gratuitement avec trois projets. Les plans payants arrivent après la bêta.",
+    "hypothesis": "Prix indicatifs à valider. Aucun paiement n’est possible pour l’instant.",
+    "toValidate": "à valider",
+    "soon": "Bientôt",
+    "perMonth": "{price} €",
+    "perMonthUnit": "par mois",
+    "free": "0 €",
+    "freeCaption": "Pour toujours",
+    "cta": "Commencer gratuitement",
+    "plans": {
+      "free": {
+        "name": "Gratuit",
+        "audience": "Pour essayer et pour un premier client."
+      },
+      "pro": {
+        "name": "Pro",
+        "audience": "Pour les indépendants et les designers."
+      },
+      "agency": {
+        "name": "Agence",
+        "audience": "Pour les studios qui livrent plusieurs marques."
+      }
+    },
+    "projects": {
+      "limited": "{count, plural, one {# projet} other {# projets}}",
+      "unlimited": "Projets illimités"
+    },
+    "feature": {
+      "pdf": "Export PDF de la charte",
+      "files": "Fichiers du logo et variantes",
+      "copilot": "Copilote et ajustement page par page",
+      "unlimited": "Tous les projets que vous voulez",
+      "tokens": "Tokens CSS, Tailwind et Figma",
+      "mockups": "Mises en situation en haute définition",
+      "priority": "Analyses prioritaires",
+      "seats": "Plusieurs membres dans l’équipe",
+      "share": "Partage avec les clients",
+      "whiteLabel": "Charte à votre nom",
+      "support": "Accompagnement dédié"
+    },
+    "faqTitle": "Questions fréquentes",
+    "q1": "Puis-je payer dès maintenant ?",
+    "a1": "Non. Le paiement n’existe pas encore. Le plan gratuit est le seul actif, avec trois projets.",
+    "q2": "Que se passe-t-il si je dépasse trois projets ?",
+    "a2": "Vous gardez l’accès à vos chartes. La création d’un quatrième projet est refusée avec un message qui explique pourquoi."
+  },
+  "auth": {
+    "loginMeta": "Connexion",
+    "signupMeta": "Créer un compte",
+    "back": "Retour à l’accueil",
+    "login": {
+      "title": "Content de vous revoir.",
+      "lead": "Retrouvez vos chartes là où vous les avez laissées.",
+      "submit": "Se connecter",
+      "switchText": "Pas encore de compte ?",
+      "switchLink": "Créer un compte"
+    },
+    "signup": {
+      "title": "Créez votre compte.",
+      "lead": "Gardez vos chartes, rouvrez-les, ajustez-les.",
+      "submit": "Créer mon compte",
+      "switchText": "Déjà un compte ?",
+      "switchLink": "Se connecter"
+    },
+    "pending": "Un instant…",
+    "name": "Nom",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "passwordHint": "10 caractères minimum. Une phrase de passe fonctionne très bien.",
+    "showPassword": "Afficher le mot de passe",
+    "summary": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} pour continuer.",
+    "guest": {
+      "title": "Pas envie de créer un compte ?",
+      "text": "Essayez avec votre logo. Si vous vous inscrivez ensuite, vos projets d’invité sont rattachés à votre compte.",
+      "cta": "Essayer sans compte"
+    },
+    "field": {
+      "nameRequired": "Indiquez votre nom, il figurera sur vos chartes.",
+      "emailInvalid": "Cette adresse e-mail n’est pas valide. Exemple : prenom@exemple.com.",
+      "passwordRequired": "Saisissez votre mot de passe.",
+      "passwordShort": "Le mot de passe est trop court : 10 caractères minimum.",
+      "passwordLong": "Le mot de passe est trop long : 128 caractères maximum."
+    },
+    "failure": {
+      "invalidCredentials": "E-mail ou mot de passe incorrect. Vérifiez la saisie, ou créez un compte si vous n’en avez pas.",
+      "signupFailed": "Le compte n’a pas pu être ouvert. Si vous avez déjà un compte avec cette adresse, connectez-vous.",
+      "rateLimitedIn": "Trop de tentatives. Réessayez dans {minutes, plural, one {# minute} other {# minutes}}.",
+      "passwordCompromised": "Ce mot de passe figure dans des fuites publiques. Choisissez-en un autre.",
+      "rateLimited": "Trop de tentatives. Patientez quelques minutes, puis réessayez.",
+      "generic": "L’opération a échoué de notre côté. Réessayez dans un instant.",
+      "network": "Le serveur est injoignable. Vérifiez votre connexion, puis réessayez."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "Mes projets",
+    "title": "Mes projets",
+    "lead": "Chaque projet est une charte que vous pouvez rouvrir et ajuster page par page.",
+    "new": "Nouveau projet",
+    "quota": "Le plan gratuit limite le nombre de projets.",
+    "seePlans": "Voir les tarifs",
+    "loading": "Chargement de vos projets…",
+    "open": "Ouvrir {title}",
+    "updated": "Modifié le {date}",
+    "noSector": "Secteur non précisé",
+    "empty": {
+      "title": "Aucun projet pour l’instant.",
+      "text": "Déposez un logo pour composer votre première charte."
+    },
+    "error": {
+      "title": "Vos projets n’ont pas pu être chargés.",
+      "text": "Le serveur n’a pas répondu comme prévu. Vos chartes ne sont pas perdues.",
+      "retry": "Réessayer"
+    },
+    "signedOut": {
+      "title": "Connectez-vous pour voir vos projets.",
+      "text": "Votre session a expiré ou vous n’êtes pas connecté.",
+      "cta": "Se connecter"
+    },
+    "signOut": "Se déconnecter",
+    "signOutFailed": "La déconnexion a échoué. Réessayez."
+  }
+}

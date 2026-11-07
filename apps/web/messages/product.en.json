@@ -1,0 +1,207 @@
+{
+  "site": {
+    "nav": "Main navigation",
+    "atelier": "Studio",
+    "method": "How it works",
+    "pricing": "Pricing",
+    "login": "Sign in",
+    "signup": "Create an account",
+    "try": "Try without an account",
+    "projects": "My projects",
+    "home": "Charta, back to the home page",
+    "footerTagline": "Brand guidelines composed from a logo, measured by engines and adjustable page by page.",
+    "footerProduct": "Product",
+    "footerAccount": "Account",
+    "rights": "© 2026 Charta"
+  },
+  "homePage": {
+    "metaTitle": "Charta · A complete brand guideline from your logo",
+    "hero": {
+      "title": "Your logo becomes a complete guideline.",
+      "lead": "Drop the file: Charta measures its colours, checks every contrast, and composes the pages and mockups. Then you edit each page by hand or by talking to the copilot.",
+      "start": "Try without an account",
+      "signup": "Create an account",
+      "note": "No credit card. Your logo is never redrawn."
+    },
+    "atelier": {
+      "title": "The studio, with a real guideline",
+      "lead": "A sample brand composed by the same engines as yours. Switch pages, read the measurements.",
+      "region": "Studio preview",
+      "example": "Sample brand",
+      "pages": "Guideline pages",
+      "page": {
+        "cover": "Cover",
+        "palette": "Palette",
+        "contrast": "Contrast",
+        "typography": "Typography"
+      },
+      "demoNote": "Demonstration sample, not a customer.",
+      "colorsTitle": "Colours measured on the logo",
+      "contrastTitle": "Contrast",
+      "tokensTitle": "Exported tokens",
+      "fontsTitle": "Typography",
+      "role": {
+        "primary": "Primary",
+        "accent": "Accent",
+        "neutralLight": "Paper",
+        "neutralDark": "Ink"
+      },
+      "level": {
+        "aaa": "AAA",
+        "aa": "AA",
+        "large-ui": "Large text",
+        "fail": "Too low"
+      },
+      "pair": "{foreground} on {background}"
+    },
+    "method": {
+      "title": "Three moves, one guideline.",
+      "drop": {
+        "title": "Drop",
+        "text": "SVG, PNG, WebP or JPEG. The file is checked and sanitised before it is read, the original stays private."
+      },
+      "watch": {
+        "title": "Watch",
+        "text": "The analysis runs live: logo reading, palette and contrast, typography, assembly. Pages land on the table as they are ready."
+      },
+      "adjust": {
+        "title": "Adjust",
+        "text": "A colour, a font, a format, or one sentence to the copilot. Every change is a command you can undo."
+      }
+    },
+    "promise": {
+      "logo": "The logo is never redrawn by an AI.",
+      "measured": "Every value shown is computed, with its source.",
+      "undo": "Every change can be undone and redone.",
+      "export": "PDF export, logo files and CSS tokens."
+    },
+    "final": {
+      "title": "Drop your logo.",
+      "lead": "The first guideline takes a few minutes, no account needed."
+    }
+  },
+  "pricing": {
+    "metaTitle": "Pricing",
+    "title": "Simple pricing, built to grow with you.",
+    "lead": "Start free with three projects. Paid plans arrive after the beta.",
+    "hypothesis": "Indicative prices, to be validated. No payment is possible for now.",
+    "toValidate": "to be validated",
+    "soon": "Soon",
+    "perMonth": "€{price}",
+    "perMonthUnit": "per month",
+    "free": "€0",
+    "freeCaption": "Forever",
+    "cta": "Start for free",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "audience": "To try it and for a first client."
+      },
+      "pro": {
+        "name": "Pro",
+        "audience": "For freelancers and designers."
+      },
+      "agency": {
+        "name": "Agency",
+        "audience": "For studios delivering several brands."
+      }
+    },
+    "projects": {
+      "limited": "{count, plural, one {# project} other {# projects}}",
+      "unlimited": "Unlimited projects"
+    },
+    "feature": {
+      "pdf": "PDF export of the guideline",
+      "files": "Logo files and variants",
+      "copilot": "Copilot and page-by-page editing",
+      "unlimited": "As many projects as you need",
+      "tokens": "CSS, Tailwind and Figma tokens",
+      "mockups": "High-definition mockups",
+      "priority": "Priority analyses",
+      "seats": "Several team members",
+      "share": "Sharing with clients",
+      "whiteLabel": "Guideline under your name",
+      "support": "Dedicated support"
+    },
+    "faqTitle": "Frequently asked questions",
+    "q1": "Can I pay right now?",
+    "a1": "No. Payment does not exist yet. The free plan is the only active one, with three projects.",
+    "q2": "What happens if I go past three projects?",
+    "a2": "You keep access to your guidelines. Creating a fourth project is refused with a message that explains why."
+  },
+  "auth": {
+    "loginMeta": "Sign in",
+    "signupMeta": "Create an account",
+    "back": "Back to the home page",
+    "login": {
+      "title": "Good to see you again.",
+      "lead": "Pick your guidelines up where you left them.",
+      "submit": "Sign in",
+      "switchText": "No account yet?",
+      "switchLink": "Create an account"
+    },
+    "signup": {
+      "title": "Create your account.",
+      "lead": "Keep your guidelines, reopen them, adjust them.",
+      "submit": "Create my account",
+      "switchText": "Already have an account?",
+      "switchLink": "Sign in"
+    },
+    "pending": "One moment…",
+    "name": "Name",
+    "email": "Email address",
+    "password": "Password",
+    "passwordHint": "At least 10 characters. A passphrase works very well.",
+    "showPassword": "Show password",
+    "summary": "{count, plural, one {One field needs fixing} other {# fields need fixing}} to continue.",
+    "guest": {
+      "title": "Rather not create an account?",
+      "text": "Try it with your logo. If you sign up afterwards, your guest projects are attached to your account.",
+      "cta": "Try without an account"
+    },
+    "field": {
+      "nameRequired": "Enter your name, it will appear on your guidelines.",
+      "emailInvalid": "This email address is not valid. Example: name@example.com.",
+      "passwordRequired": "Enter your password.",
+      "passwordShort": "The password is too short: at least 10 characters.",
+      "passwordLong": "The password is too long: 128 characters at most."
+    },
+    "failure": {
+      "invalidCredentials": "Wrong email or password. Check what you typed, or create an account if you do not have one.",
+      "signupFailed": "The account could not be opened. If you already have an account with this address, sign in.",
+      "rateLimitedIn": "Too many attempts. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+      "passwordCompromised": "This password appears in public leaks. Choose another one.",
+      "rateLimited": "Too many attempts. Wait a few minutes, then try again.",
+      "generic": "The operation failed on our side. Try again in a moment.",
+      "network": "The server cannot be reached. Check your connection, then try again."
+    }
+  },
+  "dashboard": {
+    "metaTitle": "My projects",
+    "title": "My projects",
+    "lead": "Each project is a guideline you can reopen and adjust page by page.",
+    "new": "New project",
+    "quota": "The free plan limits the number of projects.",
+    "seePlans": "See pricing",
+    "loading": "Loading your projects…",
+    "open": "Open {title}",
+    "updated": "Edited {date}",
+    "noSector": "Sector not specified",
+    "empty": {
+      "title": "No projects yet.",
+      "text": "Drop a logo to compose your first guideline."
+    },
+    "error": {
+      "title": "Your projects could not be loaded.",
+      "text": "The server did not answer as expected. Your guidelines are not lost.",
+      "retry": "Try again"
+    },
+    "signedOut": {
+      "title": "Sign in to see your projects.",
+      "text": "Your session has expired or you are not signed in.",
+      "cta": "Sign in"
+    },
+    "signOut": "Sign out",
+    "signOutFailed": "Signing out failed. Try again."
+  }
+}

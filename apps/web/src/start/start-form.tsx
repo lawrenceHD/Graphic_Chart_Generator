@@ -2,6 +2,7 @@
 
 import { ArrowRight, ImageUp, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useEffect, useState, type SyntheticEvent } from 'react';
 import { Button } from '../components/button';
 import { LogoDropzone } from '../studio/logo-dropzone';
@@ -83,6 +84,7 @@ export function StartForm({
     if (current.kind === 'network') return t('network');
     if (current.kind === 'turnstile') return t('turnstile');
     if (current.status === 429) return t('rateLimited');
+    if (current.code === 'QUOTA_PROJECTS') return t('quota');
     if (current.code === 'TURNSTILE_FAILED') return t('turnstile');
     return t('refused', { code: current.code });
   };
@@ -213,6 +215,14 @@ export function StartForm({
           {failure === null ? null : (
             <p role="alert" className="m-0 text-sm text-danger">
               {failureText(failure)}
+              {failure.kind === 'http' && failure.code === 'QUOTA_PROJECTS' ? (
+                <>
+                  {' '}
+                  <Link href="/tarifs" className="font-medium text-ink">
+                    {t('quotaLink')}
+                  </Link>
+                </>
+              ) : null}
             </p>
           )}
         </div>
