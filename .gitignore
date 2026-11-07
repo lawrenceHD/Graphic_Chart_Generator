@@ -51,3 +51,8 @@ __pycache__/
 .github/hooks/
 .github/agents/
 .impeccable/
+
+# Local secrets and agent worktrees: never committed (audit D-1)
+gemini key.txt
+*key*.txt
+.claude/worktrees/
