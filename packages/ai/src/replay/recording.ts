@@ -1,7 +1,6 @@
 import { GuidelineSectionSchema, TypeStyleSchema, VisualStyleSchema } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 import { z } from 'zod';
-import type { ImageInput } from '../gemini/logo-reading.js';
 import { LogoReadingSchema } from '../gemini/logo-reading.js';
 import type { ArtDirection } from '../references/direction.js';
 import type { BrandResearch } from '../research.js';
@@ -81,11 +80,24 @@ const RecordingSchema = z
   .object({
     version: z.literal(1),
     // Fingerprint of the logo the research was made for, or "*" for a recording valid for any logo.
-    key: z.string().regex(/^(\*|[0-9a-f]{16}-[a-z]+)$/),
+    key: z.string().regex(/^(\*|[0-9a-f]{16}-[a-z0-9]{1,16})$/),
     recordedAt: z.string().max(40),
     research: ResearchSchema,
   })
   .strict();
+
+// Any declared mime type is accepted here (it comes from an upload): the key must stay parseable.
+export interface LogoBytes {
+  data: Uint8Array;
+  mimeType: string;
+}
+
+// "image/svg+xml" gives "svgxml": only letters and digits, at most 16, never empty.
+const mimeTag = (mimeType: string): string =>
+  (mimeType.split('/')[1] ?? mimeType)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 16) || 'unknown';
 
 export interface ResearchRecording {
   version: 1;
@@ -95,7 +107,7 @@ export interface ResearchRecording {
 }
 
 // FNV-1a over the bytes (two seeds, 64 bits): identifies a recording's logo, not a security boundary.
-export function fingerprintLogo(image: ImageInput): string {
+export function fingerprintLogo(image: LogoBytes): string {
   let a = 0x811c9dc5;
   let b = 0x01000193;
   for (const byte of image.data) {
@@ -103,12 +115,12 @@ export function fingerprintLogo(image: ImageInput): string {
     b = Math.imul(b ^ byte, 0x85ebca6b) >>> 0;
   }
   const hex = (value: number): string => value.toString(16).padStart(8, '0');
-  return `${hex(a)}${hex(b)}-${image.mimeType.slice(6)}`;
+  return `${hex(a)}${hex(b)}-${mimeTag(image.mimeType)}`;
 }
 
 export function createRecording(
   research: BrandResearch,
-  image: ImageInput,
+  image: LogoBytes,
   recordedAt: string,
 ): ResearchRecording {
   return { version: 1, key: fingerprintLogo(image), recordedAt, research };
@@ -155,7 +167,7 @@ export function parseRecording(text: string): Result<ResearchRecording, string> 
 
 export function findRecording(
   recordings: readonly ResearchRecording[],
-  image: ImageInput,
+  image: LogoBytes,
 ): ResearchRecording | undefined {
   const key = fingerprintLogo(image);
   return (
