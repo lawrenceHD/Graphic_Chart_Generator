@@ -7,6 +7,7 @@ import { appLogger } from '../logger';
 import { getDatabase } from '../lib/database';
 import { getRuntimeEnv } from '../lib/runtime-env';
 import { analysisHandlers } from './analysis-routes';
+import { accountHandlers } from './account-routes';
 import { assetHandlers } from './asset-routes';
 import { actorFromSession, createAuth, type Auth } from './auth';
 import { documentHandlers } from './document-routes';
@@ -122,6 +123,38 @@ export function getAnalysisHandlers(): ReturnType<typeof analysisHandlers> {
   return analysisRoutes;
 }
 
+function newStorage() {
+  const env = getRuntimeEnv();
+  return createR2Storage(
+    {
+      accountId: env.R2_ACCOUNT_ID,
+      accessKeyId: env.R2_ACCESS_KEY_ID,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      bucket: env.R2_BUCKET,
+      ...(env.R2_ENDPOINT === undefined ? {} : { endpoint: env.R2_ENDPOINT }),
+    },
+    () => new Date(),
+  );
+}
+
+let accountRoutes: ReturnType<typeof accountHandlers> | undefined;
+
+export function getAccountHandlers(): ReturnType<typeof accountHandlers> {
+  accountRoutes ??= accountHandlers({
+    orm: getDatabase().orm,
+    appUrl: getRuntimeEnv().APP_URL,
+    resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
+    storage: newStorage(),
+    limiter: getRateLimiter(),
+    // Summary only: no e-mail, no project content.
+    onError: (error) => {
+      appLogger().error({ event: 'account_erasure_storage_error', error: errorSummary(error) });
+    },
+  });
+  return accountRoutes;
+}
+
 export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
   const env = getRuntimeEnv();
   assetRoutes ??= assetHandlers({
@@ -129,16 +162,7 @@ export function getAssetHandlers(): ReturnType<typeof assetHandlers> {
     appUrl: env.APP_URL,
     resolveActor,
     trustedProxyHops: getTrustedProxyHops(),
-    storage: createR2Storage(
-      {
-        accountId: env.R2_ACCOUNT_ID,
-        accessKeyId: env.R2_ACCESS_KEY_ID,
-        secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-        bucket: env.R2_BUCKET,
-        ...(env.R2_ENDPOINT === undefined ? {} : { endpoint: env.R2_ENDPOINT }),
-      },
-      () => new Date(),
-    ),
+    storage: newStorage(),
     queue: lazyQueue,
     limiter: getRateLimiter(),
   });
