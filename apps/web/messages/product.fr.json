@@ -28,6 +28,7 @@
       "lead": "Une marque d’exemple composée par les mêmes moteurs que la vôtre. Changez de page, lisez les mesures.",
       "region": "Aperçu de l’atelier",
       "example": "Marque d’exemple",
+      "current": "Exemple : {brand}",
       "pages": "Pages de la charte",
       "page": {
         "cover": "Couverture",

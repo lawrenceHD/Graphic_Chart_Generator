@@ -28,6 +28,7 @@
       "lead": "A sample brand composed by the same engines as yours. Switch pages, read the measurements.",
       "region": "Studio preview",
       "example": "Sample brand",
+      "current": "Example: {brand}",
       "pages": "Guideline pages",
       "page": {
         "cover": "Cover",
