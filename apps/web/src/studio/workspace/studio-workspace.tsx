@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MAIN_ID } from '../../components/skip-link-id';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
+import { evidenceOf, occurrencesOf } from '../pages/variant';
 import { brandView, orderedPages } from './brand-view';
 import { CopilotPanel } from './copilot-panel';
 import { ExportDialog } from './export-dialog';
@@ -57,6 +58,7 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
     [document, studio.project],
   );
   const pages = useMemo(() => (document === null ? [] : orderedPages(document)), [document]);
+  const occurrences = useMemo(() => occurrencesOf(pages), [pages]);
 
   // The first page is selected when the guideline arrives, so the inspector is never empty.
   useEffect(() => {
@@ -260,6 +262,8 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
                     title: page.title,
                     background: page.overrides.background,
                     year,
+                    occurrence: occurrences[index] ?? { index: 0, count: 1 },
+                    evidence: evidenceOf(page.data),
                   }}
                 />
               </div>

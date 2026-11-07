@@ -9,6 +9,7 @@ import { LogoDropzone } from '../logo-dropzone';
 import { MockupStage, SCENES, type SceneId } from '../mockups/mockup-stage';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
+import { evidenceOf, occurrencesOf, type Occurrence } from '../pages/variant';
 import type { Timeline } from '../timeline';
 import { PAGE_STEP, brandView, orderedPages, type BrandView } from './brand-view';
 import type { ProjectSummary } from './document-client';
@@ -111,6 +112,7 @@ function SheetSlot({
   page,
   index,
   total,
+  occurrence,
   view,
   year,
   selected,
@@ -119,6 +121,7 @@ function SheetSlot({
   readonly page: Page;
   readonly index: number;
   readonly total: number;
+  readonly occurrence: Occurrence;
   readonly view: BrandView;
   readonly year: number;
   readonly selected: boolean;
@@ -154,6 +157,8 @@ function SheetSlot({
             title: page.title,
             background: page.overrides.background,
             year,
+            occurrence,
+            evidence: evidenceOf(page.data),
           }}
         />
       </div>
@@ -223,6 +228,7 @@ export function PageCanvas({
 
   const view = document !== null && project !== null ? brandView(document, project) : null;
   const pages = document === null ? [] : orderedPages(document);
+  const occurrences = occurrencesOf(pages);
   const empty = phase === 'empty' || (phase === 'sending' && document === null);
 
   return (
@@ -275,6 +281,7 @@ export function PageCanvas({
                       page={page}
                       index={index}
                       total={pages.length}
+                      occurrence={occurrences[index] ?? { index: 0, count: 1 }}
                       view={view}
                       year={year}
                       selected={selection?.kind === 'page' && selection.id === page.id}

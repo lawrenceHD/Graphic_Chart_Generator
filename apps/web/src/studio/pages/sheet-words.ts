@@ -6,6 +6,8 @@ export type SheetLanguage = 'fr' | 'en';
 
 export interface SheetWords {
   readonly guideline: string;
+  /** Label of the proof references a page rests on (foot of the page). */
+  readonly evidence: string;
   readonly edition: (year: number) => string;
   readonly roles: Readonly<Record<ColorRole, string>>;
   readonly usage: Readonly<Record<ColorRole, string>>;
@@ -40,6 +42,7 @@ export interface SheetWords {
     readonly onDark: string;
     readonly tint: string;
     readonly reversed: string;
+    readonly onAccent: string;
     readonly favicon: string;
     readonly review: string;
   };
@@ -63,7 +66,11 @@ export interface SheetWords {
     readonly crowd: string;
     readonly crowdText: string;
   };
-  readonly palette: { readonly scale: string; readonly cmykNote: string };
+  readonly palette: {
+    readonly scale: string;
+    readonly scaleOf: (name: string) => string;
+    readonly cmykNote: string;
+  };
   readonly contrast: {
     readonly legend: string;
     readonly levels: Readonly<Record<'aaa' | 'aa' | 'large-ui' | 'fail', string>>;
@@ -76,6 +83,8 @@ export interface SheetWords {
     readonly licence: string;
     readonly h1: string;
     readonly h2: string;
+    readonly h3: string;
+    readonly lead: string;
     readonly body: string;
     readonly caption: string;
     readonly sample: string;
@@ -95,6 +104,7 @@ export interface SheetWords {
 
 const FR: SheetWords = {
   guideline: 'Charte graphique',
+  evidence: 'Preuve',
   edition: (year) => `Édition ${String(year)}`,
   roles: {
     primary: 'Principale',
@@ -145,6 +155,7 @@ const FR: SheetWords = {
     onDark: 'Sur fond sombre',
     tint: 'Une couleur',
     reversed: 'En réserve',
+    onAccent: 'Sur la couleur d’accent',
     favicon: 'Favicon',
     review: 'à vérifier',
   },
@@ -170,6 +181,7 @@ const FR: SheetWords = {
   },
   palette: {
     scale: 'Échelle de la principale',
+    scaleOf: (name) => `Échelle : ${name}`,
     cmykNote: 'CMJN indicatif, à valider avec l’imprimeur.',
   },
   contrast: {
@@ -184,6 +196,8 @@ const FR: SheetWords = {
     licence: 'Licence libre SIL OFL',
     h1: 'Titre 1',
     h2: 'Titre 2',
+    h3: 'Titre 3',
+    lead: 'Chapô',
     body: 'Texte courant',
     caption: 'Légende',
     sample:
@@ -204,6 +218,7 @@ const FR: SheetWords = {
 
 const EN: SheetWords = {
   guideline: 'Brand guidelines',
+  evidence: 'Evidence',
   edition: (year) => `${String(year)} edition`,
   roles: {
     primary: 'Primary',
@@ -253,6 +268,7 @@ const EN: SheetWords = {
     onDark: 'On a dark background',
     tint: 'One colour',
     reversed: 'Reversed',
+    onAccent: 'On the accent colour',
     favicon: 'Favicon',
     review: 'to check',
   },
@@ -276,7 +292,11 @@ const EN: SheetWords = {
     crowd: 'Respect the clear space',
     crowdText: 'Crowding text',
   },
-  palette: { scale: 'Primary scale', cmykNote: 'Indicative CMYK, to confirm with the printer.' },
+  palette: {
+    scale: 'Primary scale',
+    scaleOf: (name) => `Scale: ${name}`,
+    cmykNote: 'Indicative CMYK, to confirm with the printer.',
+  },
   contrast: {
     legend: 'Text (rows) on background (columns).',
     levels: { aaa: 'AAA', aa: 'AA', 'large-ui': 'Large text', fail: 'Fail' },
@@ -289,6 +309,8 @@ const EN: SheetWords = {
     licence: 'Open licence SIL OFL',
     h1: 'Heading 1',
     h2: 'Heading 2',
+    h3: 'Heading 3',
+    lead: 'Standfirst',
     body: 'Body text',
     caption: 'Caption',
     sample:
