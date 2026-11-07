@@ -9,6 +9,12 @@ import {
   projects,
   readProjectEvents,
 } from '@app/db';
+import {
+  loadFontCatalogue,
+  runResearch,
+  type ResearchRecording,
+  type RunResearchDeps,
+} from '@app/ai';
 import { BrandDocumentSchema } from '@app/document';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { uuidV7 } from '@app/kernel';
@@ -17,7 +23,8 @@ import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { analyzeProject, failTimedOutAnalysis, type AnalyzeDeps } from './analyze.js';
 import { memoryStorage } from './memory-storage.js';
-import { replayResearch } from './research.js';
+import { aiResearch, replayResearch } from './research.js';
+import { indexText, okTransport, quotaTransport } from './research-fixtures.js';
 import { createVtracer } from './vectorizer.js';
 
 const adminUrl = integrationDatabaseUrl();
@@ -337,6 +344,88 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     });
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
     expect(document.pages).toHaveLength(16);
+  });
+
+  describe('AI research with a simulated Gemini (no network)', () => {
+    const live = (
+      over: Partial<RunResearchDeps>,
+      record?: (recording: ResearchRecording) => Promise<void>,
+    ) =>
+      aiResearch({
+        run: (input) =>
+          runResearch(
+            {
+              transport: okTransport().transport,
+              visionModel: 'gemini-test',
+              catalogue: loadFontCatalogue(),
+              readIndex: () => Promise.resolve(indexText),
+              now: () => '2026-11-07T10:00:00.000Z',
+              ...over,
+            },
+            input,
+          ),
+        ...(record === undefined ? {} : { record }),
+      });
+    const freshProject = async (title: string): Promise<number> => {
+      projectId = id();
+      await test.database.orm
+        .insert(projects)
+        .values({ id: projectId, guestSessionId: guestId, title });
+      return lastEventId();
+    };
+    const doneCodes = async (cursor: number): Promise<(string | undefined)[]> =>
+      (await eventsAfter(cursor)).flatMap(({ event }) =>
+        event.type === 'analysis.step' && event.data.step === 4 && event.data.state === 'done'
+          ? [event.data.code]
+          : [],
+      );
+    const saved: ResearchRecording[] = [];
+
+    it('live: the pages follow the sourced plan, the recording is kept', async () => {
+      const cursor = await freshProject('Live');
+      const analysisId = await run0(
+        live({}, (recording) => {
+          saved.push(recording);
+          return Promise.resolve();
+        }),
+      );
+      expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+      const document = BrandDocumentSchema.parse((await documentRow())?.body);
+      expect(document.pages.some((page) => JSON.stringify(page.data).includes('menu-1'))).toBe(
+        true,
+      );
+      expect(saved).toHaveLength(1);
+      expect(await doneCodes(cursor)).toEqual([undefined]);
+    });
+
+    it('live failing: falls back to the recording, every issue reported, run still done', async () => {
+      const [recording] = saved;
+      if (recording === undefined) throw new Error('the live test must run first');
+      const cursor = await freshProject('Fallback');
+      const analysisId = await run0(
+        live({ transport: quotaTransport().transport, recordings: [recording] }),
+      );
+      expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+      expect(await doneCodes(cursor)).toEqual(
+        expect.arrayContaining(['RESEARCH_FAILED', 'RESEARCH_REPLAYED_AFTER_FAILURE']),
+      );
+      const document = BrandDocumentSchema.parse((await documentRow())?.body);
+      expect(document.pages.some((page) => JSON.stringify(page.data).includes('menu-1'))).toBe(
+        true,
+      );
+    });
+
+    it('absent corpus index: degraded, typed warnings, run still done', async () => {
+      const cursor = await freshProject('NoIndex');
+      const analysisId = await run0(live({ readIndex: () => Promise.resolve(undefined) }));
+      expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
+      expect(await doneCodes(cursor)).toEqual(
+        expect.arrayContaining([
+          'RESEARCH_REFERENCE_INDEX_MISSING',
+          'RESEARCH_VISUAL_SIMILARITY_UNAVAILABLE',
+        ]),
+      );
+    });
   });
 
   it('replays a recorded plan: its sections become the pages', async () => {

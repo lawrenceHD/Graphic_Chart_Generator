@@ -1,7 +1,14 @@
+import {
+  loadFontCatalogue,
+  runResearch,
+  type ResearchRecording,
+  type RunResearchDeps,
+} from '@app/ai';
 import type { ChartPlan } from '@app/contracts';
 import { standardChartPlan } from '@app/document';
 import { err, ok } from '@app/kernel';
 import { describe, expect, it } from 'vitest';
+import { indexText, okTransport, quotaTransport } from './research-fixtures.js';
 import {
   aiResearch,
   defaultResearch,
@@ -10,30 +17,33 @@ import {
   replayResearch,
   type ResearchInput,
   type ResearchPort,
+  type ResearchResult,
 } from './research.js';
 
-const input: ResearchInput = { language: 'fr', brandName: 'Atelier', palette: ['#1F4BFF'] };
+const logo = { data: new Uint8Array([1, 2, 3]), mimeType: 'image/png' as const };
+const input: ResearchInput = { language: 'fr', brandName: 'Atelier', palette: ['#7A1F2B'], logo };
 const recorded: ChartPlan = {
   sections: [
     { type: 'cover', title: 'Couverture', evidence: [] },
     { type: 'logo', title: 'Le logo', evidence: ['ref-1'] },
   ],
 };
+const result = (plan: ChartPlan, warnings: string[] = []): ResearchResult => ({ plan, warnings });
 
 describe('research port', () => {
   it('defaultResearch returns the 16-page standard plan in the project language', async () => {
     const fr = await defaultResearch.plan(input);
-    expect(fr).toEqual({ ok: true, value: standardChartPlan('fr') });
+    expect(fr).toEqual({ ok: true, value: result(standardChartPlan('fr')) });
     const en = await defaultResearch.plan({ ...input, language: 'en' });
-    expect(en.ok && en.value.sections).toHaveLength(16);
-    expect(en.ok && en.value.sections[0]?.title).toBe('Cover');
+    expect(en.ok && en.value.plan.sections).toHaveLength(16);
+    expect(en.ok && en.value.plan.sections[0]?.title).toBe('Cover');
   });
 
   it('replays a recorded plan without calling anything', async () => {
     const port = replayResearch(recorded);
     expect(port.ok).toBe(true);
     if (!port.ok) return;
-    expect(await port.value.plan(input)).toEqual({ ok: true, value: recorded });
+    expect(await port.value.plan(input)).toEqual({ ok: true, value: result(recorded) });
   });
 
   it('refuses a recorded plan that ChartPlanSchema rejects', () => {
@@ -49,37 +59,17 @@ describe('research port', () => {
     const missing = await loadRecordedResearch(() => Promise.reject(new Error('ENOENT')), 'p');
     expect(missing).toMatchObject({ ok: false, error: { code: 'RESEARCH_REPLAY_INVALID' } });
   });
-
-  it('the AI adapter validates the output and turns failures into errors', async () => {
-    const good = aiResearch(() => Promise.resolve(ok(recorded)));
-    expect(await good.plan(input)).toEqual({ ok: true, value: recorded });
-    const invalid = aiResearch(() => Promise.resolve(ok({ sections: [] })));
-    expect(await invalid.plan(input)).toMatchObject({
-      ok: false,
-      error: { code: 'RESEARCH_PLAN_INVALID' },
-    });
-    const failed = aiResearch(() => Promise.resolve(err({ code: 'AI_RATE_LIMITED' })));
-    expect(await failed.plan(input)).toMatchObject({
-      ok: false,
-      error: { code: 'RESEARCH_FAILED' },
-    });
-    const thrown = aiResearch(() => Promise.reject(new Error('network')));
-    expect(await thrown.plan(input)).toMatchObject({
-      ok: false,
-      error: { code: 'RESEARCH_FAILED' },
-    });
-  });
 });
 
 describe('planWithFallback (degraded mode)', () => {
   const port = (plan: ResearchPort['plan']): ResearchPort => ({ plan });
 
-  it('keeps the researched plan, without warning', async () => {
+  it('keeps the researched plan and its warnings', async () => {
     const outcome = await planWithFallback(
-      port(() => Promise.resolve(ok(recorded))),
+      port(() => Promise.resolve(ok(result(recorded, ['RESEARCH_REPLAYED'])))),
       input,
     );
-    expect(outcome).toEqual({ plan: recorded });
+    expect(outcome).toEqual({ plan: recorded, warnings: ['RESEARCH_REPLAYED'] });
   });
 
   it('falls back to the standard plan with the typed warning of the failure', async () => {
@@ -89,7 +79,7 @@ describe('planWithFallback (degraded mode)', () => {
     );
     expect(unavailable).toEqual({
       plan: standardChartPlan('fr'),
-      warning: 'RESEARCH_UNAVAILABLE',
+      warnings: ['RESEARCH_UNAVAILABLE'],
     });
   });
 
@@ -98,11 +88,111 @@ describe('planWithFallback (degraded mode)', () => {
       port(() => Promise.reject(new Error('boom'))),
       input,
     );
-    expect(thrown).toEqual({ plan: standardChartPlan('fr'), warning: 'RESEARCH_FAILED' });
+    expect(thrown).toEqual({ plan: standardChartPlan('fr'), warnings: ['RESEARCH_FAILED'] });
     const invalid = await planWithFallback(
-      port(() => Promise.resolve(ok({ sections: [] }))),
+      port(() => Promise.resolve(ok(result({ sections: [] })))),
       input,
     );
-    expect(invalid).toEqual({ plan: standardChartPlan('fr'), warning: 'RESEARCH_PLAN_INVALID' });
+    expect(invalid).toEqual({
+      plan: standardChartPlan('fr'),
+      warnings: ['RESEARCH_PLAN_INVALID'],
+    });
+  });
+});
+
+describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
+  const deps = (over: Partial<RunResearchDeps>): RunResearchDeps => ({
+    transport: okTransport().transport,
+    visionModel: 'gemini-test',
+    catalogue: loadFontCatalogue(),
+    readIndex: () => Promise.resolve(indexText),
+    now: () => '2026-11-07T10:00:00.000Z',
+    ...over,
+  });
+  const port = (over: Partial<RunResearchDeps>, record?: (r: ResearchRecording) => Promise<void>) =>
+    aiResearch({
+      run: (runInput) => runResearch(deps(over), runInput),
+      ...(record === undefined ? {} : { record }),
+    });
+
+  it('live: returns the sourced plan and hands the recording over', async () => {
+    const saved: ResearchRecording[] = [];
+    const outcome = await port({}, (recording) => {
+      saved.push(recording);
+      return Promise.resolve();
+    }).plan(input);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.value.plan.sections.some((section) => section.evidence.length > 0)).toBe(true);
+    expect(outcome.value.plan.sections).not.toEqual(standardChartPlan('fr').sections);
+    expect(saved).toHaveLength(1);
+  });
+
+  it('a failing recording is a warning, never a failure', async () => {
+    const outcome = await port({}, () => Promise.reject(new Error('disk full'))).plan(input);
+    expect(outcome.ok && outcome.value.warnings).toContain('RESEARCH_RECORDING_FAILED');
+  });
+
+  it('live failing (quota): falls back to the recording of the same logo, with warnings', async () => {
+    const live = await runResearch(deps({}), { logo, palette: ['#7A1F2B'] });
+    const recording = live.ok ? live.value.recording : undefined;
+    if (recording === undefined) throw new Error('no recording');
+    const quota = quotaTransport();
+    const saved: ResearchRecording[] = [];
+    const outcome = await port({ transport: quota.transport, recordings: [recording] }, (r) => {
+      saved.push(r);
+      return Promise.resolve();
+    }).plan(input);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.value.warnings).toEqual(
+      expect.arrayContaining(['RESEARCH_FAILED', 'RESEARCH_REPLAYED_AFTER_FAILURE']),
+    );
+    expect(outcome.value.plan.sections.some((section) => section.evidence.length > 0)).toBe(true);
+    expect(saved).toEqual([]);
+  });
+
+  it('live failing without recording: default plan of the AI and the typed issue', async () => {
+    const outcome = await port({ transport: quotaTransport().transport }).plan(input);
+    expect(outcome.ok && outcome.value.warnings).toContain('RESEARCH_FAILED');
+    expect(outcome.ok && outcome.value.plan.sections.length).toBeGreaterThan(0);
+  });
+
+  it('absent corpus index: degraded plan with the missing-index warning', async () => {
+    const outcome = await port({ readIndex: () => Promise.resolve(undefined) }).plan(input);
+    expect(outcome.ok && outcome.value.warnings).toEqual(
+      expect.arrayContaining(['RESEARCH_REFERENCE_INDEX_MISSING']),
+    );
+  });
+
+  it('without a rendered logo the research is unavailable', async () => {
+    const { language, brandName, palette } = input;
+    expect(await port({}).plan({ language, brandName, palette })).toMatchObject({
+      ok: false,
+      error: { code: 'RESEARCH_UNAVAILABLE' },
+    });
+  });
+
+  it('a throwing run and an invalid plan are failures, not exceptions', async () => {
+    const thrown = aiResearch({ run: () => Promise.reject(new Error('network')) });
+    expect(await thrown.plan(input)).toMatchObject({
+      ok: false,
+      error: { code: 'RESEARCH_FAILED' },
+    });
+    const failed = aiResearch({ run: () => Promise.resolve(err({ code: 'AI_REQUEST_REJECTED' })) });
+    expect(await failed.plan(input)).toMatchObject({
+      ok: false,
+      error: { code: 'RESEARCH_FAILED' },
+    });
+    const invalid = aiResearch({
+      run: async (runInput) => {
+        const live = await runResearch(deps({}), runInput);
+        return live.ok ? ok({ ...live.value, plan: { sections: [] } }) : live;
+      },
+    });
+    expect(await invalid.plan(input)).toMatchObject({
+      ok: false,
+      error: { code: 'RESEARCH_PLAN_INVALID' },
+    });
   });
 });

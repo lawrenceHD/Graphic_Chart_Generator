@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { createGeminiTransport } from '@app/ai';
+import { createGeminiTransport, loadFontCatalogue, runResearch } from '@app/ai';
 import { loadEnv } from '@app/contracts';
 import { createDatabase } from '@app/db';
 import { startJobQueue } from '@app/db/queue';
@@ -9,7 +9,13 @@ import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { createVtracer } from './vectorizer.js';
 import { z } from 'zod';
 import { createLogger, errorSummary } from './logger.js';
-import { defaultResearch, loadRecordedResearch, type ResearchPort } from './research.js';
+import { loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
+import {
+  aiResearch,
+  defaultResearch,
+  loadRecordedResearch,
+  type ResearchPort,
+} from './research.js';
 import { purge } from './purge.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
 
@@ -36,11 +42,37 @@ const {
 const aiConfigured =
   !/^(replace-me|development)/u.test(AI_API_KEY) && !/^(replace-me|development)/u.test(AI_MODEL);
 
-// Demo mode: RESEARCH_REPLAY_FILE names a recorded ChartPlan (JSON) served without any network call. An
-// unreadable or invalid file is a configuration error, refused at start rather than hidden by a fallback.
-// Without it the standard plan is used; the adapter for @app/ai (aiResearch) is wired once R2 has merged.
-const replayFile = z.string().min(1).optional().parse(process.env.RESEARCH_REPLAY_FILE);
+// Research (docs/team/QUEUE.md, "Variables d'environnement de la recherche"), validated here:
+// - RESEARCH_REPLAY_FILE: a recorded ChartPlan (JSON) served without any network call (demo). An unreadable
+//   or invalid file is a configuration error, refused at start rather than hidden by a fallback.
+// - RESEARCH_CORPUS_DIR: the private corpus (default corpus-reel); absent means degraded, not failed.
+// - RESEARCH_RECORD_DIR: recordings of live researches are written there and, on a later live failure,
+//   replayed (same logo).
+const ResearchEnv = z.object({
+  RESEARCH_REPLAY_FILE: z.string().min(1).optional(),
+  RESEARCH_CORPUS_DIR: z.string().min(1).default('corpus-reel'),
+  RESEARCH_RECORD_DIR: z.string().min(1).optional(),
+});
+const researchEnv = ResearchEnv.safeParse(process.env);
+if (!researchEnv.success) {
+  logger.fatal({ event: 'invalid_research_environment' });
+  process.exit(1);
+}
+const {
+  RESEARCH_REPLAY_FILE: replayFile,
+  RESEARCH_CORPUS_DIR: corpusDir,
+  RESEARCH_RECORD_DIR: recordDir,
+} = researchEnv.data;
+const geminiTransport = aiConfigured
+  ? createGeminiTransport({
+      apiKey: AI_API_KEY,
+      fetch: (url, init) => fetch(url, init),
+      sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+    })
+  : undefined;
+
 let research: ResearchPort = defaultResearch;
+let researchMode = 'standard';
 if (replayFile !== undefined) {
   const replay = await loadRecordedResearch((path) => readFile(path, 'utf8'), replayFile);
   if (!replay.ok) {
@@ -48,11 +80,34 @@ if (replayFile !== undefined) {
     process.exit(1);
   }
   research = replay.value;
+  researchMode = 'replay';
+} else if (geminiTransport !== undefined) {
+  const transport = geminiTransport;
+  const loaded = recordDir === undefined ? undefined : await loadRecordings(recordDir);
+  for (const file of loaded?.rejected ?? []) {
+    logger.warn({ event: 'research_recording_rejected', file });
+  }
+  const catalogue = loadFontCatalogue();
+  research = aiResearch({
+    run: (input) =>
+      runResearch(
+        {
+          transport,
+          visionModel: AI_MODEL,
+          catalogue,
+          readIndex: () => readCorpusIndex(corpusDir),
+          recordings: loaded?.recordings ?? [],
+          now: () => new Date().toISOString(),
+        },
+        input,
+      ),
+    ...(recordDir === undefined
+      ? {}
+      : { record: (recording) => writeRecording(recordDir, recording) }),
+  });
+  researchMode = 'live';
 }
-logger.info({
-  event: 'research_configuration',
-  mode: replayFile === undefined ? 'standard' : 'replay',
-});
+logger.info({ event: 'research_configuration', mode: researchMode });
 
 const database = createDatabase(env.value, (error) => {
   logger.error({ event: 'database_pool_error', error: errorSummary(error) });
@@ -76,15 +131,11 @@ const scanDeps = {
   normalizeRaster,
   vectorizer: createVtracer(),
   research,
-  ...(aiConfigured
+  ...(geminiTransport !== undefined
     ? {
         ai: {
           model: AI_MODEL,
-          transport: createGeminiTransport({
-            apiKey: AI_API_KEY,
-            fetch: (url, init) => fetch(url, init),
-            sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
-          }),
+          transport: geminiTransport,
         },
       }
     : {}),

@@ -227,6 +227,20 @@ async function variants(
 // brand's texts and catalogue choices, stored in the logo's meta for step 4. Without a key, or when the
 // call fails, nothing is guessed: the step says why and the document keeps its explicit empty defaults.
 const LOGO_FOR_AI = 1024;
+const COMPOSE_STEP = 4;
+
+/** The logo as a PNG for the research; undefined when it cannot be rendered (research then degrades). */
+async function renderLogoPng(
+  deps: AnalyzeDeps,
+  logo: Asset,
+  bytes: Uint8Array,
+): Promise<Uint8Array | undefined> {
+  const image =
+    logo.mime === SVG
+      ? await deps.rasterizer.rasterize(new TextDecoder().decode(bytes), LOGO_FOR_AI)
+      : await deps.normalizeRaster(bytes);
+  return image.ok ? image.value.png : undefined;
+}
 
 async function brandAnalysis(
   deps: AnalyzeDeps,
@@ -425,6 +439,7 @@ async function composeDocument(
   // Research comes after the variants and before the composition: it never fails the run, a failure
   // degrades to the standard plan and its typed warning is the code of this step.
   const { roles } = palette.data.palette;
+  const logoPng = await renderLogoPng(deps, logo, bytes);
   const researched = await planWithFallback(deps.research ?? defaultResearch, {
     language: language.data,
     brandName: project.title,
@@ -435,7 +450,12 @@ async function composeDocument(
       roles.neutralDark,
       ...roles.extra,
     ].map((color) => color.hex),
+    ...(logoPng === undefined ? {} : { logo: { data: logoPng, mimeType: 'image/png' as const } }),
   });
+  const [warning, ...others] = researched.warnings;
+  // The contract carries one code per event: the first warning rides on the step's `done`, the others
+  // follow as further `done` events of the same step, before `analysis.done`.
+  const extraWarnings = others.map((code) => stepEvent(COMPOSE_STEP, 'done', code));
   const document = composeInitialDocument(
     {
       ...(rules === undefined ? {} : { logoRules: rules }),
@@ -450,7 +470,7 @@ async function composeDocument(
   );
   if (!document.ok) return err(document.error.code);
   return ok({
-    ...(researched.warning === undefined ? {} : { code: researched.warning }),
+    ...(warning === undefined ? {} : { code: warning }),
     save: async (tx: Tx) => {
       const created = await tx
         .insert(documents)
@@ -463,7 +483,7 @@ async function composeDocument(
         .onConflictDoNothing()
         .returning({ seq: documents.seq });
       // Another analysis of the project may have composed it in the meantime: theirs is kept.
-      return finish(tx, logo.projectId, created.length > 0);
+      return finish(tx, logo.projectId, created.length > 0, extraWarnings);
     },
   });
 }
@@ -473,7 +493,12 @@ function keptDocument(logo: Asset): StepDone {
 }
 
 /** The project is ready; `analysis.done` carries the head of its document. */
-async function finish(tx: Tx, projectId: string, created: boolean): Promise<Saved> {
+async function finish(
+  tx: Tx,
+  projectId: string,
+  created: boolean,
+  warnings: readonly ProjectEvent[] = [],
+): Promise<Saved> {
   const [current] = await tx
     .select({ seq: documents.seq })
     .from(documents)
@@ -485,7 +510,7 @@ async function finish(tx: Tx, projectId: string, created: boolean): Promise<Save
     .set({ status: 'ready' })
     .where(and(eq(projects.id, projectId), isNull(projects.deletedAt)));
   const done = { type: 'analysis.done', data: { seq: current.seq } } satisfies ProjectEvent;
-  return created ? { after: [done] } : { code: 'DOCUMENT_KEPT', after: [done] };
+  return created ? { after: [...warnings, done] } : { code: 'DOCUMENT_KEPT', after: [done] };
 }
 
 async function failRun(orm: Orm, run: Run, step: number, code: string): Promise<void> {
