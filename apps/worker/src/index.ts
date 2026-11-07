@@ -9,6 +9,7 @@ import { analyzeProject, failTimedOutAnalysis } from './analyze.js';
 import { createVtracer } from './vectorizer.js';
 import { z } from 'zod';
 import { createLogger, errorSummary } from './logger.js';
+import type { ResearchLogEntry } from './research-step.js';
 import { loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
 import {
   aiResearch,
@@ -138,6 +139,9 @@ const scanDeps = {
   normalizeRaster,
   vectorizer: createVtracer(),
   research,
+  onResearchWarning: (entry: ResearchLogEntry) => {
+    logger.warn({ event: 'research_warning', ...entry });
+  },
   ...(geminiTransport !== undefined
     ? {
         ai: {

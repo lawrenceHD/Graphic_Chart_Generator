@@ -18,6 +18,7 @@ import {
   type ResearchInput,
   type ResearchPort,
   type ResearchResult,
+  type ResearchWarning,
 } from './research.js';
 
 const logo = { data: new Uint8Array([1, 2, 3]), mimeType: 'image/png' as const };
@@ -28,7 +29,12 @@ const recorded: ChartPlan = {
     { type: 'logo', title: 'Le logo', evidence: ['ref-1'] },
   ],
 };
-const result = (plan: ChartPlan, warnings: string[] = []): ResearchResult => ({ plan, warnings });
+const result = (plan: ChartPlan, warnings: ResearchWarning[] = []): ResearchResult => ({
+  plan,
+  warnings,
+});
+const codes = (warnings: readonly ResearchWarning[] | undefined): string[] =>
+  (warnings ?? []).map((warning) => warning.code);
 
 describe('research port', () => {
   it('defaultResearch returns the 16-page standard plan in the project language', async () => {
@@ -66,10 +72,10 @@ describe('planWithFallback (degraded mode)', () => {
 
   it('keeps the researched plan and its warnings', async () => {
     const outcome = await planWithFallback(
-      port(() => Promise.resolve(ok(result(recorded, ['RESEARCH_REPLAYED'])))),
+      port(() => Promise.resolve(ok(result(recorded, [{ code: 'RESEARCH_REPLAYED' }])))),
       input,
     );
-    expect(outcome).toEqual({ plan: recorded, warnings: ['RESEARCH_REPLAYED'] });
+    expect(outcome).toEqual({ plan: recorded, warnings: [{ code: 'RESEARCH_REPLAYED' }] });
   });
 
   it('falls back to the standard plan with the typed warning of the failure', async () => {
@@ -79,7 +85,7 @@ describe('planWithFallback (degraded mode)', () => {
     );
     expect(unavailable).toEqual({
       plan: standardChartPlan('fr'),
-      warnings: ['RESEARCH_UNAVAILABLE'],
+      warnings: [{ code: 'RESEARCH_UNAVAILABLE', detail: 'no key' }],
     });
   });
 
@@ -88,14 +94,17 @@ describe('planWithFallback (degraded mode)', () => {
       port(() => Promise.reject(new Error('boom'))),
       input,
     );
-    expect(thrown).toEqual({ plan: standardChartPlan('fr'), warnings: ['RESEARCH_FAILED'] });
+    expect(thrown).toEqual({
+      plan: standardChartPlan('fr'),
+      warnings: [{ code: 'RESEARCH_FAILED', cause: 'Error' }],
+    });
     const invalid = await planWithFallback(
       port(() => Promise.resolve(ok(result({ sections: [] })))),
       input,
     );
     expect(invalid).toEqual({
       plan: standardChartPlan('fr'),
-      warnings: ['RESEARCH_PLAN_INVALID'],
+      warnings: [{ code: 'RESEARCH_PLAN_INVALID' }],
     });
   });
 });
@@ -130,7 +139,10 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
 
   it('a failing recording is a warning, never a failure', async () => {
     const outcome = await port({}, () => Promise.reject(new Error('disk full'))).plan(input);
-    expect(outcome.ok && outcome.value.warnings).toContain('RESEARCH_RECORDING_FAILED');
+    expect(outcome.ok && outcome.value.warnings).toContainEqual({
+      code: 'RESEARCH_RECORDING_FAILED',
+      cause: 'Error',
+    });
   });
 
   it('live failing (quota): falls back to the recording of the same logo, with warnings', async () => {
@@ -145,22 +157,24 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
     }).plan(input);
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
-    expect(outcome.value.warnings).toEqual(
+    expect(codes(outcome.value.warnings)).toEqual(
       expect.arrayContaining(['RESEARCH_FAILED', 'RESEARCH_REPLAYED_AFTER_FAILURE']),
     );
+    // The cause (the quota) is kept for the logs, not lost behind the code.
+    expect(outcome.value.warnings).toContainEqual({ code: 'RESEARCH_FAILED', detail: 'AI_QUOTA' });
     expect(outcome.value.plan.sections.some((section) => section.evidence.length > 0)).toBe(true);
     expect(saved).toEqual([]);
   });
 
   it('live failing without recording: default plan of the AI and the typed issue', async () => {
     const outcome = await port({ transport: quotaTransport().transport }).plan(input);
-    expect(outcome.ok && outcome.value.warnings).toContain('RESEARCH_FAILED');
+    expect(codes(outcome.ok ? outcome.value.warnings : undefined)).toContain('RESEARCH_FAILED');
     expect(outcome.ok && outcome.value.plan.sections.length).toBeGreaterThan(0);
   });
 
   it('absent corpus index: degraded plan with the missing-index warning', async () => {
     const outcome = await port({ readIndex: () => Promise.resolve(undefined) }).plan(input);
-    expect(outcome.ok && outcome.value.warnings).toEqual(
+    expect(codes(outcome.ok ? outcome.value.warnings : undefined)).toEqual(
       expect.arrayContaining(['RESEARCH_REFERENCE_INDEX_MISSING']),
     );
   });
@@ -174,10 +188,10 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
   });
 
   it('a throwing run and an invalid plan are failures, not exceptions', async () => {
-    const thrown = aiResearch({ run: () => Promise.reject(new Error('network')) });
+    const thrown = aiResearch({ run: () => Promise.reject(new TypeError('network')) });
     expect(await thrown.plan(input)).toMatchObject({
       ok: false,
-      error: { code: 'RESEARCH_FAILED' },
+      error: { code: 'RESEARCH_FAILED', message: 'research threw (TypeError)' },
     });
     const failed = aiResearch({ run: () => Promise.resolve(err({ code: 'AI_REQUEST_REJECTED' })) });
     expect(await failed.plan(input)).toMatchObject({
