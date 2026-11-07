@@ -31,11 +31,21 @@ const TOKEN_NAME: Readonly<Record<ColorRole, string>> = {
   neutralLight: 'paper',
   neutralDark: 'ink',
 };
-const PAIRS: readonly (readonly [ColorRole, ColorRole])[] = [
-  ['neutralDark', 'neutralLight'],
-  ['neutralDark', 'primary'],
-  ['primary', 'neutralLight'],
-];
+/** Pairs a designer would actually use: text on paper, the better text colour on the brand field, and the brand
+ * colour as text only where it reads (3:1). A relevant pair that fails is still shown, with its verdict. */
+function contrastPairs(
+  colors: Readonly<Record<ColorRole, string>>,
+): readonly (readonly [ColorRole, ColorRole])[] {
+  const onPaper = contrastRatio(colors.neutralLight, colors.primary);
+  const onInk = contrastRatio(colors.neutralDark, colors.primary);
+  const pairs: (readonly [ColorRole, ColorRole])[] = [
+    ['neutralDark', 'neutralLight'],
+    [onPaper >= onInk ? 'neutralLight' : 'neutralDark', 'primary'],
+  ];
+  if (contrastRatio(colors.primary, colors.neutralLight) >= 3)
+    pairs.push(['primary', 'neutralLight']);
+  return pairs;
+}
 
 export function exampleFromView(id: string, view: BrandView): LandingExample {
   return {
@@ -44,7 +54,7 @@ export function exampleFromView(id: string, view: BrandView): LandingExample {
     sector: view.sector,
     logo: view.logo.color,
     colors: ROLES.map((role) => ({ role, hex: view.colors[role] })),
-    contrasts: PAIRS.map(([foreground, background]) => {
+    contrasts: contrastPairs(view.colors).map(([foreground, background]) => {
       const ratio = contrastRatio(view.colors[foreground], view.colors[background]);
       return { foreground, background, ratio: formatRatio(ratio), level: wcagLevel(ratio) };
     }),
