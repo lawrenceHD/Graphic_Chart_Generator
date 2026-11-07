@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
 import { Button } from '../components/button';
 import {
@@ -16,7 +17,11 @@ export type AuthSubmit = (
   mode: AuthMode,
   values: AuthValues,
 ) => Promise<
-  | { readonly ok: true }
+  | {
+      readonly ok: true;
+      /** Set when signed in but the guest projects were not attached (account full, or failure). */
+      readonly claim?: 'quota' | 'failed';
+    }
   | {
       readonly ok: false;
       readonly failure: FailureKey;
@@ -72,6 +77,7 @@ export function AuthForm({
   const t = useTranslations('auth');
   const [errors, setErrors] = useState<Partial<Record<AuthField, FieldErrorKey>>>({});
   const [failure, setFailure] = useState<{ key: FailureKey; minutes: number | null } | null>(null);
+  const [claimIssue, setClaimIssue] = useState<'quota' | 'failed' | null>(null);
   const [pending, setPending] = useState(false);
   const [reveal, setReveal] = useState(false);
   const summary = useRef<HTMLDivElement>(null);
@@ -94,6 +100,7 @@ export function AuthForm({
       password: text('password'),
     });
     setFailure(null);
+    setClaimIssue(null);
     if (!checked.ok) {
       setErrors(checked.errors);
       return;
@@ -102,7 +109,9 @@ export function AuthForm({
     setPending(true);
     try {
       const outcome = await submit(mode, checked.value);
-      if (!outcome.ok) {
+      if (outcome.ok) {
+        setClaimIssue(outcome.claim ?? null);
+      } else {
         const seconds = outcome.retryAfterSeconds;
         setFailure({
           key: outcome.failure,
@@ -201,6 +210,14 @@ export function AuthForm({
       <Button type="submit" disabled={pending} className="w-full rounded-full">
         {pending ? t('pending') : t(`${mode}.submit`)}
       </Button>
+      {claimIssue === null ? null : (
+        <p role="status" data-testid="claim-issue" className="m-0 flex flex-col gap-2 text-sm">
+          <span>{t(`claim.${claimIssue}`)}</span>
+          <Link href="/projets" className="font-medium text-ink">
+            {t('claim.link')}
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

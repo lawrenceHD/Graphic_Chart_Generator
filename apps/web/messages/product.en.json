@@ -154,6 +154,11 @@
     "passwordHint": "At least 10 characters. A passphrase works very well.",
     "showPassword": "Show password",
     "summary": "{count, plural, one {One field needs fixing} other {# fields need fixing}} to continue.",
+    "claim": {
+      "quota": "You are signed in, but your account has reached its project limit. Your trial project is intact: delete a project to free a place, then sign in again to recover it.",
+      "failed": "You are signed in, but your trial projects could not be attached to your account. They stay in this browser: sign in again in a moment to retry.",
+      "link": "Go to My projects"
+    },
     "guest": {
       "title": "Rather not create an account?",
       "text": "Try it with your logo. If you sign up afterwards, your guest projects are attached to your account.",

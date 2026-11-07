@@ -61,6 +61,17 @@ describe('AuthForm', () => {
     expect(screen.queryByLabelText(t.name)).toBeNull();
   });
 
+  it('tells a full account that its trial project is safe, with a link to free a place', async () => {
+    const submit = vi.fn<AuthSubmit>(() => Promise.resolve({ ok: true, claim: 'quota' }));
+    setup('login', submit);
+    await userEvent.type(screen.getByLabelText(t.email), 'awa@example.com');
+    await userEvent.type(screen.getByLabelText(t.password), 'whatever');
+    await userEvent.click(screen.getByRole('button', { name: t.login.submit }));
+    const notice = await screen.findByTestId('claim-issue');
+    expect(notice.textContent).toContain('reste intact');
+    expect(screen.getByRole('link', { name: t.claim.link }).getAttribute('href')).toBe('/projets');
+  });
+
   it('disables the button while the request runs', async () => {
     let release: (value: { ok: true }) => void = () => undefined;
     const submit = vi.fn<AuthSubmit>(

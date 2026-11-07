@@ -154,6 +154,11 @@
     "passwordHint": "10 caractères minimum. Une phrase de passe fonctionne très bien.",
     "showPassword": "Afficher le mot de passe",
     "summary": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} pour continuer.",
+    "claim": {
+      "quota": "Vous êtes connecté, mais votre compte a atteint sa limite de projets. Votre projet d’essai reste intact : supprimez un projet pour libérer une place, puis reconnectez-vous pour le récupérer.",
+      "failed": "Vous êtes connecté, mais vos projets d’essai n’ont pas pu être rattachés à votre compte. Ils restent sur ce navigateur : reconnectez-vous dans un instant pour réessayer.",
+      "link": "Aller à Mes projets"
+    },
     "guest": {
       "title": "Pas envie de créer un compte ?",
       "text": "Essayez avec votre logo. Si vous vous inscrivez ensuite, vos projets d’invité sont rattachés à votre compte.",

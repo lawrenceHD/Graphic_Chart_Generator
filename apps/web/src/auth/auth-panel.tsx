@@ -43,7 +43,8 @@ export function AuthPanel({ mode }: { readonly mode: AuthMode }) {
     const send = createSubmit(port, claimGuestProjects);
     return async (...args: Parameters<typeof send>) => {
       const outcome = await send(...args);
-      if (outcome.ok) router.push('/projets');
+      // A claim problem is told by the form, with a link: no silent redirect over it.
+      if (outcome.ok && outcome.claim === undefined) router.push('/projets');
       return outcome;
     };
   }, [router]);
