@@ -3,8 +3,9 @@
 import { Check, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { inkOn, isDark } from '../../brand/color';
-import { LogoImage, PAPER, SheetFrame, u, type SheetContext } from './sheet';
+import { LogoImage, PAPER, SheetFrame, logoOn, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
+import { doDontFocus } from './variant';
 
 interface Misuse {
   readonly key: string;
@@ -14,15 +15,15 @@ interface Misuse {
   readonly art?: CSSProperties;
   readonly busy?: boolean;
   readonly crowd?: boolean;
+  /** Version of the logo drawn in the panel (default: the colour logo). */
+  readonly src?: string;
 }
 
-export function DoDont({ context }: { readonly context: SheetContext }) {
+function logoPanels(context: SheetContext): readonly Misuse[] {
   const { view, words } = context;
-  const ink = inkOn(context.background ?? PAPER);
-  const light = view.colors.neutralLight;
   // A background close to the logo's own colour: the classic low-contrast misuse.
   const clash = isDark(view.colors.primary) ? view.colors.neutralDark : view.colors.accent;
-  const panels: readonly Misuse[] = [
+  return [
     { key: 'ok', label: words.dont.correct, ok: true },
     { key: 'stretch', label: words.dont.stretch, art: { transform: 'scaleX(1.45)' } },
     { key: 'rotate', label: words.dont.rotate, art: { transform: 'rotate(-14deg)' } },
@@ -40,6 +41,52 @@ export function DoDont({ context }: { readonly context: SheetContext }) {
     { key: 'busy', label: words.dont.busy, busy: true },
     { key: 'crowd', label: words.dont.crowd, crowd: true },
   ];
+}
+
+// The colours page: the version that reads on each brand field (allowed), then what the colours forbid.
+function colourPanels(context: SheetContext): readonly Misuse[] {
+  const { view, words } = context;
+  const { primary, accent, neutralDark } = view.colors;
+  return [
+    { key: 'white', label: words.logo.onLight, ok: true, background: PAPER },
+    {
+      key: 'dark',
+      label: words.logo.onDark,
+      ok: true,
+      background: neutralDark,
+      src: logoOn(view, neutralDark),
+    },
+    {
+      key: 'primary',
+      label: words.logo.reversed,
+      ok: true,
+      background: primary,
+      src: logoOn(view, primary),
+    },
+    {
+      key: 'accent',
+      label: words.logo.onAccent,
+      ok: true,
+      background: accent,
+      src: logoOn(view, accent),
+    },
+    { key: 'same', label: words.dont.lowContrast, background: primary },
+    { key: 'busy', label: words.dont.busy, busy: true },
+    {
+      key: 'recolor',
+      label: words.dont.recolor,
+      art: { filter: 'hue-rotate(150deg) saturate(1.4)' },
+    },
+    { key: 'transparent', label: words.dont.transparency, art: { opacity: 0.35 } },
+  ];
+}
+
+export function DoDont({ context }: { readonly context: SheetContext }) {
+  const { view, words } = context;
+  const ink = inkOn(context.background ?? PAPER);
+  const light = view.colors.neutralLight;
+  const panels =
+    doDontFocus(occurrenceOf(context)) === 'colours' ? colourPanels(context) : logoPanels(context);
   return (
     <SheetFrame context={context} lead={words.lead.doDont} wide>
       <div className="grid h-full grid-cols-4 grid-rows-2" style={{ gap: u(1.2) }}>
@@ -55,7 +102,11 @@ export function DoDont({ context }: { readonly context: SheetContext }) {
                 ...hairline(ink),
               }}
             >
-              <LogoImage src={view.logo.color} className="h-[46%] w-[66%]" style={panel.art} />
+              <LogoImage
+                src={panel.src ?? view.logo.color}
+                className="h-[46%] w-[66%]"
+                style={panel.art}
+              />
               {panel.crowd ? (
                 <span
                   className="absolute"

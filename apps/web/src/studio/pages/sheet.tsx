@@ -5,6 +5,7 @@ import { contrastRatio, inkOn, isDark } from '../../brand/color';
 import { svgDataUrl, tintSvg } from '../../brand/logo-tint';
 import type { BrandView } from '../workspace/brand-view';
 import type { SheetWords } from './sheet-words';
+import { SINGLE, evidenceLine, type Occurrence } from './variant';
 
 // Frame of a guideline page (DESIGN.md "Guideline Sheet"): an A4 landscape sheet by default, A4 portrait on
 // request. Every size is a multiple of --u, one hundredth of the sheet width in landscape and a larger step in
@@ -22,7 +23,13 @@ export interface SheetContext {
   readonly title: string;
   readonly background: string | undefined;
   readonly year: number;
+  /** Place among the pages of the same type (absent: the only one). */
+  readonly occurrence?: Occurrence;
+  /** Proof references the plan attached to the page. */
+  readonly evidence?: readonly string[];
 }
+
+export const occurrenceOf = (context: SheetContext): Occurrence => context.occurrence ?? SINGLE;
 
 /** Ink of the sheet: the brand's dark neutral when it reads on the paper, near-black otherwise. */
 export function sheetInk(view: BrandView, paper: string): string {
@@ -132,14 +139,20 @@ function SectionHead({ context, ink }: { readonly context: SheetContext; readonl
 
 function Folio({ context }: { readonly context: SheetContext }) {
   const pad = (value: number): string => String(value).padStart(2, '0');
+  const proof = evidenceLine(context.words.evidence, context.evidence ?? []);
   return (
     <footer
       className="flex items-baseline justify-between"
-      style={{ ...SMALL_CAPS, fontSize: u(0.72), opacity: 0.55, paddingTop: u(1.4) }}
+      style={{ ...SMALL_CAPS, fontSize: u(0.72), opacity: 0.55, paddingTop: u(1.4), gap: u(2) }}
     >
       <span className="truncate">
         {context.view.name} · {context.words.guideline}
       </span>
+      {proof === null ? null : (
+        <span className="min-w-0 flex-1 truncate text-right normal-case" title={proof}>
+          {proof}
+        </span>
+      )}
       <span className="tabular shrink-0">{pad(context.number)}</span>
     </footer>
   );
