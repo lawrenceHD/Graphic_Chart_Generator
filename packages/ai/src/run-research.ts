@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { FontFamily } from './fonts/catalogue.js';
 import type { ImageInput } from './gemini/logo-reading.js';
 import type { AiError, GeminiTransport } from './gemini/transport.js';
-import { defaultChartPlan, directionToChartPlan } from './plan/chart-plan.js';
+import { defaultChartPlan, planFromDirection } from './plan/chart-plan.js';
 import { parseReferenceIndex } from './references/library.js';
 import { createRecording, findRecording, type ResearchRecording } from './replay/recording.js';
 import { researchBrand, type BrandResearch } from './research.js';
@@ -24,7 +24,8 @@ export type ResearchIssueCode =
   | 'recording-missing'
   | 'replayed'
   | 'replayed-after-failure'
-  | 'prompt-injection-suspected';
+  | 'prompt-injection-suspected'
+  | 'plan-invalid';
 
 export interface ResearchIssue {
   code: ResearchIssueCode;
@@ -87,6 +88,13 @@ function cleanDirection(research: BrandResearch, issues: ResearchIssue[]): Brand
   return { ...research, direction: { ...research.direction, insights } };
 }
 
+// The plan of a sourced direction; an empty or refused one falls back to the default plan, visibly.
+function sourcedPlan(research: BrandResearch, issues: ResearchIssue[]): ChartPlan {
+  const { plan, degraded } = planFromDirection(research.direction);
+  if (degraded) addIssue(issues, { code: 'plan-invalid' });
+  return plan;
+}
+
 function replayed(
   recording: ResearchRecording,
   deps: RunResearchDeps,
@@ -95,7 +103,7 @@ function replayed(
   const research = cleanDirection(recording.research, issues);
   return {
     source: 'replay',
-    plan: directionToChartPlan(research.direction),
+    plan: sourcedPlan(research, issues),
     research,
     issues,
     usage: NO_USAGE,
@@ -215,7 +223,7 @@ export async function runResearch(
   if (library.length === 0) return ok(degraded(deps, issues, usage, research));
   return ok({
     source: 'live',
-    plan: directionToChartPlan(research.direction),
+    plan: sourcedPlan(research, issues),
     research,
     issues,
     ...(deps.now ? { recording: createRecording(research, input.logo, deps.now()) } : {}),
