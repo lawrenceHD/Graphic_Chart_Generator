@@ -209,10 +209,12 @@ describe('composeInitialDocument with a ChartPlan', () => {
     expect([...positions].sort()).toEqual(positions);
   });
 
-  it('keeps the 11 default pages without data when no plan is given', () => {
+  it('keeps one page per type, without data, when no plan is given', () => {
     const result = composeInitialDocument(input);
     if (!result.ok) throw new Error(result.error.code);
-    expect(result.value.pages).toHaveLength(11);
+    expect(result.value.pages).toHaveLength(
+      new Set(result.value.pages.map((page) => page.type)).size,
+    );
     expect(result.value.pages.every((page) => Object.keys(page.data).length === 0)).toBe(true);
   });
 
@@ -225,14 +227,16 @@ describe('composeInitialDocument with a ChartPlan', () => {
     expect(!unsafe.ok && unsafe.error.code).toBe('INVALID_DOCUMENT');
   });
 
-  it('builds a valid 16-page charter from the standard plan, in both languages', () => {
+  it('builds a valid charter with one page per section of the standard plan, in both languages', () => {
     for (const language of ['fr', 'en'] as const) {
       const standard = standardChartPlan(language);
       expect(ChartPlanSchema.safeParse(standard).success).toBe(true);
       const result = composeInitialDocument({ ...input, language }, standard);
       if (!result.ok) throw new Error(result.error.code);
-      expect(result.value.pages).toHaveLength(16);
-      expect(new Set(result.value.pages.map((page) => page.title)).size).toBe(16);
+      expect(result.value.pages).toHaveLength(standard.sections.length);
+      expect(new Set(result.value.pages.map((page) => page.title)).size).toBe(
+        standard.sections.length,
+      );
       expect(BrandDocumentSchema.safeParse(result.value).success).toBe(true);
     }
   });
