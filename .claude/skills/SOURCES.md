@@ -18,3 +18,5 @@ Copies antérieures, également issues d'ECC sans modification : `browser-qa`, `
 
 Retirés le 2026-10-17 (contradictoires avec `AGENTS.md` ou hors sujet) : `fal-ai-media`, `postgres-patterns`,
 `token-budget-advisor`, `prompt-optimizer`, `strategic-compact`, `tdd-workflow`.
+
+- `frontend-anchors` (2026-11-07) : Ilm-Alan/frontend-design @ f8966e6cc9b9 (MIT), renommé ; invocation sur demande seulement. Voir `docs/team/skills/INSTALL-LOG.md`.
