@@ -107,4 +107,34 @@ describe.each(EXAMPLES)('startProject for $id', (example) => {
       error: { kind: 'http', status: 201, code: 'INVALID_RESPONSE' },
     });
   });
+
+  it('keeps the cause: an unreadable body is not reported as a contract mismatch', async () => {
+    const unreadable = (status: number) => new Response('<html>oops</html>', { status });
+    const okBody = await startProject(
+      fakeApi({ '/api/v1/projects': [unreadable(201)] }).fetcher,
+      { title: 'A' },
+      token,
+    );
+    expect(okBody).toEqual({
+      ok: false,
+      error: { kind: 'http', status: 201, code: 'UNREADABLE_RESPONSE' },
+    });
+    const refusal = await startProject(
+      fakeApi({ '/api/v1/projects': [unreadable(500)] }).fetcher,
+      { title: 'A' },
+      token,
+    );
+    expect(refusal).toEqual({
+      ok: false,
+      error: { kind: 'http', status: 500, code: 'UNREADABLE_RESPONSE' },
+    });
+  });
+
+  it('tells a readable refusal without a code (HTTP_ERROR) from an unreadable one', async () => {
+    const api = fakeApi({ '/api/v1/projects': [Response.json({ title: 'x' }, { status: 502 })] });
+    expect(await startProject(api.fetcher, { title: 'A' }, token)).toEqual({
+      ok: false,
+      error: { kind: 'http', status: 502, code: 'HTTP_ERROR' },
+    });
+  });
 });

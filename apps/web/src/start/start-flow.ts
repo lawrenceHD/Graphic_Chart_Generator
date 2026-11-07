@@ -23,13 +23,23 @@ const post = (body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
+/** JSON body of a response, or undefined when it cannot be read (the cause is then named by the caller). */
+async function readJson(response: Response): Promise<unknown> {
+  return response.json().then(
+    (body: unknown) => body,
+    () => undefined,
+  );
+}
+
 async function failure(response: Response): Promise<StartFailure> {
-  const problem = Problem.safeParse(await response.json().catch(() => null));
-  return {
-    kind: 'http',
-    status: response.status,
-    code: problem.success ? problem.data.code : 'HTTP_ERROR',
-  };
+  const body = await readJson(response);
+  const problem = Problem.safeParse(body);
+  const code = problem.success
+    ? problem.data.code
+    : body === undefined
+      ? 'UNREADABLE_RESPONSE'
+      : 'HTTP_ERROR';
+  return { kind: 'http', status: response.status, code };
 }
 
 async function create(fetcher: Fetcher, input: StartInput): Promise<Response> {
@@ -43,10 +53,11 @@ async function create(fetcher: Fetcher, input: StartInput): Promise<Response> {
 
 async function created(response: Response): Promise<Result<string, StartFailure>> {
   if (!response.ok) return err(await failure(response));
-  const parsed = Created.safeParse(await response.json().catch(() => null));
-  return parsed.success
-    ? ok(parsed.data.project.id)
-    : err({ kind: 'http', status: response.status, code: 'INVALID_RESPONSE' });
+  const body = await readJson(response);
+  const parsed = Created.safeParse(body);
+  if (parsed.success) return ok(parsed.data.project.id);
+  const code = body === undefined ? 'UNREADABLE_RESPONSE' : 'INVALID_RESPONSE';
+  return err({ kind: 'http', status: response.status, code });
 }
 
 async function steps(
