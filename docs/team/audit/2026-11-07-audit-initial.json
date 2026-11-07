@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-07",
+  "head": "29090d2",
+  "verdict": "no-blocker",
+  "tools": {
+    "pnpm_audit_prod": {"moderate": 1, "package": "esbuild<=0.24.2", "id": "GHSA-67mh-4wv8-2f99"},
+    "gitleaks_history": {"commits": 262, "leaks": 0},
+    "gitleaks_worktree": {"findings": 2, "files": [".env.local", "prototypes/studio/.env.local"], "note": "git-ignored, untracked, not a leak"},
+    "trivy": {"vuln_medium": 1, "secrets": 0, "misconfig": 0},
+    "semgrep": {"version": "1.184.0", "files": 288, "results": 0, "errors": 0}
+  },
+  "findings": [
+    {"id": "D-1", "severity": "medium", "status": "fixed", "title": "gemini key.txt only in .git/info/exclude"},
+    {"id": "D-2", "severity": "medium", "status": "open", "title": "AI_DAILY_BUDGET_EUR validated but not enforced (SEC-18)"},
+    {"id": "D-3", "severity": "medium", "status": "open", "title": "esbuild dev-only vulnerability via drizzle-kit"},
+    {"id": "D-4", "severity": "low", "status": "fixed", "title": "guest claim race, now conditional UPDATE and quota lock"},
+    {"id": "D-5", "severity": "low", "status": "open", "title": "guest cookie HMAC reuses AUTH_SECRET"},
+    {"id": "D-6", "severity": "low", "status": "open", "title": "sharp not process-isolated"},
+    {"id": "R-1", "severity": "medium", "status": "fixed", "title": "X-Forwarded-For spoofing, TRUSTED_PROXY_HOPS; verify real value at deploy"},
+    {"id": "R-3", "severity": "low", "status": "to-investigate", "title": "export file names / zip entries"},
+    {"id": "R-4", "severity": "low", "status": "open", "title": "unbounded recursive readdir of private corpus (operator only)"}
+  ]
+}

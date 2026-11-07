@@ -81,8 +81,9 @@ export function buildExample(example: DemoExample): BuiltExample {
       logo: {
         color: example.logo,
         vector: null,
-        'mono-black': mono.black,
-        'mono-white': mono.white,
+        // Hand-drawn variants when the example carries them, else derived by logo-kit, else none (raster).
+        'mono-black': example.monoLogos?.black ?? mono.black,
+        'mono-white': example.monoLogos?.white ?? mono.white,
         favicon: null,
       },
     },

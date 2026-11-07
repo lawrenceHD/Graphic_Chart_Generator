@@ -16,6 +16,20 @@ describe('example set', () => {
     expect(getExample('does-not-exist')).toBeUndefined();
   });
 
+  it('gives every brand its own primary colour and its own type pairing', () => {
+    expect(new Set(EXAMPLES.map((example) => example.colors.primary.hex.toLowerCase())).size).toBe(
+      EXAMPLES.length,
+    );
+    expect(new Set(EXAMPLES.map((example) => example.pairingId)).size).toBe(EXAMPLES.length);
+  });
+
+  it('covers hospitality, bakery, consulting, beauty and food production', () => {
+    expect(EXAMPLES.map((example) => example.id)).toEqual(
+      expect.arrayContaining(['maison-alba', 'halden-advisory', 'atelier-nacre', 'harrow-fields']),
+    );
+    expect(EXAMPLES).toHaveLength(5);
+  });
+
   it('offers both guideline languages', () => {
     expect(new Set(EXAMPLES.map((example) => example.language))).toEqual(new Set(['fr', 'en']));
   });
@@ -47,6 +61,25 @@ describe.each(EXAMPLES)('example $id', (example) => {
     const svg = decodeURIComponent(example.logo.slice(example.logo.indexOf(',') + 1));
     expect(svg).toMatch(/^<svg\b/u);
     expect(svg).not.toMatch(/<script|href=|on\w+=/iu);
+  });
+
+  it('draws its black and white versions, when it has them, in a single flat colour', () => {
+    const { monoLogos } = example;
+    if (monoLogos === undefined) return;
+    for (const [uri, ink] of [
+      [monoLogos.black, '#000000'],
+      [monoLogos.white, '#FFFFFF'],
+    ] as const) {
+      const svg = decodeURIComponent(uri.slice(uri.indexOf(',') + 1));
+      const fills = [...svg.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6}|none)"/gu)].map(
+        (m) => m[1],
+      );
+      expect(fills.length).toBeGreaterThan(0);
+      for (const fill of fills)
+        expect(['none', ink]).toContain(fill?.toUpperCase().replace('NONE', 'none'));
+    }
+    expect(buildExample(example).view.logo['mono-black']).toBe(monoLogos.black);
+    expect(buildExample(example).view.logo['mono-white']).toBe(monoLogos.white);
   });
 
   it('rejects a palette that is not hexadecimal', () => {

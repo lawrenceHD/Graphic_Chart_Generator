@@ -23,6 +23,22 @@ export const PAGE_TYPES = [
 export const PageTypeSchema = z.enum(PAGE_TYPES);
 export type PageType = z.infer<typeof PageTypeSchema>;
 
+// Pages of a type the studio can fill with distinct content (apps/web/src/studio/pages/variant.ts): beyond
+// it a page would say there is nothing more to show. A change in the studio has to be mirrored here.
+export const PAGE_CAPACITY: Record<PageType, number> = {
+  cover: 1,
+  manifesto: 4,
+  logo: 4,
+  'clear-space': 3,
+  'do-dont': 16,
+  palette: 12,
+  contrast: 2,
+  typography: 11,
+  'tone-of-voice': 1,
+  mockup: 13,
+  tokens: 1,
+};
+
 export const TONE_AXIS_IDS = [
   'formal-casual',
   'serious-playful',
