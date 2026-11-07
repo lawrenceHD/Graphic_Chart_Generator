@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { DemoSheet } from './demo-sheet';
-import { DEMO_EXAMPLE_ID, type ColorRole, type LandingExample } from './example-source';
+import { type ColorRole, type LandingExample } from './example-source';
 
 type Shown = 'cover' | 'palette' | 'contrast' | 'typography';
 const SHOWN: readonly Shown[] = ['cover', 'palette', 'contrast', 'typography'];
@@ -82,7 +82,7 @@ export function Atelier({ examples }: { readonly examples: readonly LandingExamp
         </div>
         <div className="drafting grid place-items-center rounded-lg bg-preview p-4 sm:p-8">
           <div className="w-full overflow-hidden rounded-md shadow-lg" aria-live="polite">
-            {example.id === DEMO_EXAMPLE_ID ? <DemoSheet type={shown} /> : null}
+            <DemoSheet type={shown} exampleId={example.id} />
           </div>
         </div>
         <p className="m-0 text-sm text-ink-3">{t('demoNote')}</p>

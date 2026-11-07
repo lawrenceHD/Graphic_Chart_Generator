@@ -1,10 +1,10 @@
 import { contrastRatio, formatRatio, wcagLevel, type WcagLevel } from '@app/color-engine';
 import type { BrandView } from '../studio/workspace/brand-view';
-import { DEMO_VIEW } from './demo';
+import { demoFor } from './demo';
+import { EXAMPLES } from './examples';
 
-// Seam between the home page and the examples. R7 will provide a set of brands (landing/examples); until it
-// is merged, the only example is the one the studio already composes (demo.ts). Swapping the source is a
-// change to listExamples() only: the page reads this plain-data shape and nothing else.
+// Seam between the home page and the example set (landing/examples): the page reads this plain-data shape
+// and nothing else, so no brand is named in product code.
 export type ColorRole = 'primary' | 'accent' | 'neutralLight' | 'neutralDark';
 
 export interface LandingExample {
@@ -56,9 +56,7 @@ export function exampleFromView(id: string, view: BrandView): LandingExample {
   };
 }
 
-/** The example whose guideline pages the studio renderers can draw today (demo.ts). */
-export const DEMO_EXAMPLE_ID = 'demo';
-
+/** Every demonstration brand of landing/examples, composed by the studio's engines (demoFor). */
 export function listExamples(): readonly LandingExample[] {
-  return [exampleFromView(DEMO_EXAMPLE_ID, DEMO_VIEW)];
+  return EXAMPLES.map((example) => exampleFromView(example.id, demoFor(example.id).view));
 }
