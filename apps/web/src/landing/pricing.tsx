@@ -1,14 +1,13 @@
 import { Check } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { MAIN_ID } from '../components/skip-link-id';
-import { PillLink } from './pill-link';
+import { PlanCta } from './pricing-cta';
 import { PLANS, type Plan } from './pricing-plans';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 
 async function PlanColumn({ plan }: { readonly plan: Plan }) {
   const t = await getTranslations('pricing');
-  const paid = plan.price !== null;
   return (
     <li
       className={`flex flex-col gap-6 rounded-xl border p-6 ${plan.highlighted ? 'border-line-strong bg-surface' : 'border-line bg-canvas'}`}
@@ -18,11 +17,6 @@ async function PlanColumn({ plan }: { readonly plan: Plan }) {
           <h2 className="m-0 font-display text-2xl font-bold tracking-tight">
             {t(`plans.${plan.id}.name`)}
           </h2>
-          {paid ? (
-            <span className="rounded-full border border-line-strong px-3 py-0.5 text-xs text-ink-2">
-              {t('soon')}
-            </span>
-          ) : null}
         </div>
         <p className="m-0 text-sm text-ink-2">{t(`plans.${plan.id}.audience`)}</p>
       </div>
@@ -54,13 +48,7 @@ async function PlanColumn({ plan }: { readonly plan: Plan }) {
         ))}
       </ul>
 
-      <PillLink
-        href="/inscription"
-        variant={plan.highlighted ? 'primary' : 'secondary'}
-        className="mt-auto"
-      >
-        {t('cta')}
-      </PillLink>
+      <PlanCta plan={plan} />
     </li>
   );
 }
@@ -72,7 +60,7 @@ export async function PricingPage() {
       <SiteHeader />
       <main id={MAIN_ID} tabIndex={-1} className="focus:outline-none">
         <div className="mx-auto flex max-w-[1240px] flex-col gap-12 px-6 py-16 lg:py-24">
-          <div className="flex max-w-[44ch] flex-col gap-4">
+          <div className="flex max-w-[900px] flex-col gap-4">
             <h1 className="m-0 font-display text-4xl leading-[0.98] font-extrabold tracking-[-0.035em] text-balance">
               {t('title')}
             </h1>
@@ -89,7 +77,7 @@ export async function PricingPage() {
               {t('faqTitle')}
             </h2>
             <dl className="m-0 flex flex-col gap-5">
-              {(['1', '2'] as const).map((n) => (
+              {(['1', '2', '3', '4'] as const).map((n) => (
                 <div key={n} className="flex flex-col gap-1">
                   <dt className="font-semibold">{t(`q${n}`)}</dt>
                   <dd className="m-0 text-ink-2">{t(`a${n}`)}</dd>

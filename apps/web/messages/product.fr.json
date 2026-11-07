@@ -83,11 +83,10 @@
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "title": "Des tarifs simples, pensés pour grandir.",
+    "title": "Gratuit pour commencer, des plans payants à venir.",
     "lead": "Commencez gratuitement avec trois projets. Les plans payants arrivent après la bêta.",
-    "hypothesis": "Prix indicatifs à valider. Aucun paiement n’est possible pour l’instant.",
-    "toValidate": "à valider",
-    "soon": "Bientôt",
+    "hypothesis": "Prix indicatifs, non facturés pour l’instant : aucun paiement n’est possible.",
+    "toValidate": "prix indicatif, à valider",
     "perMonth": "{price} €",
     "perMonthUnit": "par mois",
     "free": "0 €",
@@ -125,10 +124,15 @@
       "support": "Accompagnement dédié"
     },
     "faqTitle": "Questions fréquentes",
-    "q1": "Puis-je payer dès maintenant ?",
-    "a1": "Non. Le paiement n’existe pas encore. Le plan gratuit est le seul actif, avec trois projets.",
-    "q2": "Que se passe-t-il si je dépasse trois projets ?",
-    "a2": "Vous gardez l’accès à vos chartes. La création d’un quatrième projet est refusée avec un message qui explique pourquoi."
+    "q1": "Quels fichiers puis-je déposer ?",
+    "a1": "Un logo SVG (5 Mo au plus), PNG, WebP ou JPEG (10 Mo et 8192 × 8192 px au plus). Le fichier est vérifié avant toute lecture.",
+    "q2": "Mes fichiers m’appartiennent-ils ?",
+    "a2": "Vous conservez vos droits sur vos logos. Les conditions sur les textes et mises en page générés seront précisées dans les conditions d’utilisation, formulées avec prudence.",
+    "ctaSoon": "Bientôt disponible",
+    "q3": "Que contient l’export PDF ?",
+    "a3": "Toutes les pages de la charte, avec les textes et les logos en vectoriel. C’est un PDF de référence en RVB : il n’est pas présenté comme prêt pour l’impression.",
+    "q4": "Que devient mon logo ?",
+    "a4": "Il est assaini, reste privé et n’est lisible que depuis votre projet. Il n’est jamais redessiné par une IA : les variantes et mises en situation sont calculées à partir de votre fichier."
   },
   "auth": {
     "loginMeta": "Connexion",
