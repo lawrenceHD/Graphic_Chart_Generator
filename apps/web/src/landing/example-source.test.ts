@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEMO_VIEW } from './demo';
+import { EXAMPLES } from './examples';
 import { exampleFromView, listExamples } from './example-source';
 
 describe('exampleFromView', () => {
@@ -36,9 +37,10 @@ describe('exampleFromView', () => {
 });
 
 describe('listExamples', () => {
-  it('returns at least one example with a unique id each', () => {
+  it('returns every example of the set, in order, with distinct palettes', () => {
     const examples = listExamples();
-    expect(examples.length).toBeGreaterThan(0);
-    expect(new Set(examples.map((entry) => entry.id)).size).toBe(examples.length);
+    expect(examples.map((entry) => entry.id)).toEqual(EXAMPLES.map((entry) => entry.id));
+    expect(examples.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(examples.map((entry) => entry.colors[0]?.hex)).size).toBe(examples.length);
   });
 });
