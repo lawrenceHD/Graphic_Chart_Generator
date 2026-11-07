@@ -3,8 +3,10 @@
 import { Check, Minus, X } from 'lucide-react';
 import { contrastRatio, contrastVerdict, inkOn } from '../../brand/color';
 import { COLOR_ROLES } from '../workspace/brand-view';
-import { Measure, PAPER, SheetFrame, u, type SheetContext } from './sheet';
+import { Measure, PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
+import { BeyondPage } from './beyond';
+import { contrastView } from './variant';
 
 function VerdictIcon({ tone }: { readonly tone: 'ok' | 'mid' | 'bad' }) {
   const style = { width: u(1), height: u(1) };
@@ -13,15 +15,22 @@ function VerdictIcon({ tone }: { readonly tone: 'ok' | 'mid' | 'bad' }) {
   return <X aria-hidden="true" style={style} />;
 }
 
-export function Contrast({ context }: { readonly context: SheetContext }) {
+interface Swatch {
+  readonly hex: string;
+  readonly name: string;
+}
+
+// White is added for reference unless a role already is white; equal colours are shown once.
+function swatchesOf(context: SheetContext): readonly Swatch[] {
   const { view, words } = context;
-  const ink = inkOn(context.background ?? PAPER);
-  // White is added for reference unless a role already is white; equal colours are shown once.
-  const swatches = [
+  return [
     ...COLOR_ROLES.map((role) => ({ hex: view.colors[role], name: words.roles[role] })),
     { hex: '#FFFFFF', name: words.logo.white },
   ].filter((swatch, index, list) => list.findIndex((other) => other.hex === swatch.hex) === index);
-  const pairs = swatches
+}
+
+function pairsOf(swatches: readonly Swatch[], limit: number) {
+  return swatches
     .flatMap((text) =>
       swatches
         .filter((background) => background.hex !== text.hex)
@@ -33,7 +42,51 @@ export function Contrast({ context }: { readonly context: SheetContext }) {
     )
     .filter((pair) => pair.ratio >= 4.5)
     .sort((a, b) => b.ratio - a.ratio)
-    .slice(0, 4);
+    .slice(0, limit);
+}
+
+// The recommended pairs alone, each one a flat field with its text set on it.
+function Pairs({ context }: { readonly context: SheetContext }) {
+  const { view, words } = context;
+  const pairs = pairsOf(swatchesOf(context), 6);
+  return (
+    <SheetFrame context={context} lead={words.lead.contrast}>
+      <div className="grid h-full grid-cols-3 grid-rows-2" style={{ gap: u(1) }}>
+        {pairs.map((pair) => {
+          const verdict = contrastVerdict(pair.ratio);
+          return (
+            <div
+              key={`${pair.text.hex}${pair.background.hex}`}
+              className="flex min-h-0 flex-col justify-between"
+              style={{ background: pair.background.hex, color: pair.text.hex, padding: u(1.4) }}
+            >
+              <p
+                className="m-0"
+                style={{ fontFamily: view.pairing.display.css, fontSize: u(3.4), fontWeight: 600 }}
+              >
+                Aa
+              </p>
+              <div>
+                <p className="m-0" style={{ fontSize: u(1) }}>
+                  {words.contrast.textOn(pair.text.name, pair.background.name)}
+                </p>
+                <p className="tabular m-0" style={{ fontSize: u(1.3), fontWeight: 600 }}>
+                  {pair.ratio.toFixed(1)}:1 · {words.contrast.levels[verdict.level]}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SheetFrame>
+  );
+}
+
+function Matrix({ context }: { readonly context: SheetContext }) {
+  const { words } = context;
+  const ink = inkOn(context.background ?? PAPER);
+  const swatches = swatchesOf(context);
+  const pairs = pairsOf(swatches, 4);
   return (
     <SheetFrame
       context={context}
@@ -158,4 +211,10 @@ function ContrastRow({
       })}
     </>
   );
+}
+
+export function Contrast({ context }: { readonly context: SheetContext }) {
+  const shown = contrastView(occurrenceOf(context));
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  return shown.kind === 'pairs' ? <Pairs context={context} /> : <Matrix context={context} />;
 }

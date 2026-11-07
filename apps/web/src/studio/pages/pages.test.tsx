@@ -6,8 +6,11 @@ import { RENDERERS } from './pages';
 import { SHEET_WORDS } from './sheet-words';
 import type { SheetContext } from './sheet';
 
+type Rendered = Exclude<PageType, 'mockup'>;
+
+// Same title and number for every page: only the rank can make two renderings differ.
 function render(
-  type: Exclude<PageType, 'mockup'>,
+  type: Rendered,
   index: number,
   count: number,
   evidence: readonly string[] = [],
@@ -16,10 +19,10 @@ function render(
   const context: SheetContext = {
     view: DEMO_VIEW,
     words: SHEET_WORDS[DEMO_VIEW.language],
-    number: index + 1,
+    number: 1,
     total: 16,
     portrait: false,
-    title: `${type} ${String(index)}`,
+    title: 'Page',
     background: undefined,
     year: 2026,
     occurrence: { index, count },
@@ -28,19 +31,34 @@ function render(
   return renderToStaticMarkup(<Renderer context={context} />);
 }
 
-describe.each(['palette', 'do-dont', 'typography'] as const)('%s pages of one document', (type) => {
-  const count = type === 'palette' ? 3 : 2;
+const distinct = (type: Rendered, count: number): number =>
+  new Set(Array.from({ length: count }, (_, index) => render(type, index, count))).size;
 
-  it('never render two identical pages', () => {
-    const pages = Array.from({ length: count }, (_, index) => render(type, index, count));
-    expect(new Set(pages).size).toBe(count);
+describe('pages of one type never repeat', () => {
+  it.each(['palette', 'typography', 'do-dont'] as const)('%s, 11 pages', (type) => {
+    expect(distinct(type, 11)).toBe(11);
   });
 
-  it('differ from the single-page rendering', () => {
-    const single = render(type, 0, 1);
-    // The first do/don't page is the logo one, which is the single-page rendering.
-    for (let index = type === 'do-dont' ? 1 : 0; index < count; index += 1)
-      expect(render(type, index, count)).not.toBe(single);
+  it.each([
+    ['manifesto', 4],
+    ['logo', 4],
+    ['clear-space', 3],
+    ['contrast', 2],
+  ] as const)('%s has its own content on each of its %i first pages', (type, capacity) => {
+    expect(distinct(type, capacity)).toBe(capacity);
+  });
+
+  it.each(['manifesto', 'logo', 'clear-space', 'contrast'] as const)(
+    '%s says so past its content instead of repeating a page',
+    (type) => {
+      const html = render(type, 9, 11);
+      expect(html).toContain(SHEET_WORDS.fr.beyond(9));
+      expect(html).not.toBe(render(type, 0, 11));
+    },
+  );
+
+  it('the first manifesto page stays the single-page rendering', () => {
+    expect(render('manifesto', 0, 4)).toBe(render('manifesto', 0, 1));
   });
 });
 
@@ -65,7 +83,8 @@ describe('evidence', () => {
 
 describe('sheet rules', () => {
   it('uses no monospace face on the sheets', () => {
-    for (const type of ['palette', 'do-dont', 'typography'] as const)
-      expect(render(type, 1, 2)).not.toMatch(/monospace|font-mono/u);
+    for (const type of ['palette', 'do-dont', 'typography', 'manifesto', 'logo'] as const)
+      for (let index = 0; index < 4; index += 1)
+        expect(render(type, index, 4)).not.toMatch(/monospace|font-mono/u);
   });
 });

@@ -5,7 +5,8 @@ import type { CSSProperties } from 'react';
 import { inkOn, isDark } from '../../brand/color';
 import { LogoImage, PAPER, SheetFrame, logoOn, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
-import { doDontFocus } from './variant';
+import { BeyondPage } from './beyond';
+import { doDontView } from './variant';
 
 interface Misuse {
   readonly key: string;
@@ -85,11 +86,22 @@ export function DoDont({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
   const light = view.colors.neutralLight;
-  const panels =
-    doDontFocus(occurrenceOf(context)) === 'colours' ? colourPanels(context) : logoPanels(context);
+  const shown = doDontView(occurrenceOf(context));
+  const logo = logoPanels(context);
+  const colours = colourPanels(context);
+  const every = [...logo, ...colours];
+  const single =
+    shown.kind === 'single' ? every.find((panel) => panel.key === shown.panel) : undefined;
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  if (shown.kind === 'single' && single === undefined)
+    return <BeyondPage context={context} rank={occurrenceOf(context).index} />;
+  const panels = single !== undefined ? [single] : shown.kind === 'colours' ? colours : logo;
   return (
     <SheetFrame context={context} lead={words.lead.doDont} wide>
-      <div className="grid h-full grid-cols-4 grid-rows-2" style={{ gap: u(1.2) }}>
+      <div
+        className={`grid h-full ${single === undefined ? 'grid-cols-4 grid-rows-2' : 'mx-auto w-3/5 grid-cols-1 grid-rows-1'}`}
+        style={{ gap: u(1.2) }}
+      >
         {panels.map((panel) => (
           <figure key={panel.key} className="m-0 flex min-h-0 flex-col" style={{ gap: u(0.6) }}>
             <div

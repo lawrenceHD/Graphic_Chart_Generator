@@ -8,6 +8,8 @@ export interface SheetWords {
   readonly guideline: string;
   /** Label of the proof references a page rests on (foot of the page). */
   readonly evidence: string;
+  /** A page of a type the guideline has no further content for (the plan should group those sections). */
+  readonly beyond: (rank: number) => string;
   readonly edition: (year: number) => string;
   readonly roles: Readonly<Record<ColorRole, string>>;
   readonly usage: Readonly<Record<ColorRole, string>>;
@@ -43,6 +45,8 @@ export interface SheetWords {
     readonly tint: string;
     readonly reversed: string;
     readonly onAccent: string;
+    readonly construction: string;
+    readonly proportions: string;
     readonly favicon: string;
     readonly review: string;
   };
@@ -88,6 +92,7 @@ export interface SheetWords {
     readonly body: string;
     readonly caption: string;
     readonly sample: string;
+    readonly glyphs: Readonly<Record<'upper' | 'lower' | 'figures' | 'accents', string>>;
   };
   readonly tone: {
     readonly axes: Readonly<
@@ -105,6 +110,8 @@ export interface SheetWords {
 const FR: SheetWords = {
   guideline: 'Charte graphique',
   evidence: 'Preuve',
+  beyond: (rank) =>
+    `Page ${String(rank + 1)} de ce type : la charte n’a pas d’autre contenu à y montrer. Regroupez ces pages dans le plan.`,
   edition: (year) => `Édition ${String(year)}`,
   roles: {
     primary: 'Principale',
@@ -156,6 +163,8 @@ const FR: SheetWords = {
     tint: 'Une couleur',
     reversed: 'En réserve',
     onAccent: 'Sur la couleur d’accent',
+    construction: 'Construction',
+    proportions: 'Proportions',
     favicon: 'Favicon',
     review: 'à vérifier',
   },
@@ -198,6 +207,12 @@ const FR: SheetWords = {
     h2: 'Titre 2',
     h3: 'Titre 3',
     lead: 'Chapô',
+    glyphs: {
+      upper: 'Capitales',
+      lower: 'Minuscules',
+      figures: 'Chiffres et signes',
+      accents: 'Accents',
+    },
     body: 'Texte courant',
     caption: 'Légende',
     sample:
@@ -219,6 +234,8 @@ const FR: SheetWords = {
 const EN: SheetWords = {
   guideline: 'Brand guidelines',
   evidence: 'Evidence',
+  beyond: (rank) =>
+    `Page ${String(rank + 1)} of this type: the guideline has no further content to show here. Group these pages in the plan.`,
   edition: (year) => `${String(year)} edition`,
   roles: {
     primary: 'Primary',
@@ -269,6 +286,8 @@ const EN: SheetWords = {
     tint: 'One colour',
     reversed: 'Reversed',
     onAccent: 'On the accent colour',
+    construction: 'Construction',
+    proportions: 'Proportions',
     favicon: 'Favicon',
     review: 'to check',
   },
@@ -311,6 +330,12 @@ const EN: SheetWords = {
     h2: 'Heading 2',
     h3: 'Heading 3',
     lead: 'Standfirst',
+    glyphs: {
+      upper: 'Capitals',
+      lower: 'Lower case',
+      figures: 'Figures and signs',
+      accents: 'Accents',
+    },
     body: 'Body text',
     caption: 'Caption',
     sample:

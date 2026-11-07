@@ -1,10 +1,11 @@
 'use client';
 
 import { buildScale, cmykOf, formatOklch, inkOn, rgbOf } from '../../brand/color';
-import type { ColorRole } from '../workspace/brand-view';
+import { COLOR_ROLES, type ColorRole } from '../workspace/brand-view';
 import { PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
-import { paletteRoles } from './variant';
+import { BeyondPage } from './beyond';
+import { paletteView } from './variant';
 
 const SHARE: Readonly<Record<ColorRole, number>> = {
   primary: 34,
@@ -97,13 +98,80 @@ function ColourField({
   );
 }
 
+// One tint scale of one colour, two halves of five steps over two pages: each step is a tall flat band.
+function Detail({
+  context,
+  role,
+  half,
+}: {
+  readonly context: SheetContext;
+  readonly role: ColorRole;
+  readonly half: 0 | 1;
+}) {
+  const { view, words } = context;
+  const steps = buildScale(view.colors[role]);
+  const middle = Math.ceil(steps.length / 2);
+  const shown = half === 0 ? steps.slice(0, middle) : steps.slice(middle);
+  return (
+    <SheetFrame
+      context={context}
+      lead={words.lead.palette}
+      aside={
+        <div>
+          <p className="m-0 uppercase" style={CAPTION}>
+            {words.palette.scaleOf(words.roles[role])}
+          </p>
+          <p className="m-0" style={{ fontSize: u(0.85), opacity: 0.6, marginTop: u(0.8) }}>
+            {words.palette.cmykNote}
+          </p>
+        </div>
+      }
+    >
+      <div className="flex h-full" style={{ gap: u(1) }}>
+        {shown.map((step) => {
+          const [c, m, y, k] = cmykOf(step.hex);
+          return (
+            <div
+              key={step.step}
+              className="tabular flex min-w-0 flex-1 flex-col justify-between"
+              style={{ background: step.hex, color: inkOn(step.hex), padding: u(1.2) }}
+            >
+              <p
+                className="m-0"
+                style={{ fontFamily: view.pairing.display.css, fontSize: u(2.4), fontWeight: 600 }}
+              >
+                {step.step}
+              </p>
+              <dl
+                className="m-0 grid grid-cols-[auto_1fr]"
+                style={{ fontSize: u(0.8), columnGap: u(0.6), rowGap: u(0.2), lineHeight: 1.35 }}
+              >
+                <dt style={{ opacity: 0.82 }}>HEX</dt>
+                <dd className="m-0">{step.hex}</dd>
+                <dt style={{ opacity: 0.82 }}>RVB</dt>
+                <dd className="m-0">{rgbOf(step.hex).join(' ')}</dd>
+                <dt style={{ opacity: 0.82 }}>CMJN</dt>
+                <dd className="m-0">{[c, m, y, k].join(' ')}</dd>
+              </dl>
+            </div>
+          );
+        })}
+      </div>
+    </SheetFrame>
+  );
+}
+
 // A charter with one palette page shows the four roles in their proportions. With several, each page is
 // about one colour group (primary, accent, neutrals) and adds the tint scale of every colour it shows.
 export function Palette({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
-  const roles = paletteRoles(occurrenceOf(context));
-  const focused = roles.length < 4;
+  const shown = paletteView(occurrenceOf(context));
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  if (shown.kind === 'detail')
+    return <Detail context={context} role={shown.role} half={shown.half} />;
+  const roles = shown.kind === 'roles' ? shown.roles : COLOR_ROLES;
+  const focused = shown.kind === 'roles';
   return (
     <SheetFrame
       context={context}

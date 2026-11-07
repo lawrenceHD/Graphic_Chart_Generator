@@ -2,12 +2,17 @@
 
 import { inkOn } from '../../brand/color';
 import { briefLead } from '../workspace/brand-view';
-import { PAPER, SheetFrame, u, type SheetContext } from './sheet';
+import { PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
+import { BeyondPage } from './beyond';
+import { manifestoView } from './variant';
 
 export function Manifesto({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
+  const shown = manifestoView(occurrenceOf(context));
+  if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
+  if (shown.kind !== 'overview') return <Focus context={context} kind={shown.kind} />;
   if (!view.written) {
     const quote = briefLead(view.brief, 320);
     return (
@@ -107,5 +112,84 @@ function Statement({
         {text}
       </p>
     </div>
+  );
+}
+
+// A page for the mission, the vision or the four values alone, set large (a charter that has several
+// manifesto pages gives each of them its own).
+function Focus({
+  context,
+  kind,
+}: {
+  readonly context: SheetContext;
+  readonly kind: 'mission' | 'vision' | 'values';
+}) {
+  const { view, words } = context;
+  const ink = inkOn(context.background ?? PAPER);
+  const label = words.manifesto[kind];
+  const statement = kind === 'mission' ? view.mission : kind === 'vision' ? view.vision : '';
+  const caption = (
+    <p
+      className="m-0 uppercase"
+      style={{ fontSize: u(0.95), letterSpacing: '0.14em', opacity: 0.6 }}
+    >
+      {label}
+    </p>
+  );
+  if (!view.written)
+    return (
+      <SheetFrame context={context} lead={words.lead.manifesto}>
+        <div className="flex h-full flex-col justify-center" style={{ gap: u(2) }}>
+          {caption}
+          <p
+            className="m-0 text-balance"
+            style={{ fontFamily: view.pairing.display.css, fontSize: u(3.4), lineHeight: 1.12 }}
+          >
+            {words.manifesto.pending}
+          </p>
+        </div>
+      </SheetFrame>
+    );
+  if (kind === 'values')
+    return (
+      <SheetFrame context={context} lead={words.lead.manifesto}>
+        <div className="grid h-full grid-cols-2 grid-rows-2" style={{ gap: u(2.4) }}>
+          {view.values.map((value) => (
+            <div
+              key={value.label}
+              className="flex flex-col justify-center border-t"
+              style={{ ...hairline(ink), paddingTop: u(1.4) }}
+            >
+              <p
+                className="m-0"
+                style={{ fontFamily: view.pairing.display.css, fontSize: u(3.2), fontWeight: 600 }}
+              >
+                {value.label}
+              </p>
+              <p className="m-0" style={{ fontSize: u(1.4), opacity: 0.72, marginTop: u(0.8) }}>
+                {value.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </SheetFrame>
+    );
+  return (
+    <SheetFrame context={context} lead={words.lead.manifesto}>
+      <div className="flex h-full flex-col justify-center" style={{ gap: u(2) }}>
+        {caption}
+        <p
+          className="m-0 text-balance"
+          style={{
+            fontFamily: view.pairing.display.css,
+            fontSize: u(4.2),
+            lineHeight: 1.08,
+            letterSpacing: '-0.015em',
+          }}
+        >
+          {statement}
+        </p>
+      </div>
+    </SheetFrame>
   );
 }
