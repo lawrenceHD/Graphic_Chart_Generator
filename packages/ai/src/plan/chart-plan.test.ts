@@ -71,6 +71,15 @@ describe('directionToChartPlan', () => {
   });
 });
 
+describe('tokens page', () => {
+  it('ends every plan, researched, default or last resort, like the standard plan', () => {
+    for (const plan of [directionToChartPlan(art), defaultChartPlan(), FALLBACK_CHART_PLAN]) {
+      expect(plan.sections.at(-1)?.type).toBe('tokens');
+      expect(plan.sections.filter((section) => section.type === 'tokens')).toHaveLength(1);
+    }
+  });
+});
+
 describe('defaultChartPlan', () => {
   it('is the common core of professional guidelines, valid, without evidence', () => {
     const plan = defaultChartPlan();
@@ -97,7 +106,10 @@ describe('never throws', () => {
     const duplicated = { sections: [planned('menu', ['a']), planned('menu', ['b'])] };
     const { plan, degraded } = planFromDirection(duplicated);
     expect(degraded).toBe(false);
-    expect(plan.sections).toEqual([{ type: 'mockup', title: 'Menu and cards', evidence: ['a'] }]);
+    expect(plan.sections).toEqual([
+      { type: 'mockup', title: 'Menu and cards', evidence: ['a'] },
+      { type: 'tokens', title: 'Design tokens', evidence: [] },
+    ]);
   });
 
   it('survives evidence that is entirely invalid', () => {
