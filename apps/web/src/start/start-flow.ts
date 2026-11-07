@@ -56,6 +56,12 @@ async function steps(
 ): Promise<Result<string, StartFailure>> {
   const first = await create(fetcher, input);
   if (first.status !== 401 && first.status !== 403) return created(first);
+  // A signed-in account over its free quota is refused with 403 too: it must see the quota message, not
+  // be turned into a guest.
+  if (first.status === 403) {
+    const refusal = await failure(first.clone());
+    if (refusal.kind === 'http' && refusal.code === 'QUOTA_PROJECTS') return err(refusal);
+  }
   const token = await turnstileToken();
   if (token === null) return err({ kind: 'turnstile' });
   const session = await fetcher('/api/v1/guest-sessions', post({ turnstileToken: token }));

@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Landing } from '../landing/landing';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('landing');
+  const t = await getTranslations('homePage');
   return { title: { absolute: t('metaTitle') } };
 }
 

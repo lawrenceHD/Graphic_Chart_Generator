@@ -75,6 +75,16 @@ describe('StartForm ("Démarrer", US-01 then US-02)', () => {
     expect(screen.getByText(t.darkBackground)).toBeDefined();
   });
 
+  it('explains the free-plan quota and links to the pricing page', async () => {
+    setup([Response.json({ code: 'QUOTA_PROJECTS' }, { status: 403 })]);
+    await userEvent.type(screen.getByLabelText(t.name), 'A');
+    await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), PNG);
+    await screen.findByText(t.chosen.replace('{name}', 'la-meza.png'));
+    await userEvent.click(screen.getByRole('button', { name: t.submit }));
+    expect((await screen.findByRole('alert')).textContent).toContain(t.quota);
+    expect(screen.getByRole('link', { name: t.quotaLink }).getAttribute('href')).toBe('/tarifs');
+  });
+
   it('explains a refusal and lets the person try again', async () => {
     const { navigate } = setup([Response.json({ code: 'RATE_LIMITED' }, { status: 429 })]);
     await userEvent.type(screen.getByLabelText(t.name), 'A');
