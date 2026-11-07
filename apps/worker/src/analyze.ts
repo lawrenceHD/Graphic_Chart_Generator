@@ -1,13 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { assignRoles, brandClusters, extractPalette, type PaletteRoles } from '@app/color-engine';
-import type {
-  ObjectStorage,
-  ProjectEvent,
-  RasterError,
-  RasterImage,
-  Rasterizer,
-  Vectorizer,
-} from '@app/contracts';
+import type { ObjectStorage, ProjectEvent, Vectorizer } from '@app/contracts';
 import {
   analysisRuns,
   and,
