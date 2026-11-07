@@ -1,7 +1,9 @@
 import {
+  ChartPlanSchema,
   TONE_AXIS_IDS,
   type Archetype,
   type BrandValue,
+  type ChartPlan,
   type PageType,
   type PairingId,
   type Tone,
@@ -117,19 +119,49 @@ const WORDING = {
 
 const color = ({ hex, source }: ComposeColor): ComposeColor => ({ hex: hex.toUpperCase(), source });
 
-export function composeInitialDocument(input: ComposeInput): Result<BrandDocument, ComposeError> {
+interface PageBlueprint {
+  readonly type: PageType;
+  readonly title: string;
+  readonly evidence: readonly string[] | null;
+}
+
+// Without a plan: the fixed MVP pages. With one: its sections, in order, each carrying its evidence.
+function blueprints(
+  plan: ChartPlan | undefined,
+  titles: Record<PageType, string>,
+): readonly PageBlueprint[] {
+  if (plan === undefined) {
+    return PAGES.map((type) => ({ type, title: titles[type], evidence: null }));
+  }
+  return plan.sections.map(({ type, title, evidence }) => ({ type, title, evidence }));
+}
+
+// The first page of a type keeps the historical id `page-<type>`; the next ones are numbered from 2.
+function pageId(type: PageType, occurrence: number): string {
+  return occurrence === 1 ? `page-${type}` : `page-${type}-${String(occurrence)}`;
+}
+
+export function composeInitialDocument(
+  input: ComposeInput,
+  plan?: ChartPlan,
+): Result<BrandDocument, ComposeError> {
+  const checkedPlan = plan === undefined ? undefined : ChartPlanSchema.safeParse(plan);
+  if (checkedPlan !== undefined && !checkedPlan.success) return err({ code: 'INVALID_DOCUMENT' });
   const words = WORDING[input.language];
   const name = input.brandName.trim().slice(0, MAX_BRAND_NAME);
   const value = (index: number) => ({ label: `${words.value} ${String(index)}`, description: '' });
   let position: string | null = null;
-  const pages = PAGES.map((type) => {
+  const seen = new Map<PageType, number>();
+  const pages = blueprints(checkedPlan?.data, words.titles).map(({ type, title, evidence }) => {
     position = generateKeyBetween(position, null);
+    const occurrence = (seen.get(type) ?? 0) + 1;
+    seen.set(type, occurrence);
     return {
-      id: `page-${type}`,
+      id: pageId(type, occurrence),
       type,
       position,
-      title: words.titles[type],
-      data: {},
+      title,
+      data: evidence === null ? {} : { evidence },
       overrides: {},
     };
   });

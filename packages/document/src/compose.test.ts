@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { ChartPlanSchema, type ChartPlan, type PageType } from '@app/contracts';
 import { composeInitialDocument, type ComposeInput } from './compose.js';
+import { standardChartPlan } from './plans.js';
 import { BrandDocumentSchema } from './schema.js';
 
 const input: ComposeInput = {
@@ -164,5 +166,74 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
     expect(!badColor.ok && badColor.error.code).toBe('INVALID_DOCUMENT');
     const markup = composeInitialDocument({ ...input, brandName: '<script>x</script>' });
     expect(!markup.ok && markup.error.code).toBe('INVALID_DOCUMENT');
+  });
+});
+
+const plan = (types: readonly PageType[]): ChartPlan => ({
+  sections: types.map((type, index) => ({
+    type,
+    title: `Section ${String(index + 1)}`,
+    evidence: [`ref-${String(index + 1)}`],
+  })),
+});
+
+describe('composeInitialDocument with a ChartPlan', () => {
+  it('produces one page per section, in plan order, with its title and evidence', () => {
+    const result = composeInitialDocument(input, plan(['cover', 'palette', 'palette', 'do-dont']));
+    if (!result.ok) throw new Error(result.error.code);
+    const { pages } = result.value;
+
+    expect(pages.map((page) => page.type)).toEqual(['cover', 'palette', 'palette', 'do-dont']);
+    expect(pages.map((page) => page.title)).toEqual([
+      'Section 1',
+      'Section 2',
+      'Section 3',
+      'Section 4',
+    ]);
+    expect(pages[2]?.data).toEqual({ evidence: ['ref-3'] });
+  });
+
+  it('gives repeated types distinct stable ids and strictly increasing positions', () => {
+    const result = composeInitialDocument(input, plan(['palette', 'palette', 'palette', 'mockup']));
+    if (!result.ok) throw new Error(result.error.code);
+    const { pages } = result.value;
+
+    expect(pages.map((page) => page.id)).toEqual([
+      'page-palette',
+      'page-palette-2',
+      'page-palette-3',
+      'page-mockup',
+    ]);
+    const positions = pages.map((page) => page.position);
+    expect(new Set(positions).size).toBe(4);
+    expect([...positions].sort()).toEqual(positions);
+  });
+
+  it('keeps the 11 default pages without data when no plan is given', () => {
+    const result = composeInitialDocument(input);
+    if (!result.ok) throw new Error(result.error.code);
+    expect(result.value.pages).toHaveLength(11);
+    expect(result.value.pages.every((page) => Object.keys(page.data).length === 0)).toBe(true);
+  });
+
+  it('refuses a plan that does not satisfy ChartPlanSchema', () => {
+    const empty = composeInitialDocument(input, { sections: [] });
+    expect(!empty.ok && empty.error.code).toBe('INVALID_DOCUMENT');
+    const unsafe = composeInitialDocument(input, {
+      sections: [{ type: 'cover', title: '<i>x', evidence: [] }],
+    });
+    expect(!unsafe.ok && unsafe.error.code).toBe('INVALID_DOCUMENT');
+  });
+
+  it('builds a valid 16-page charter from the standard plan, in both languages', () => {
+    for (const language of ['fr', 'en'] as const) {
+      const standard = standardChartPlan(language);
+      expect(ChartPlanSchema.safeParse(standard).success).toBe(true);
+      const result = composeInitialDocument({ ...input, language }, standard);
+      if (!result.ok) throw new Error(result.error.code);
+      expect(result.value.pages).toHaveLength(16);
+      expect(new Set(result.value.pages.map((page) => page.title)).size).toBe(16);
+      expect(BrandDocumentSchema.safeParse(result.value).success).toBe(true);
+    }
   });
 });

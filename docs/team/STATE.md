@@ -51,4 +51,5 @@ Après validation des décisions 1 à 3 : sauvegarde du prototype, `.gitignore`,
 
 ## 6. Journal
 
+- 2026-11-07 (R1, branche `comp/r1-contracts-document`, non poussée) : `ChartPlanSchema` (contracts/chart-plan.ts), `composeInitialDocument(input, plan?)` (ids `page-<type>`, `page-<type>-2`..., données `{ evidence }`), `standardChartPlan(language)` (16 pages, document/plans.ts). Sans plan : 10 pages, inchangé (pas 12, la fonction ne s'appelle pas `composeDocument`). Statut : Implémenté, tests verts ; `pnpm verify` voir rapport. Aucune demande dans QUEUE.
 - 2026-11-07 : réanalyse du projet, trois agents (Analyste, Architecte, Outils), deux tours de consensus, roster consolidé dans `docs/team/`. Aucun code modifié.
