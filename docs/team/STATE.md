@@ -52,3 +52,4 @@ Après validation des décisions 1 à 3 : sauvegarde du prototype, `.gitignore`,
 ## 6. Journal
 
 - 2026-11-07 : réanalyse du projet, trois agents (Analyste, Architecte, Outils), deux tours de consensus, roster consolidé dans `docs/team/`. Aucun code modifié.
+- 2026-11-07 (R2, branche `comp/r2-ai-research`, non poussée) : `runResearch` livré dans `packages/ai` (Implémenté, tests verts). Adaptateur `directionToChartPlan` / `defaultChartPlan`, mode dégradé typé (index absent, `visual-similarity-unavailable`), rejeu enregistré JSON Zod, plafonds d'appels / taille / jetons de sortie, liste blanche `gemini-*`, filtrage des consignes injectées dans les textes de références. Reste à R3 : l'étape worker ; à R1 : `ChartPlan` du contrat. Aucun appel réseau réel lancé. Voir `QUEUE.md`.
