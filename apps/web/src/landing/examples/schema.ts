@@ -24,6 +24,8 @@ export const DemoExampleSchema = z
     language: z.enum(['fr', 'en']),
     briefText: z.string().min(1).max(2000),
     logo: LogoSchema,
+    /** Hand-drawn one-colour versions of the logo (black and white), when the example has them. */
+    monoLogos: z.object({ black: LogoSchema, white: LogoSchema }).strict().optional(),
     /** Where the logo comes from: documented so that no example ever carries a third-party mark. */
     logoProvenance: z.string().min(1).max(200),
     colors: z
