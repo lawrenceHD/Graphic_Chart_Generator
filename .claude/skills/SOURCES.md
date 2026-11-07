@@ -20,3 +20,4 @@ Retirés le 2026-10-17 (contradictoires avec `AGENTS.md` ou hors sujet) : `fal-a
 `token-budget-advisor`, `prompt-optimizer`, `strategic-compact`, `tdd-workflow`.
 
 - `frontend-anchors` (2026-11-07) : Ilm-Alan/frontend-design @ f8966e6cc9b9 (MIT), renommé ; invocation sur demande seulement. Voir `docs/team/skills/INSTALL-LOG.md`.
+- `sharp-edges` (2026-11-07) : trailofbits/skills plugins/sharp-edges @ e4dd0bb (CC-BY-SA-4.0), copié sans modification. Voir `docs/team/skills/INSTALL-LOG.md`.
