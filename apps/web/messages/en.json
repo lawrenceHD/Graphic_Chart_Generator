@@ -96,7 +96,7 @@
     "title": "Which brand are we dressing today?",
     "lead": "A name and a logo are enough. The more you tell us, the more the guidelines look like you.",
     "name": "Brand name",
-    "namePlaceholder": "E.g. La Mèza",
+    "namePlaceholder": "E.g. Atelier Horizon",
     "logo": "Logo",
     "chosen": "Chosen logo: {name}",
     "change": "Change",
@@ -115,7 +115,7 @@
     "rateLimited": "Too many projects created in a short time. Wait a few minutes, then try again.",
     "refused": "The request was refused (code {code}). Try again in a moment.",
     "logoHint": "The only field needed with the name",
-    "briefPlaceholder": "E.g.: La Mèza brings strangers together around one table for friendly dinners…",
+    "briefPlaceholder": "E.g.: Atelier Horizon brings the neighbourhood’s craftspeople together in a workshop open to all…",
     "after": "You land in the studio: the guideline builds before your eyes, page after page.",
     "coverLead": "The brief sets the tone of the cover.",
     "coverNote": "Preview: the final cover takes the colours measured in your logo.",
@@ -386,7 +386,7 @@
       "try": "Try it"
     },
     "hero": {
-      "badge": "Real example below: the La Mèza guideline",
+      "badge": "Real example below: a guideline composed by Charta",
       "line1": "Your logo,",
       "line2": "your",
       "line3": "live.",
@@ -435,12 +435,12 @@
     },
     "pages": {
       "title": "Pages that hold up to comparison.",
-      "lead": "The La Mèza pages, as Charta composes them. Grab one.",
-      "caption": "{page} · La Mèza"
+      "lead": "The pages of a real guideline, as Charta composes them. Grab one.",
+      "caption": "{page} · {brand}"
     },
     "inside": {
       "title": "Everything in the guideline.",
-      "lead": "Example: La Mèza, composed by Charta then refined in the studio (mission, values and tone taken from its brief).",
+      "lead": "Example: {brand}. Guideline composed by Charta then refined in the studio (mission, values and tone taken from the brief).",
       "paletteTitle": "Palette extracted from the logo",
       "paletteNote": "Roles assigned by the engine: primary, accent, neutrals.",
       "contrastTitle": "Measured contrast",

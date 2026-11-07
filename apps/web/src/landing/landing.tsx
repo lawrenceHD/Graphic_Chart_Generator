@@ -17,7 +17,7 @@ import {
 } from './landing-sections';
 
 // Landing of the mock-up validated by the owner (prototypes/studio, Landing.tsx), on real material: every page
-// and mockup shown is drawn by the studio's renderers from the La Mèza example (demo.ts).
+// and mockup shown is drawn by the studio's renderers from a demonstration brand (demo.ts, landing/examples).
 export function Landing() {
   // The hero paints first; the rest of the page (a long scroll of sheets and photographs) mounts after the
   // first frame, so the headline is never held back by below-the-fold work.
