@@ -51,5 +51,6 @@ Après validation des décisions 1 à 3 : sauvegarde du prototype, `.gitignore`,
 
 ## 6. Journal
 
+- 2026-11-07 (R3, branche `comp/r3-worker-research`, non poussée) : étape recherche dans `apps/worker` (`research.ts` : `ResearchPort`, `defaultResearch`, `replayResearch`, `loadRecordedResearch`, `aiResearch`, `planWithFallback`), exécutée dans l'étape 4 avant `composeInitialDocument(input, plan)` (contrat `step` plafonné à 4). Repli sur le plan standard avec avertissement typé en `code` de l'événement `done`. Rejeu via `RESEARCH_REPLAY_FILE`. Statut : Implémenté ; tests unitaires verts, tests d'intégration DB écrits mais non exécutés (pas de `DATABASE_URL`). Reste : brancher `aiResearch` sur la fonction de R2 (voir QUEUE).
 - 2026-11-07 (R1, branche `comp/r1-contracts-document`, non poussée) : `ChartPlanSchema` (contracts/chart-plan.ts), `composeInitialDocument(input, plan?)` (ids `page-<type>`, `page-<type>-2`..., données `{ evidence }`), `standardChartPlan(language)` (16 pages, document/plans.ts). Sans plan : 10 pages, inchangé (pas 12, la fonction ne s'appelle pas `composeDocument`). Statut : Implémenté, tests verts ; `pnpm verify` voir rapport. Aucune demande dans QUEUE.
 - 2026-11-07 : réanalyse du projet, trois agents (Analyste, Architecte, Outils), deux tours de consensus, roster consolidé dans `docs/team/`. Aucun code modifié.
