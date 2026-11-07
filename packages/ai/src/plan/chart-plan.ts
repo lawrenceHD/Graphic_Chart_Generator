@@ -9,7 +9,9 @@ import { buildArtDirection, type ArtDirection } from '../references/direction.js
 
 // The research speaks in 30 guideline sections; the document knows 11 page types (packages/contracts).
 // Several sections may share a type: the plan then holds several pages of that type, each with its own title.
-// Types no section maps to ('contrast', 'tokens') are produced by the standard plan, not by the research.
+// 'tokens' is no guideline section: buildPlan appends that page last, as the standard plan does.
+// 'contrast' comes from 'color-ratio' only. That section is not in the common core (references/direction.ts):
+// it joins the plan when at least a quarter of the closest references show it, like any sector section.
 export const SECTION_PAGE_TYPE: Record<GuidelineSection, PageType> = {
   cover: 'cover',
   contents: 'manifesto',
@@ -87,6 +89,12 @@ function cleanEvidence(evidence: readonly string[]): string[] {
     .slice(0, MAX_SECTION_EVIDENCE);
 }
 
+const tokensSection = (): ChartPlan['sections'][number] => ({
+  type: 'tokens',
+  title: 'Design tokens',
+  evidence: [],
+});
+
 function buildPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan | undefined {
   const seen = new Set<GuidelineSection>();
   const sections: ChartPlan['sections'] = [];
@@ -99,6 +107,7 @@ function buildPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan | undef
       evidence: cleanEvidence(planned.evidence),
     });
   }
+  if (sections.length > 0) sections.push(tokensSection());
   const parsed = ChartPlanSchema.safeParse({ sections });
   return parsed.success ? parsed.data : undefined;
 }
@@ -110,6 +119,7 @@ export const FALLBACK_CHART_PLAN: ChartPlan = {
     { type: 'logo', title: 'The logo', evidence: [] },
     { type: 'palette', title: 'Colour palette', evidence: [] },
     { type: 'typography', title: 'Typography', evidence: [] },
+    tokensSection(),
   ],
 };
 

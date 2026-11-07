@@ -25,7 +25,9 @@ export type ResearchIssueCode =
   | 'replayed'
   | 'replayed-after-failure'
   | 'prompt-injection-suspected'
-  | 'plan-invalid';
+  | 'plan-invalid'
+  | 'replayed-wildcard'
+  | 'recording-failed';
 
 export interface ResearchIssue {
   code: ResearchIssueCode;
@@ -95,11 +97,9 @@ function sourcedPlan(research: BrandResearch, issues: ResearchIssue[]): ChartPla
   return plan;
 }
 
-function replayed(
-  recording: ResearchRecording,
-  deps: RunResearchDeps,
-  issues: ResearchIssue[],
-): ResearchOutcome {
+function replayed(recording: ResearchRecording, issues: ResearchIssue[]): ResearchOutcome {
+  // A wildcard recording was made for another logo: the result is usable but must not pass for this brand's.
+  if (recording.key === '*') addIssue(issues, { code: 'replayed-wildcard' });
   const research = cleanDirection(recording.research, issues);
   return {
     source: 'replay',
@@ -110,8 +110,27 @@ function replayed(
   };
 }
 
-function degraded(
+// The clock is injected, so it may throw; nothing else here can: cleanDirection, createRecording,
+// parseReferenceIndex and the plan builders only run total string and Zod operations.
+function makeRecording(
   deps: RunResearchDeps,
+  research: BrandResearch,
+  logo: ImageInput,
+  issues: ResearchIssue[],
+): ResearchRecording | undefined {
+  if (!deps.now) return undefined;
+  try {
+    return createRecording(research, logo, deps.now());
+  } catch (error) {
+    addIssue(issues, {
+      code: 'recording-failed',
+      detail: error instanceof Error ? error.name : 'unexpected failure',
+    });
+    return undefined;
+  }
+}
+
+function degraded(
   issues: ResearchIssue[],
   usage: ResearchOutcome['usage'],
   research?: BrandResearch,
@@ -169,10 +188,10 @@ export async function runResearch(
   if (deps.mode === 'replay') {
     if (!recording) {
       addIssue(issues, { code: 'recording-missing' });
-      return ok(degraded(deps, issues, NO_USAGE));
+      return ok(degraded(issues, NO_USAGE));
     }
     addIssue(issues, { code: 'replayed', detail: recording.recordedAt });
-    return ok(replayed(recording, deps, issues));
+    return ok(replayed(recording, issues));
   }
 
   const library = await loadLibrary(deps, issues);
@@ -206,9 +225,9 @@ export async function runResearch(
     addIssue(issues, { code: 'research-failed', detail: result.error.code });
     if (recording) {
       addIssue(issues, { code: 'replayed-after-failure', detail: recording.recordedAt });
-      return ok(replayed(recording, deps, issues));
+      return ok(replayed(recording, issues));
     }
-    return ok(degraded(deps, issues, usage));
+    return ok(degraded(issues, usage));
   }
 
   const research = cleanDirection(result.value, issues);
@@ -220,13 +239,14 @@ export async function runResearch(
         : {}),
     });
   }
-  if (library.length === 0) return ok(degraded(deps, issues, usage, research));
+  if (library.length === 0) return ok(degraded(issues, usage, research));
+  const saved = makeRecording(deps, research, input.logo, issues);
   return ok({
     source: 'live',
     plan: sourcedPlan(research, issues),
     research,
     issues,
-    ...(deps.now ? { recording: createRecording(research, input.logo, deps.now()) } : {}),
+    ...(saved ? { recording: saved } : {}),
     usage,
   });
 }

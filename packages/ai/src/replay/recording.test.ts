@@ -74,4 +74,19 @@ describe('research recording', () => {
     expect(findRecording([exact], other)).toBeUndefined();
     expect(findRecording([exact, wildcard], other)).toBe(wildcard);
   });
+
+  it('writes keys its own parser accepts, whatever the declared mime type', async () => {
+    const research = await liveResearch();
+    for (const mimeType of ['image/svg+xml', 'image/x-icon', 'application/octet-stream', '']) {
+      const recording = createRecording(
+        research,
+        { data: image.data, mimeType },
+        '2026-11-07T10:00:00.000Z',
+      );
+      const parsed = parseRecording(serializeRecording(recording));
+      expect(parsed.ok, mimeType).toBe(true);
+      if (parsed.ok)
+        expect(findRecording([parsed.value], { data: image.data, mimeType })).toBeDefined();
+    }
+  });
 });
