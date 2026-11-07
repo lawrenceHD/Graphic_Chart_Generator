@@ -87,8 +87,7 @@ function cleanEvidence(evidence: readonly string[]): string[] {
     .slice(0, MAX_SECTION_EVIDENCE);
 }
 
-/** Converts a sourced art direction into the contract's page plan, in guideline order, evidence kept. */
-export function directionToChartPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan {
+function buildPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan | undefined {
   const seen = new Set<GuidelineSection>();
   const sections: ChartPlan['sections'] = [];
   for (const planned of direction.sections) {
@@ -100,11 +99,35 @@ export function directionToChartPlan(direction: Pick<ArtDirection, 'sections'>):
       evidence: cleanEvidence(planned.evidence),
     });
   }
-  // Throws on a bug of this module rather than handing a refused plan to composeInitialDocument.
-  return ChartPlanSchema.parse({ sections });
+  const parsed = ChartPlanSchema.safeParse({ sections });
+  return parsed.success ? parsed.data : undefined;
 }
+
+// Last resort, fixed and tested against the contract: reached only if the common core itself is refused.
+export const FALLBACK_CHART_PLAN: ChartPlan = {
+  sections: [
+    { type: 'cover', title: 'Cover', evidence: [] },
+    { type: 'logo', title: 'The logo', evidence: [] },
+    { type: 'palette', title: 'Colour palette', evidence: [] },
+    { type: 'typography', title: 'Typography', evidence: [] },
+  ],
+};
 
 /** The sections every professional guideline contains: used when no sourced direction is available. */
 export function defaultChartPlan(): ChartPlan {
-  return directionToChartPlan(buildArtDirection([]));
+  return buildPlan(buildArtDirection([])) ?? FALLBACK_CHART_PLAN;
+}
+
+/** Never throws: an empty or refused plan becomes the default plan, flagged as degraded. */
+export function planFromDirection(direction: Pick<ArtDirection, 'sections'>): {
+  plan: ChartPlan;
+  degraded: boolean;
+} {
+  const plan = buildPlan(direction);
+  return plan ? { plan, degraded: false } : { plan: defaultChartPlan(), degraded: true };
+}
+
+/** Converts a sourced art direction into the contract's page plan, in guideline order, evidence kept. */
+export function directionToChartPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan {
+  return planFromDirection(direction).plan;
 }
