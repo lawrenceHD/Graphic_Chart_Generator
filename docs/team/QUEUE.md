@@ -38,3 +38,4 @@
 - [ ] R5 → R7 : `landing/examples` + `DemoSheet` générique (prop d'exemple), et retirer les clés `landing.*` de `messages/{fr,en}.json` devenues inutilisées (critère : `listExamples()` renvoie les 3 marques, atelier sans importer `demo.ts`).
 - [ ] R5 → R0 : exclure `prototypes/showcase-flow` de `prettier --check` (`.prettierignore`), `pnpm verify` échoue sur 13 fichiers du prototype (critère : `pnpm format:check` vert).
 - [ ] R5 → R7 : `product.*.json` est ma fusion de messages ; l'intégrer dans `fr.json`/`en.json` si vous préférez un seul fichier.
+- [ ] R5 → R4 : afficher `<AnalysisNotice warnings={timeline.warnings} />` (exporté par `studio/analysis-timeline.tsx`, role="status", FR/EN `analysis.notice.*`) dans `StepList` de `studio/workspace/copilot-panel.tsx`, sous la liste des étapes (critère : un run avec `RESEARCH_UNAVAILABLE` affiche « la charte utilise le plan standard » dans le studio ; `DOCUMENT_KEPT` seul n’affiche rien).
