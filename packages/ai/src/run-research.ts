@@ -26,6 +26,7 @@ export type ResearchIssueCode =
   | 'replayed-after-failure'
   | 'prompt-injection-suspected'
   | 'plan-invalid'
+  | 'plan-capped'
   | 'replayed-wildcard'
   | 'recording-failed';
 
@@ -92,8 +93,9 @@ function cleanDirection(research: BrandResearch, issues: ResearchIssue[]): Brand
 
 // The plan of a sourced direction; an empty or refused one falls back to the default plan, visibly.
 function sourcedPlan(research: BrandResearch, issues: ResearchIssue[]): ChartPlan {
-  const { plan, degraded } = planFromDirection(research.direction);
+  const { plan, degraded, capped } = planFromDirection(research.direction);
   if (degraded) addIssue(issues, { code: 'plan-invalid' });
+  if (capped > 0) addIssue(issues, { code: 'plan-capped', detail: String(capped) });
   return plan;
 }
 
