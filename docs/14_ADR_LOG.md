@@ -171,6 +171,17 @@
 **Conséquences** : `09` §1.2, §1.5 et `07` §2 (facturation) sont supersédés pendant la compétition ; les addenda « à reporter » de `journal/OWNER_DECISIONS.md` font foi jusqu'à leur report dans `docs/`, prévu après la présélection.
 **Alternatives rejetées** : rendus séparés pour la toile et le PDF (double maintenance, écarts visuels) ; génération d'images par l'IA pour les mockups (logo déformé, contraire au principe du produit) ; Gemini payant (pas de facturation pour l'instant).
 
+## ADR-030 — Plans et quotas (paiement différé, O-5 ouvert)
+**Contexte** : aucun mode de paiement ni table de plans n'existe ; la migration de base est interdite avant le 09/11 et O-5 (tarification, fournisseur) reste ouvert. Le jury doit pourtant voir une limite de palier gratuit appliquée côté serveur.
+**Décision** :
+1. Le palier gratuit est une **constante du code** (`apps/web/src/server/plans.ts`) : 3 projets actifs par compte ; tout compte est au palier gratuit. Une session invitée garde la limite d'un projet de `can()` (`01_PRODUCT_MVP.md` §3).
+2. `POST /api/v1/projects` refuse la création au-delà par `403` avec le code stable `QUOTA_PROJECTS` (RFC 9457). `403` plutôt que `402` : aucun paiement n'est possible, donc rien à « payer » ; le statut sera réexaminé avec O-5.
+3. Les projets supprimés logiquement ne comptent pas. Le décompte et l'insertion s'exécutent dans une transaction sous verrou consultatif par compte (pas de dépassement en concurrence).
+4. Le rattachement d'un projet invité (`guest-sessions/claim`) n'est **jamais** refusé par le quota (AC-01.3, aucune perte) : un compte peut donc dépasser 3 projets par rattachement ; seule la création suivante est bloquée.
+5. Aucune table `subscriptions`, aucune migration avant le 09/11 ; la table (R10) remplacera la constante après cette date, une fois O-5 tranché.
+**Conséquences** : l'interface traduit `QUOTA_PROJECTS` (message et appel à l'action vers les tarifs statiques) ; les paliers payants et leurs limites restent à définir.
+**Alternatives rejetées** : table `plans`/`subscriptions` maintenant (migration interdite) ; quota côté client seulement (contournable) ; `402` (suppose un paiement qui n'existe pas).
+
 ---
 
 ## Décisions ouvertes
