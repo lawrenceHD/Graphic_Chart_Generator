@@ -53,7 +53,10 @@ export function assetHandlers(deps: AssetRouteDeps) {
             : actor.kind;
       const wait = await deps.limiter.hit([
         { key: `upload:${identity}`, limit: DECLARATIONS_PER_ACTOR },
-        { key: `upload-ip:${clientIp(request) ?? 'unknown'}`, limit: DECLARATIONS_PER_IP },
+        {
+          key: `upload-ip:${clientIp(request, deps.trustedProxyHops) ?? 'unknown'}`,
+          limit: DECLARATIONS_PER_IP,
+        },
       ]);
       if (wait > 0) return tooManyRequests(request, wait);
       const body = await readJson(request, DeclareBody);

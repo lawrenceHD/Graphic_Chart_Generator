@@ -1,10 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import type { Actor } from '@app/contracts';
-import { documents, eq, projects, revisions, user } from '@app/db';
+import { documents, eq, guestSessions, projects, revisions, user } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { guestActorFromCookie } from './guest-service';
+import { claimGuestSession, guestActorFromCookie } from './guest-service';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { projectResource } from './project-access';
 import { createProject, listProjects } from './project-service';
@@ -32,6 +32,7 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
       now: () => clock,
       limiter: createRateLimiter(test.database.orm, () => clock),
       resolveActor: () => Promise.resolve(signedIn),
+      trustedProxyHops: 1,
     });
   });
   afterAll(async () => {
@@ -88,6 +89,41 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     expect((await routes.create(post('/guest-sessions', { turnstileToken: 'ok' }))).status).toBe(
       201,
     );
+  });
+
+  it('cannot dodge the 5/h limit by forging X-Forwarded-For behind one proxy', async () => {
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const response = await routes.create(
+        post(
+          '/guest-sessions',
+          { turnstileToken: 'ok' },
+          '',
+          APP_URL,
+          `192.0.2.${String(attempt + 1)}, 203.0.113.60`,
+        ),
+      );
+      statuses.push(response.status);
+    }
+    expect(statuses).toEqual([201, 201, 201, 201, 201, 429]);
+  });
+
+  it('shares one bucket when no proxy is trusted: the header is ignored', async () => {
+    const untrusting = guestHandlers({
+      orm: test.database.orm,
+      appUrl: APP_URL,
+      guestSecret: SECRET,
+      verifyTurnstile: () => Promise.resolve(true),
+      now: () => clock,
+      limiter: createRateLimiter(test.database.orm, () => clock),
+      resolveActor: () => Promise.resolve(null),
+    });
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1)
+      statuses.push(
+        (await untrusting.create(post('/guest-sessions', { turnstileToken: 'ok' }))).status,
+      );
+    expect(statuses).toEqual([201, 201, 201, 201, 201, 429]);
   });
 
   it('resolves the guest actor from its cookie only while valid', async () => {
@@ -180,25 +216,67 @@ describe.runIf(adminUrl !== '')('guest sessions (SEC-10, T-017)', () => {
     });
   });
 
-  it('claims even when the account already holds a full free plan, losing nothing', async () => {
+  it('refuses to claim past the free plan, leaves the guest project intact and claimable later', async () => {
     const orm = test.database.orm;
     const { cookie, actor } = await newGuest();
     if (actor?.kind !== 'guest') throw new Error('guest expected');
     const userId = uuidV7(clock.getTime(), randomBytes(10));
     await orm.insert(user).values({ id: userId, name: 'x', email: `${userId}@example.invalid` });
+    const owned = [];
     for (const title of ['A', 'B', 'C'])
-      await createProject(orm, { kind: 'user', userId }, { title, language: 'fr' });
-    await createProject(orm, actor, { title: 'Guest draft', language: 'fr' });
+      owned.push(await createProject(orm, { kind: 'user', userId }, { title, language: 'fr' }));
+    const draft = await createProject(orm, actor, { title: 'Guest draft', language: 'fr' });
     signedIn = { kind: 'user', userId, emailVerified: false };
+
+    const refused = await routes.claim(post('/guest-sessions/claim', {}, cookie));
+    expect([refused.status, await refused.json()]).toEqual([
+      403,
+      expect.objectContaining({ code: 'QUOTA_PROJECTS' }),
+    ]);
+    expect(refused.headers.get('set-cookie')).toBeNull();
+    const [untouched] = await orm.select().from(projects).where(eq(projects.id, draft.id));
+    expect([untouched?.guestSessionId, untouched?.workspaceId]).toEqual([
+      actor.guestSessionId,
+      null,
+    ]);
+
+    const first = owned[0];
+    if (!first) throw new Error('project expected');
+    await orm.update(projects).set({ deletedAt: clock }).where(eq(projects.id, first.id));
     expect(await (await routes.claim(post('/guest-sessions/claim', {}, cookie))).json()).toEqual({
       claimed: 1,
     });
-    const kept = await listProjects(
+    const kept = await listProjects(orm, signedIn, { limit: 50 });
+    expect(kept.items.map((item) => item.title).sort()).toEqual(['B', 'C', 'Guest draft']);
+  });
+
+  it('lets two accounts race for one guest session: exactly one wins, the project is not split', async () => {
+    const orm = test.database.orm;
+    const { actor } = await newGuest();
+    if (actor?.kind !== 'guest') throw new Error('guest expected');
+    const draft = await createProject(orm, actor, { title: 'Contested', language: 'fr' });
+    const users = [
+      uuidV7(clock.getTime(), randomBytes(10)),
+      uuidV7(clock.getTime(), randomBytes(10)),
+    ];
+    for (const userId of users)
+      await orm.insert(user).values({ id: userId, name: 'x', email: `${userId}@example.invalid` });
+    const outcomes = await Promise.all(
+      users.map((userId) => claimGuestSession(orm, actor.guestSessionId, userId)),
+    );
+    expect(outcomes.map((outcome) => outcome.claimed).sort()).toEqual([0, 1]);
+    const winner = users[outcomes.findIndex((outcome) => outcome.claimed === 1)] ?? '';
+    const mine = await listProjects(
       orm,
-      { kind: 'user', userId, emailVerified: false },
+      { kind: 'user', userId: winner, emailVerified: false },
       { limit: 50 },
     );
-    expect(kept.items.map((item) => item.title).sort()).toEqual(['A', 'B', 'C', 'Guest draft']);
+    expect(mine.items.map((item) => item.id)).toEqual([draft.id]);
+    const [closed] = await orm
+      .select({ claimedBy: guestSessions.claimedByUserId })
+      .from(guestSessions)
+      .where(eq(guestSessions.id, actor.guestSessionId));
+    expect(closed?.claimedBy).toBe(winner);
   });
 
   it('claims nothing without a valid guest cookie, and refuses a foreign Origin', async () => {

@@ -4,6 +4,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { haveIBeenPwned } from 'better-auth/plugins/haveibeenpwned';
+import { CLIENT_IP_HEADER } from './client-ip';
 import { hashPassword, verifyPassword } from '../lib/password';
 
 // Better Auth 1.7.7 configured as decided by the T-013 spike (sortie tikets/T-013.md), SEC-01 to SEC-06.
@@ -60,6 +61,7 @@ export function createAuth(orm: Orm, settings: AuthSettings, options: AuthOption
       // Explicit: Better Auth switches both checks off by default when it detects a test environment (SEC-06).
       disableOriginCheck: false,
       disableCSRFCheck: false,
+      ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] }, // set by trustClientIp, never by the client
       useSecureCookies: secureCookies,
       defaultCookieAttributes: { httpOnly: true, sameSite: 'lax', secure: secureCookies },
     },

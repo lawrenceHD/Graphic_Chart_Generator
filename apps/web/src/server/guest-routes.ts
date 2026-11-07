@@ -14,6 +14,7 @@ import {
   readJson,
   tooManyRequests,
 } from './http';
+import { ACCOUNT_PLAN } from './plans';
 import type { RateLimiter } from './rate-limiter';
 import { authenticate, type RouteDeps } from './route-guard';
 import type { TurnstileVerifier } from './turnstile';
@@ -52,7 +53,7 @@ export function guestHandlers(deps: GuestRouteDeps) {
     async create(request: Request): Promise<Response> {
       const rejected = checkOrigin(request, deps.appUrl);
       if (rejected) return rejected;
-      const ip = clientIp(request);
+      const ip = clientIp(request, deps.trustedProxyHops);
       // Before Turnstile, so that a flood costs neither verification calls nor rows.
       const wait = await deps.limiter.hit([
         { key: `guest-session:${ip ?? 'unknown'}`, limit: GUEST_SESSIONS_PER_IP },
@@ -94,12 +95,20 @@ export function guestHandlers(deps: GuestRouteDeps) {
         cookie === undefined
           ? null
           : await guestActorFromCookie(deps.orm, cookie, deps.guestSecret, deps.now());
-      const claimed =
+      const outcome =
         guest?.kind === 'guest'
           ? await claimGuestSession(deps.orm, guest.guestSessionId, actor.value.userId)
-          : 0;
+          : { claimed: 0, refused: null };
+      // The guest session stays open when refused: the person can free a slot and claim again.
+      if (outcome.refused !== null)
+        return problemResponse(
+          request,
+          403,
+          outcome.refused,
+          `the free plan allows ${String(ACCOUNT_PLAN.maxProjects)} projects`,
+        );
       return Response.json(
-        { claimed },
+        { claimed: outcome.claimed },
         { headers: { 'set-cookie': cookieHeader('', 0, deps.appUrl) } },
       );
     },

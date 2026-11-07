@@ -2,6 +2,7 @@ import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@
 import { z } from 'zod';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { actorFromSession, createAuth, type Auth } from './auth';
+import { trustClientIp } from './client-ip';
 
 const adminUrl = integrationDatabaseUrl();
 const APP_URL = 'http://localhost:3000';
@@ -36,7 +37,10 @@ describe.runIf(adminUrl !== '')('auth over HTTP: sign-up, sign-in, session, sign
       'x-forwarded-for': options.ip ?? `198.51.100.${String(client)}`,
     });
     if (options.cookie !== undefined) headers.set('cookie', options.cookie);
-    return auth.handler(
+    return trustClientIp(
+      (request) => auth.handler(request),
+      1,
+    )(
       new Request(`${APP_URL}/api/auth${path}`, {
         method: 'POST',
         headers,
@@ -117,6 +121,38 @@ describe.runIf(adminUrl !== '')('auth over HTTP: sign-up, sign-in, session, sign
 
   const shapeOf = async (response: Response): Promise<string[]> =>
     Object.keys(z.record(z.string(), z.unknown()).parse(await response.json())).sort();
+
+  it('cannot dodge the sign-in limit by forging X-Forwarded-For (one real address behind 1 proxy)', async () => {
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const response = await call(
+        '/sign-in/email',
+        { email: 'ada@example.invalid', password: 'a wrong passphrase' },
+        { ip: `192.0.2.${String(attempt + 1)}, 203.0.113.77` },
+      );
+      statuses.push(response.status);
+    }
+    expect(statuses).toEqual([401, 401, 401, 401, 401, 429]);
+  });
+
+  it('ignores a client-written address header altogether', async () => {
+    const forged = new Request(`${APP_URL}/api/auth/sign-in/email`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: APP_URL,
+        'x-charta-client-ip': '198.18.0.1',
+        'x-forwarded-for': '203.0.113.88',
+      },
+      body: JSON.stringify({ email: 'ada@example.invalid', password: 'a wrong passphrase' }),
+    });
+    let seen: string | null = 'untouched';
+    await trustClientIp((request) => {
+      seen = request.headers.get('x-charta-client-ip');
+      return Promise.resolve(new Response(null));
+    }, 0)(forged);
+    expect(seen).toBeNull();
+  });
 
   it('answers a sign-up on a taken e-mail like a fresh one (no account enumeration)', async () => {
     const body = { email: 'taken@example.invalid', password: PASSWORD, name: 'T' };

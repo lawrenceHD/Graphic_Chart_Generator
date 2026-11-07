@@ -17,7 +17,7 @@ import { uuidV7 } from '@app/kernel';
 // 04_API_CONTRACTS.md §3 "Projets". Authorisation is decided by the routes through can(); these functions
 // only read and write.
 type Orm = ReturnType<typeof createDatabase>['orm'];
-type Tx = Parameters<Parameters<Orm['transaction']>[0]>[0];
+export type Tx = Parameters<Parameters<Orm['transaction']>[0]>[0];
 const newId = (): string => uuidV7(Date.now(), randomBytes(10));
 export const PAGE_LIMIT = 50;
 
@@ -55,7 +55,7 @@ export async function personalWorkspace(tx: Tx, userId: string) {
 }
 
 /** Live projects of the workspaces the user is a member of (the quota of PLANS counts these). */
-async function countUserProjects(tx: Tx, userId: string): Promise<number> {
+export async function countUserProjects(tx: Tx, userId: string): Promise<number> {
   const [row] = await tx
     .select({ count: sql<number>`count(*)::int` })
     .from(projects)
@@ -81,6 +81,11 @@ async function insertProject(
   return row;
 }
 
+/** Per-user advisory lock held until commit: serialises everything that changes the user's project count. */
+export async function lockUserProjects(tx: Tx, userId: string): Promise<void> {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`projects:${userId}`}))`);
+}
+
 /**
  * Creates the project of a user unless the plan's quota is reached (null). The per-user advisory lock held
  * until commit serialises concurrent creations, so the count cannot be raced past the limit.
@@ -92,7 +97,7 @@ export function createProjectWithinQuota(
   maxProjects: number,
 ): Promise<ProjectRow | null> {
   return orm.transaction(async (tx) => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`projects:${userId}`}))`);
+    await lockUserProjects(tx, userId);
     if ((await countUserProjects(tx, userId)) >= maxProjects) return null;
     return insertProject(tx, { workspaceId: await personalWorkspace(tx, userId) }, input);
   });
