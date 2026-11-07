@@ -331,7 +331,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     };
     const analysisId = await run0(research);
     expect(await runRow(analysisId)).toMatchObject({ status: 'done', step: 4 });
-    expect(await eventsAfter(cursor)).toContainEqual({
+    expect((await eventsAfter(cursor)).map((stored) => stored.event)).toContainEqual({
       type: 'analysis.step',
       data: { step: 4, state: 'done', code: 'RESEARCH_FAILED' },
     });
