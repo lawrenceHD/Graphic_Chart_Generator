@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { startProject } from './start-flow';
+import { EXAMPLES } from '../landing/examples';
 
 type Call = { readonly url: string; readonly body: unknown };
 const PROJECT_ID = '0190a0b0-0000-7000-8000-00000000000a';
@@ -21,13 +22,20 @@ const created = () => Response.json({ project: { id: PROJECT_ID } }, { status: 2
 const problem = (status: number, code: string) => Response.json({ code }, { status });
 const token = () => Promise.resolve('turnstile-token');
 
-describe('startProject', () => {
+describe.each(EXAMPLES)('startProject for $id', (example) => {
   it('creates the project directly when a session already exists', async () => {
     const api = fakeApi({ '/api/v1/projects': [created()] });
-    const result = await startProject(api.fetcher, { title: 'La Mèza', briefText: 'Brief' }, token);
+    const result = await startProject(
+      api.fetcher,
+      { title: example.name, briefText: example.briefText },
+      token,
+    );
     expect(result).toEqual({ ok: true, value: PROJECT_ID });
     expect(api.calls).toEqual([
-      { url: '/api/v1/projects', body: { title: 'La Mèza', briefText: 'Brief', language: 'fr' } },
+      {
+        url: '/api/v1/projects',
+        body: { title: example.name, briefText: example.briefText, language: 'fr' },
+      },
     ]);
   });
 
@@ -36,7 +44,7 @@ describe('startProject', () => {
       '/api/v1/projects': [problem(401, 'UNAUTHENTICATED'), created()],
       '/api/v1/guest-sessions': [Response.json({ expiresAt: 'x' }, { status: 201 })],
     });
-    const result = await startProject(api.fetcher, { title: 'La Mèza' }, token);
+    const result = await startProject(api.fetcher, { title: example.name }, token);
     expect(result).toEqual({ ok: true, value: PROJECT_ID });
     expect(api.calls.map((call) => call.url)).toEqual([
       '/api/v1/projects',

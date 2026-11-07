@@ -96,7 +96,7 @@
     "title": "Quelle marque on habille aujourd'hui ?",
     "lead": "Le nom et le logo suffisent. Plus vous en dites, plus la charte vous ressemble.",
     "name": "Nom de la marque",
-    "namePlaceholder": "Ex. : La Mèza",
+    "namePlaceholder": "Ex. : Atelier Horizon",
     "logo": "Logo",
     "chosen": "Logo choisi : {name}",
     "change": "Changer",
@@ -115,7 +115,7 @@
     "rateLimited": "Trop de projets créés en peu de temps. Patientez quelques minutes, puis réessayez.",
     "refused": "La création a été refusée (code {code}). Réessayez dans un instant.",
     "logoHint": "Seul champ indispensable avec le nom",
-    "briefPlaceholder": "Ex. : La Mèza réunit des inconnus autour d’une même table pour des dîners conviviaux…",
+    "briefPlaceholder": "Ex. : Atelier Horizon réunit les artisans du quartier dans un atelier ouvert à tous…",
     "after": "Vous arrivez dans le studio : la charte se compose sous vos yeux, page après page.",
     "coverLead": "Le brief donne le ton de la couverture.",
     "coverNote": "Aperçu : la couverture finale prend les couleurs mesurées dans votre logo.",
@@ -386,7 +386,7 @@
       "try": "Essayer"
     },
     "hero": {
-      "badge": "Exemple réel plus bas : la charte de La Mèza",
+      "badge": "Exemple réel plus bas : une charte composée par Charta",
       "line1": "Votre logo,",
       "line2": "votre",
       "line3": "en direct.",
@@ -435,12 +435,12 @@
     },
     "pages": {
       "title": "Des pages qui tiennent la comparaison.",
-      "lead": "Les pages de La Mèza, telles que Charta les compose. Attrapez-en une.",
-      "caption": "{page} · La Mèza"
+      "lead": "Les pages d’une vraie charte, telles que Charta les compose. Attrapez-en une.",
+      "caption": "{page} · {brand}"
     },
     "inside": {
       "title": "Tout ce que contient la charte.",
-      "lead": "Exemple : La Mèza, composée par Charta puis ajustée dans le studio (mission, valeurs et ton repris de son brief).",
+      "lead": "Exemple : {brand}. Charte composée par Charta puis ajustée dans le studio (mission, valeurs et ton repris du brief).",
       "paletteTitle": "Palette extraite du logo",
       "paletteNote": "Rôles attribués par le moteur : principale, accent, neutres.",
       "contrastTitle": "Contrastes mesurés",

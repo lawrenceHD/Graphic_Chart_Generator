@@ -4,25 +4,36 @@ import type { PageType } from '@app/contracts';
 import { RENDERERS } from '../studio/pages/pages';
 import { SHEET_WORDS } from '../studio/pages/sheet-words';
 import { orderedPages } from '../studio/workspace/brand-view';
-import { DEMO_DOCUMENT, DEMO_VIEW } from './demo';
+import { demoFor } from './demo';
 
-// A page of the La Mèza example, drawn by the studio's own renderers: what the landing shows is what the
-// product composes, at any size (the sheet scales with its container).
-const PAGES = orderedPages(DEMO_DOCUMENT).filter((page) => page.type !== 'mockup');
+// A page of an example brand, drawn by the studio's own renderers: what the landing shows is what the
+// product composes, at any size (the sheet scales with its container). Without `exampleId`, the default example.
 const YEAR = 2026;
 
-export function DemoSheet({ type }: { readonly type: Exclude<PageType, 'mockup'> }) {
-  const index = PAGES.findIndex((page) => page.type === type);
-  const page = PAGES[index];
+function pagesOf(exampleId: string | undefined) {
+  const { document, view } = demoFor(exampleId);
+  return { view, pages: orderedPages(document).filter((page) => page.type !== 'mockup') };
+}
+
+export function DemoSheet({
+  type,
+  exampleId,
+}: {
+  readonly type: Exclude<PageType, 'mockup'>;
+  readonly exampleId?: string;
+}) {
+  const { view, pages } = pagesOf(exampleId);
+  const index = pages.findIndex((page) => page.type === type);
+  const page = pages[index];
   if (page === undefined) return null;
   const Renderer = RENDERERS[type];
   return (
     <Renderer
       context={{
-        view: DEMO_VIEW,
-        words: SHEET_WORDS[DEMO_VIEW.language],
+        view,
+        words: SHEET_WORDS[view.language],
         number: index + 1,
-        total: PAGES.length,
+        total: pages.length,
         portrait: false,
         title: page.title,
         background: undefined,
@@ -32,6 +43,6 @@ export function DemoSheet({ type }: { readonly type: Exclude<PageType, 'mockup'>
   );
 }
 
-export function demoTitle(type: PageType): string {
-  return PAGES.find((page) => page.type === type)?.title ?? type;
+export function demoTitle(type: PageType, exampleId?: string): string {
+  return pagesOf(exampleId).pages.find((page) => page.type === type)?.title ?? type;
 }

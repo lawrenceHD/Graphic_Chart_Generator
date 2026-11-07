@@ -522,7 +522,7 @@ export function PinnedPages() {
                         <DemoSheet type={type} />
                       </div>
                       <span className="absolute bottom-2.5 left-4 font-display text-sm text-[oklch(0.3_0.01_60)]">
-                        {t('caption', { page: demoTitle(type) })}
+                        {t('caption', { page: demoTitle(type), brand: DEMO_VIEW.name })}
                       </span>
                     </div>
                   </motion.div>
@@ -577,7 +577,7 @@ export function Inside() {
       <h2 className={`${SECTION_TITLE} max-w-3xl`}>
         <SplitWords text={t('title')} />
       </h2>
-      <p className="mt-4 max-w-[60ch] text-ink-2">{t('lead')}</p>
+      <p className="mt-4 max-w-[60ch] text-ink-2">{t('lead', { brand: DEMO_VIEW.name })}</p>
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         <Tile
           className="md:col-span-2 md:row-span-2"

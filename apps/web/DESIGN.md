@@ -192,7 +192,7 @@ tabular figures. Prose never contains a raw measurement in the body font.
 Spacing runs on a 4 px unit (8, 16, 24, 40 in practice). The landing is a centred column up to 1200 px with full
 bleed sections. The studio is a fixed three-column workspace at desktop widths: chat and analysis on the left
 (about 340 px), the canvas in the centre (fluid, dotted grid, zoom control floating at the bottom), the inspector on
-the right (about 300 px). Guideline pages are 16:9 landscape sheets by default, portrait per page. Below 1024 px the
+the right (about 300 px). Guideline pages are A4 landscape sheets (297 by 210) by default, portrait per page. Below 1024 px the
 side columns become sheets over the canvas.
 
 ## Elevation & Depth
@@ -254,7 +254,7 @@ carries a dotted drafting grid; sheets carry a page number and a running header 
 
 ### Guideline Sheet (signature component)
 
-A 16:9 sheet on the canvas with a mono running header (brand, "Charte graphique", page number), a headline title,
+An A4 landscape sheet (297 by 210) on the canvas with a mono running header (brand, "Charte graphique", page number), a headline title,
 and content composed only from the document. States: skeleton (shimmer on opacity only), filled, selected (ink
 outline), error. It is the same component in the canvas, on `/print` and in the PDF.
 
@@ -267,6 +267,15 @@ outline), error. It is the same component in the canvas, on `/print` and in the 
 - **Do** set every measured value in Geist Mono with tabular figures.
 - **Do** keep one primary ink button per screen.
 - **Do** honour `prefers-reduced-motion`: skeletons and reveals fall back to instant states.
+
+### Example brands
+
+- **Do** treat every example brand as data (`landing/examples/data`), never as a design decision: the interface looks
+  identical whichever brand fills the sheets, and only the brand's own colours and fonts change.
+- **Do** compose guideline pages from juxtaposed flat colour fields, without a frame or a plate around the logo, and
+  give each page a professional reference.
+- **Don't** hard-code a brand name, colour or logo in a component, a stylesheet or a message; messages take the
+  brand as a `{brand}` parameter.
 
 ### Don't:
 

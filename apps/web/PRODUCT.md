@@ -46,10 +46,14 @@ The AI works like a senior art director that shows its evidence, on top of deter
 
 - Flow: Home → Start (name, logo, brief) → Studio (chat on the left, live canvas in the centre where guideline
   pages then mockups appear as they are generated, inspector on the right) → per-page edits → Export.
-- Pages are landscape 16:9 by default, portrait per page. Each page and each mockup is editable on its own.
+- Pages are A4 landscape (297 by 210) by default, portrait per page. Each page and each mockup is editable on its own.
 - Demo on a laptop in front of a jury, possibly with weak network: a replayable demo mode must keep the flow working.
-- Reference demo case: **La Mèza** (convivial dinners between strangers, Cameroon), logo owned by the project owner,
-  free to show publicly.
+- **Charta is a generic SaaS, not a one-brand product.** No brand name appears in product code or interface text.
+  The landing and the demo show example brands, each a validated record (`DemoExample`) in
+  `apps/web/src/landing/examples/data/`: at least three, from different sectors and in both languages (hospitality,
+  bakery and coffee house, technology consulting). Logos are either owned by the project owner and cleared for public
+  display, or fictional marks drawn for the project; never a third-party mark. `check-brand-names.ts` (run by the
+  unit tests, so by `pnpm verify`) fails when an example brand is named outside tests, fixtures and that data folder.
 
 ## Capabilities and Constraints
 
@@ -73,7 +77,7 @@ The AI works like a senior art director that shows its evidence, on top of deter
 
 ## Evidence on Hand
 
-- Demo logo and brief: `C:\Users\KURO\Documents\la maza\` (`LA_MEZA_brief_identite_visuelle.md`, SVG/PNG variants).
+- Demo brands, logos and briefs: `apps/web/src/landing/examples/data/` (each record states its logo provenance).
 - Owner's reference boards of professional brand guidelines: `corpus-reel/` (private, analysis only).
 - Studio inspiration (SETO): `C:\Users\KURO\Documents\Projects\inspi studio`.
 - Validated mock-up of the full flow: `prototypes/studio` (landing validated by the owner).
