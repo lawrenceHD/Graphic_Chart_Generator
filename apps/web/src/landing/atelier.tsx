@@ -81,7 +81,10 @@ export function Atelier({ examples }: { readonly examples: readonly LandingExamp
           ) : null}
         </div>
         <div className="drafting grid place-items-center rounded-lg bg-preview p-4 sm:p-8">
-          <div className="w-full overflow-hidden rounded-md shadow-lg" aria-live="polite">
+          <div className="w-full overflow-hidden rounded-md shadow-lg">
+            <p role="status" className="sr-only">
+              {t('current', { brand: example.name })}
+            </p>
             <DemoSheet type={shown} exampleId={example.id} />
           </div>
         </div>

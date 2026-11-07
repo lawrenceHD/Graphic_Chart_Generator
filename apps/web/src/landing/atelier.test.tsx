@@ -26,6 +26,15 @@ describe('Atelier example selector', () => {
     }
   });
 
+  it('announces the chosen brand in a short status, not through the whole sheet', async () => {
+    const { container } = show();
+    expect(container.querySelector('[aria-live]')).toBeNull();
+    const second = examples[1];
+    if (second === undefined) throw new Error('needs two examples');
+    await userEvent.click(screen.getByRole('radio', { name: second.name }));
+    expect(screen.getByRole('status').textContent).toBe(`Exemple : ${second.name}`);
+  });
+
   it('starts on the first example, then follows the selection: palette, contrast, tokens', async () => {
     show();
     const [first, second] = examples;

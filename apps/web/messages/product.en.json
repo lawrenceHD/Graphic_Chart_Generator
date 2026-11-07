@@ -28,6 +28,7 @@
       "lead": "A sample brand composed by the same engines as yours. Switch pages, read the measurements.",
       "region": "Studio preview",
       "example": "Sample brand",
+      "current": "Example: {brand}",
       "pages": "Guideline pages",
       "page": {
         "cover": "Cover",
@@ -154,6 +155,11 @@
     "passwordHint": "At least 10 characters. A passphrase works very well.",
     "showPassword": "Show password",
     "summary": "{count, plural, one {One field needs fixing} other {# fields need fixing}} to continue.",
+    "claim": {
+      "quota": "You are signed in, but your account has reached its project limit. Your trial project is intact: delete a project to free a place, then sign in again to recover it.",
+      "failed": "You are signed in, but your trial projects could not be attached to your account. They stay in this browser: sign in again in a moment to retry.",
+      "link": "Go to My projects"
+    },
     "guest": {
       "title": "Rather not create an account?",
       "text": "Try it with your logo. If you sign up afterwards, your guest projects are attached to your account.",
@@ -192,8 +198,18 @@
       "text": "Drop a logo to compose your first guideline."
     },
     "error": {
-      "title": "Your projects could not be loaded.",
-      "text": "The server did not answer as expected. Your guidelines are not lost.",
+      "network": {
+        "title": "The server cannot be reached.",
+        "text": "Check your connection, then try again. Your guidelines are not lost."
+      },
+      "server": {
+        "title": "The server hit an error.",
+        "text": "It is not your connection. Wait a moment, then try again. Your guidelines are not lost."
+      },
+      "invalid": {
+        "title": "The server's answer was unexpected.",
+        "text": "Your project list could not be read. Reload the page; if it keeps happening, the app may be updating."
+      },
       "retry": "Try again"
     },
     "signedOut": {

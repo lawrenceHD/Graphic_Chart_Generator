@@ -61,3 +61,25 @@ describe('AnalysisTimeline (AC-04.1 to AC-04.3)', () => {
     expect(screen.queryByRole('button', { name: t.retry })).toBeNull();
   });
 });
+
+describe('AnalysisTimeline degraded-mode notice', () => {
+  const run = (...codes: string[]) =>
+    fold(step(1, 'running'), ...codes.map((code) => step(4, 'done', code)), {
+      type: 'analysis.done',
+      data: { seq: 2 },
+    });
+
+  it('says honestly that the guideline uses the standard plan, in a small status, not an alert', () => {
+    renderFr(<AnalysisTimeline timeline={run('RESEARCH_UNAVAILABLE')} onRetry={vi.fn()} />);
+    const notice = screen.getByTestId('analysis-notice');
+    expect(notice.getAttribute('role')).toBe('status');
+    expect(notice.textContent).toContain(t.notice.standard);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(notice.getAttribute('aria-live')).toBeNull();
+  });
+
+  it('shows nothing for DOCUMENT_KEPT alone', () => {
+    renderFr(<AnalysisTimeline timeline={run('DOCUMENT_KEPT')} onRetry={vi.fn()} />);
+    expect(screen.queryByTestId('analysis-notice')).toBeNull();
+  });
+});

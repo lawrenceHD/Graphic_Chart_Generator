@@ -1,6 +1,12 @@
 import type { ProjectEvent } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
-import { INITIAL_TIMELINE, assetVerdict, reduceTimeline, timelineStatus } from './timeline';
+import {
+  INITIAL_TIMELINE,
+  analysisNotice,
+  assetVerdict,
+  reduceTimeline,
+  timelineStatus,
+} from './timeline';
 
 const ASSET = '0190a0b0-0000-7000-8000-000000000001';
 const OTHER = '0190a0b0-0000-7000-8000-000000000002';
@@ -89,5 +95,53 @@ describe('assetVerdict (scan result of the uploaded logo)', () => {
       status: 'rejected',
       code: 'ASSET_DECODE_FAILED',
     });
+  });
+});
+
+describe('analysis warnings (degraded mode, step 4 done events)', () => {
+  it('keeps the codes of several done events without duplicates, and the step states', () => {
+    const run = replay([
+      step(1, 'running'),
+      step(4, 'running'),
+      step(4, 'done', 'RESEARCH_UNAVAILABLE'),
+      step(4, 'done', 'DOCUMENT_KEPT'),
+      step(4, 'done', 'RESEARCH_UNAVAILABLE'),
+      { type: 'analysis.done', data: { seq: 4 } },
+    ]);
+    expect(run.warnings).toEqual(['RESEARCH_UNAVAILABLE', 'DOCUMENT_KEPT']);
+    expect(run.steps.map((s) => s.state)).toEqual(['done', 'done', 'done', 'done']);
+    expect(run.seq).toBe(4);
+  });
+
+  it('forgets the warnings of a previous run when a new one starts', () => {
+    expect(replay([step(4, 'done', 'RESEARCH_FAILED'), step(1, 'running')]).warnings).toEqual([]);
+  });
+
+  it('ignores codes that are not warnings and codes of other steps', () => {
+    const run = replay([step(2, 'done', 'RESEARCH_FAILED'), step(4, 'done', 'WHATEVER')]);
+    expect(run.warnings).toEqual([]);
+  });
+});
+
+describe('analysisNotice', () => {
+  it('is silent without warnings, for DOCUMENT_KEPT alone and for a recording failure', () => {
+    expect(analysisNotice([])).toBeNull();
+    expect(analysisNotice(['DOCUMENT_KEPT'])).toBeNull();
+    expect(analysisNotice(['RESEARCH_RECORDING_FAILED'])).toBeNull();
+  });
+
+  it('announces the standard plan when the research could not run', () => {
+    const codes = [
+      'RESEARCH_UNAVAILABLE',
+      'RESEARCH_FAILED',
+      'RESEARCH_PLAN_INVALID',
+      'RESEARCH_REPLAY_INVALID',
+    ];
+    for (const code of codes)
+      expect(analysisNotice(['DOCUMENT_KEPT', code]), code).toBe('standard');
+  });
+
+  it('announces a partial result for other research warnings', () => {
+    expect(analysisNotice(['RESEARCH_SOME_ISSUE'])).toBe('partial');
   });
 });

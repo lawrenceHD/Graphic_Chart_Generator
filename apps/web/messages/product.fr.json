@@ -28,6 +28,7 @@
       "lead": "Une marque d’exemple composée par les mêmes moteurs que la vôtre. Changez de page, lisez les mesures.",
       "region": "Aperçu de l’atelier",
       "example": "Marque d’exemple",
+      "current": "Exemple : {brand}",
       "pages": "Pages de la charte",
       "page": {
         "cover": "Couverture",
@@ -154,6 +155,11 @@
     "passwordHint": "10 caractères minimum. Une phrase de passe fonctionne très bien.",
     "showPassword": "Afficher le mot de passe",
     "summary": "{count, plural, one {Un champ est à corriger} other {# champs sont à corriger}} pour continuer.",
+    "claim": {
+      "quota": "Vous êtes connecté, mais votre compte a atteint sa limite de projets. Votre projet d’essai reste intact : supprimez un projet pour libérer une place, puis reconnectez-vous pour le récupérer.",
+      "failed": "Vous êtes connecté, mais vos projets d’essai n’ont pas pu être rattachés à votre compte. Ils restent sur ce navigateur : reconnectez-vous dans un instant pour réessayer.",
+      "link": "Aller à Mes projets"
+    },
     "guest": {
       "title": "Pas envie de créer un compte ?",
       "text": "Essayez avec votre logo. Si vous vous inscrivez ensuite, vos projets d’invité sont rattachés à votre compte.",
@@ -192,8 +198,18 @@
       "text": "Déposez un logo pour composer votre première charte."
     },
     "error": {
-      "title": "Vos projets n’ont pas pu être chargés.",
-      "text": "Le serveur n’a pas répondu comme prévu. Vos chartes ne sont pas perdues.",
+      "network": {
+        "title": "Le serveur est injoignable.",
+        "text": "Vérifiez votre connexion, puis réessayez. Vos chartes ne sont pas perdues."
+      },
+      "server": {
+        "title": "Le serveur a rencontré une erreur.",
+        "text": "Ce n’est pas lié à votre connexion. Patientez un instant, puis réessayez. Vos chartes ne sont pas perdues."
+      },
+      "invalid": {
+        "title": "La réponse du serveur est inattendue.",
+        "text": "La liste de vos projets n’a pas pu être lue. Rechargez la page ; si cela continue, l’application est peut-être en cours de mise à jour."
+      },
       "retry": "Réessayer"
     },
     "signedOut": {

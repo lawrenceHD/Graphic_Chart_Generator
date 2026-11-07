@@ -60,7 +60,7 @@ describe('ProjectsView', () => {
         new Response(JSON.stringify({ items: [project], nextCursor: null }), { status: 200 }),
       );
     show(fetcher);
-    expect((await screen.findByRole('alert')).textContent).toContain(t.error.title);
+    expect((await screen.findByRole('alert')).textContent).toContain(t.error.server.title);
     await userEvent.click(screen.getByRole('button', { name: t.error.retry }));
     expect(await screen.findByRole('link', { name: `Ouvrir ${project.title}` })).toBeTruthy();
     expect(fetcher).toHaveBeenCalledTimes(2);
