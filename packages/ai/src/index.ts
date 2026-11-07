@@ -48,3 +48,34 @@ export {
   type AnalyzeInput,
   type BrandAnalysis,
 } from './gemini/brand-analysis.js';
+export {
+  defaultChartPlan,
+  directionToChartPlan,
+  type ChartPlanDraft,
+  type ChartPlanDraftSection,
+  type PlanLanguage,
+} from './plan/chart-plan.js';
+export {
+  createRecording,
+  findRecording,
+  fingerprintLogo,
+  parseRecording,
+  serializeRecording,
+  type ResearchRecording,
+} from './replay/recording.js';
+export {
+  runResearch,
+  type ResearchIssue,
+  type ResearchIssueCode,
+  type ResearchOutcome,
+  type ResearchSource,
+  type RunResearchDeps,
+  type RunResearchInput,
+} from './run-research.js';
+export {
+  DEFAULT_BUDGET,
+  withBudget,
+  type BudgetedTransport,
+  type BudgetLimits,
+} from './safety/budget.js';
+export { looksLikeInjection, sanitizeUntrusted } from './safety/untrusted.js';
