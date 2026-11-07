@@ -34,6 +34,16 @@ function render(
 const distinct = (type: Rendered, count: number): number =>
   new Set(Array.from({ length: count }, (_, index) => render(type, index, count))).size;
 
+describe('cover placement', () => {
+  it('sets the logo large and on the start side of the field, not centred by default, without a plate', () => {
+    const html = render('cover', 0, 1);
+    const img = /<img[^>]*class="([^"]*)"/u.exec(html)?.[1] ?? '';
+    expect(img).toContain('object-left');
+    expect(img).toContain('h-[64%]');
+    expect(html).not.toContain('place-items-center');
+  });
+});
+
 describe('pages of one type never repeat', () => {
   it.each(['palette', 'typography', 'do-dont'] as const)('%s, 11 pages', (type) => {
     expect(distinct(type, 11)).toBe(11);

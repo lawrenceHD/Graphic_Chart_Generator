@@ -22,8 +22,9 @@ export function Cover({ context }: { readonly context: SheetContext }) {
         className="absolute inset-0 flex flex-col"
         style={{ padding: `${u(5)} ${u(6)}`, color: ink, fontFamily: view.pairing.text.css }}
       >
-        <div className="grid min-h-0 flex-1 place-items-center">
-          <LogoImage src={logo} alt={view.name} className="h-[46%] w-[46%]" />
+        {/* The mark sits on the start side and large, as the lead object of the cover, never in a plate. */}
+        <div className="flex min-h-0 flex-1 items-center justify-start">
+          <LogoImage src={logo} alt={view.name} className="h-[64%] w-[64%] object-left" />
         </div>
         <div
           className="flex items-end justify-between"
