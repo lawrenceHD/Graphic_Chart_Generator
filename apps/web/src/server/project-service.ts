@@ -17,6 +17,7 @@ import { uuidV7 } from '@app/kernel';
 // 04_API_CONTRACTS.md §3 "Projets". Authorisation is decided by the routes through can(); these functions
 // only read and write.
 type Orm = ReturnType<typeof createDatabase>['orm'];
+type Tx = Parameters<Parameters<Orm['transaction']>[0]>[0];
 const newId = (): string => uuidV7(Date.now(), randomBytes(10));
 export const PAGE_LIMIT = 50;
 
@@ -41,10 +42,7 @@ export async function countGuestProjects(orm: Orm, guestSessionId: string): Prom
 }
 
 /** MVP: one personal workspace per user, created with its owner membership on first use. */
-export async function personalWorkspace(
-  tx: Parameters<Parameters<Orm['transaction']>[0]>[0],
-  userId: string,
-) {
+export async function personalWorkspace(tx: Tx, userId: string) {
   const [existing] = await tx
     .select({ id: workspaces.id })
     .from(workspaces)
@@ -56,18 +54,57 @@ export async function personalWorkspace(
   return id;
 }
 
+/** Live projects of the workspaces the user is a member of (the quota of PLANS counts these). */
+async function countUserProjects(tx: Tx, userId: string): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(projects)
+    .where(
+      and(
+        isNull(projects.deletedAt),
+        sql`${projects.workspaceId} IN (SELECT ${workspaceMembers.workspaceId} FROM ${workspaceMembers} WHERE ${workspaceMembers.userId} = ${userId})`,
+      ),
+    );
+  return row?.count ?? 0;
+}
+
+async function insertProject(
+  tx: Tx,
+  ownership: { workspaceId: string } | { guestSessionId: string },
+  input: ProjectInput,
+): Promise<ProjectRow> {
+  const [row] = await tx
+    .insert(projects)
+    .values({ id: newId(), ...ownership, ...input })
+    .returning();
+  if (!row) throw new Error('INSERT … RETURNING returned no row');
+  return row;
+}
+
+/**
+ * Creates the project of a user unless the plan's quota is reached (null). The per-user advisory lock held
+ * until commit serialises concurrent creations, so the count cannot be raced past the limit.
+ */
+export function createProjectWithinQuota(
+  orm: Orm,
+  userId: string,
+  input: ProjectInput,
+  maxProjects: number,
+): Promise<ProjectRow | null> {
+  return orm.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`projects:${userId}`}))`);
+    if ((await countUserProjects(tx, userId)) >= maxProjects) return null;
+    return insertProject(tx, { workspaceId: await personalWorkspace(tx, userId) }, input);
+  });
+}
+
 export function createProject(orm: Orm, owner: Owner, input: ProjectInput): Promise<ProjectRow> {
   return orm.transaction(async (tx) => {
     const ownership =
       owner.kind === 'user'
         ? { workspaceId: await personalWorkspace(tx, owner.userId) }
         : { guestSessionId: owner.guestSessionId };
-    const [row] = await tx
-      .insert(projects)
-      .values({ id: newId(), ...ownership, ...input })
-      .returning();
-    if (!row) throw new Error('INSERT … RETURNING returned no row');
-    return row;
+    return insertProject(tx, ownership, input);
   });
 }
 

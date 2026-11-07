@@ -5,6 +5,7 @@ import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@
 import { uuidV7 } from '@app/kernel';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { projectHandlers } from './project-routes';
+import { createProjectWithinQuota } from './project-service';
 
 const adminUrl = integrationDatabaseUrl();
 const APP_URL = 'http://localhost:3000';
@@ -18,7 +19,7 @@ describe.runIf(adminUrl !== '')('project routes (04_API_CONTRACTS.md §3, 10_QUA
   beforeAll(async () => {
     test = await createTestDatabase(adminUrl);
     const { orm } = test.database;
-    for (const name of ['alice', 'bob']) {
+    for (const name of ['alice', 'bob', 'carol', 'dave', 'erin']) {
       const userId = id();
       await orm.insert(user).values({ id: userId, name, email: `${userId}@example.invalid` });
       actors[name] = { kind: 'user', userId, emailVerified: true };
@@ -77,6 +78,53 @@ describe.runIf(adminUrl !== '')('project routes (04_API_CONTRACTS.md §3, 10_QUA
     ]);
     expect((await create('alice', '<script>x</script>')).status).toBe(400);
     expect((await create('nobody', 'x')).status).toBe(401);
+  });
+
+  it('refuses the 4th project of a free account with QUOTA_PROJECTS, counted per account', async () => {
+    for (const title of ['One', 'Two', 'Three'])
+      expect((await create('carol', title)).status).toBe(201);
+    const refused = await routes.create(request('POST', '/projects', 'carol', { title: 'Four' }));
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: 'QUOTA_PROJECTS', status: 403 });
+    expect(await titles('carol')).toHaveLength(3);
+    expect((await create('dave', 'Mine')).status).toBe(201);
+  });
+
+  it('frees a slot when a project is deleted, and never exceeds the limit under concurrency', async () => {
+    const { id: doomed } = await create('dave', 'Doomed');
+    await create('dave', 'Kept');
+    expect((await create('dave', 'Over')).status).toBe(403);
+    await routes.remove(request('DELETE', `/projects/${doomed}`, 'dave'), params(doomed));
+    const replacement = await create('dave', 'Replacement');
+    expect(replacement.status).toBe(201);
+    await routes.remove(
+      request('DELETE', `/projects/${replacement.id}`, 'dave'),
+      params(replacement.id),
+    );
+    const race = await Promise.all(
+      Array.from({ length: 5 }, (_, index) => create('dave', `Race ${String(index)}`)),
+    );
+    expect(race.filter((attempt) => attempt.status === 201)).toHaveLength(1);
+    expect(await titles('dave')).toHaveLength(3);
+  });
+
+  it('serialises concurrent creations of one account at the service level', async () => {
+    const userId = actors.erin?.kind === 'user' ? actors.erin.userId : '';
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, index) =>
+        createProjectWithinQuota(
+          test.database.orm,
+          userId,
+          { title: `Parallel ${String(index)}`, language: 'fr' },
+          3,
+        ),
+      ),
+    );
+    expect(results.filter((row) => row !== null)).toHaveLength(3);
+  });
+
+  it('answers 401 to an anonymous listing and creation', async () => {
+    expect((await routes.list(request('GET', '/projects', 'nobody'))).status).toBe(401);
   });
 
   it('lets a guest create one project only', async () => {

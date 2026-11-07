@@ -184,6 +184,16 @@
 7. **Client Gemini sans dépendance** : `fetch` + Zod (`createGeminiTransport`) ; clé uniquement dans l'en-tête `x-goog-api-key` ; 30 s, 2 nouvelles tentatives sur 429/5xx, arrêt immédiat `AI_QUOTA` sur quota journalier ; sortie invalide → une nouvelle tentative avec l'erreur jointe, puis `AI_OUTPUT_INVALID`. `@google/genai` (ADR-027) n'est pas nécessaire. `ai` peut dépendre de `color-engine` (dependency-cruiser).
 **Conséquences** : `07` §3.2 (`typographyPairingId`) et le plan de pages de `compose.ts` sont à étendre ; les rendus des nouvelles sections (construction du logo, taille minimale, motif, papeterie, signalétique, menu, réseaux sociaux…) entrent dans le studio. Les clés de pages actuelles restent valides.
 **Alternatives rejetées** : recherche Google en direct à chaque charte (quota gratuit de l'ancrage trop faible, résultats non structurés) ; API Behance/Dribbble (inexistantes) ; similarité par mots-clés seuls (rate le style visuel du logo) ; laisser le modèle choisir librement une police (noms inventés, licences inconnues).
+## ADR-030 — Plans et quotas (paiement différé, O-5 ouvert)
+**Contexte** : aucun mode de paiement ni table de plans n'existe ; la migration de base est interdite avant le 09/11 et O-5 (tarification, fournisseur) reste ouvert. Le jury doit pourtant voir une limite de palier gratuit appliquée côté serveur.
+**Décision** :
+1. Le palier gratuit est une **constante du code** (`apps/web/src/server/plans.ts`) : 3 projets actifs par compte ; tout compte est au palier gratuit. Une session invitée garde la limite d'un projet de `can()` (`01_PRODUCT_MVP.md` §3).
+2. `POST /api/v1/projects` refuse la création au-delà par `403` avec le code stable `QUOTA_PROJECTS` (RFC 9457). `403` plutôt que `402` : aucun paiement n'est possible, donc rien à « payer » ; le statut sera réexaminé avec O-5.
+3. Les projets supprimés logiquement ne comptent pas. Le décompte et l'insertion s'exécutent dans une transaction sous verrou consultatif par compte (pas de dépassement en concurrence).
+4. Le rattachement d'un projet invité (`guest-sessions/claim`) n'est **jamais** refusé par le quota (AC-01.3, aucune perte) : un compte peut donc dépasser 3 projets par rattachement ; seule la création suivante est bloquée.
+5. Aucune table `subscriptions`, aucune migration avant le 09/11 ; la table (R10) remplacera la constante après cette date, une fois O-5 tranché.
+**Conséquences** : l'interface traduit `QUOTA_PROJECTS` (message et appel à l'action vers les tarifs statiques) ; les paliers payants et leurs limites restent à définir.
+**Alternatives rejetées** : table `plans`/`subscriptions` maintenant (migration interdite) ; quota côté client seulement (contournable) ; `402` (suppose un paiement qui n'existe pas).
 
 ---
 

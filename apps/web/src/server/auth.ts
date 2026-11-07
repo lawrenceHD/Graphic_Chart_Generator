@@ -41,6 +41,9 @@ export function createAuth(orm: Orm, settings: AuthSettings, options: AuthOption
       maxPasswordLength: 128,
       // SEC-03 gates exports and sharing (through can()), not sign-in.
       requireEmailVerification: false,
+      // No automatic session at sign-up: it makes a taken e-mail answer like a fresh one (no account
+      // enumeration); the interface signs in right after (sign-up/email then sign-in/email).
+      autoSignIn: false,
       resetPasswordTokenExpiresIn: RESET_TOKEN_SECONDS, // SEC-04
       revokeSessionsOnPasswordReset: true, // SEC-02
       password: { hash: hashPassword, verify: verifyPassword }, // Argon2id (SEC-01)
@@ -54,6 +57,9 @@ export function createAuth(orm: Orm, settings: AuthSettings, options: AuthOption
       },
     },
     advanced: {
+      // Explicit: Better Auth switches both checks off by default when it detects a test environment (SEC-06).
+      disableOriginCheck: false,
+      disableCSRFCheck: false,
       useSecureCookies: secureCookies,
       defaultCookieAttributes: { httpOnly: true, sameSite: 'lax', secure: secureCookies },
     },
