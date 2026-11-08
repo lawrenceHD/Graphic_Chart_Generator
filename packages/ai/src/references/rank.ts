@@ -1,5 +1,6 @@
-import { deltaEOk } from '@app/color-engine';
-import type { IndexedReference, VisualStyle } from '@app/contracts';
+import { deltaEOk, hexToOklch } from '@app/color-engine';
+import type { IndexedReference, ReferenceKind, VisualStyle } from '@app/contracts';
+import { sectorAffinity } from './sectors.js';
 
 export interface ResearchQuery {
   sector: string;
@@ -15,6 +16,8 @@ export interface ScoreBreakdown {
   style: number;
   palette: number;
   quality: number;
+  // Only when the search has a purpose: how well the kind of image serves it.
+  kind?: number;
 }
 
 export interface RankedReference {
@@ -28,11 +31,40 @@ export interface RankOptions {
   minQuality?: number;
   // 1 = pure relevance, lower = more variety between the selected references (maximal marginal relevance).
   relevanceWeight?: number;
+  // What the references are for: a charter search favours guideline spreads, a mockup search mockup scenes.
+  purpose?: SearchPurpose;
 }
 
-const WEIGHTS = { visual: 0.4, sector: 0.25, style: 0.2, palette: 0.1, quality: 0.05 } as const;
+export type SearchPurpose = 'charter' | 'mockups';
+
+const WEIGHTS = {
+  visual: 0.4,
+  sector: 0.25,
+  style: 0.2,
+  palette: 0.1,
+  quality: 0.05,
+  kind: 0.1,
+} as const;
 // OKLab distance at which two brand colours stop reading as the same family.
 const PALETTE_FALLOFF = 0.15;
+// Share of the palette score that asks the reference to carry the brand colours (the rest: the reference's own
+// leading colours must be found in the brand).
+const PALETTE_FORWARD = 0.65;
+const PALETTE_DEPTH = 3;
+
+const KIND_FIT: Record<SearchPurpose, Partial<Record<ReferenceKind, number>>> = {
+  charter: { 'guideline-spread': 1, 'brand-board': 0.8, 'logo-presentation': 0.4, stationery: 0.3 },
+  mockups: {
+    'mockup-scene': 1,
+    packaging: 0.9,
+    stationery: 0.9,
+    signage: 0.9,
+    apparel: 0.9,
+    'social-media': 0.7,
+    'digital-ui': 0.6,
+    'brand-board': 0.4,
+  },
+};
 
 export function cosine(a: readonly number[], b: readonly number[]): number {
   // Vectors of different sizes come from different models: they are not comparable.
@@ -58,17 +90,43 @@ function jaccard<T>(a: readonly T[], b: readonly T[]): number {
   return [...left].filter((item) => right.has(item)).length / union;
 }
 
-function paletteAffinity(query: readonly string[], palette: readonly string[]): number {
-  if (query.length === 0 || palette.length === 0) return 0;
-  let closest = Number.POSITIVE_INFINITY;
-  for (const a of query) for (const b of palette) closest = Math.min(closest, deltaEOk(a, b));
-  return Math.exp(-closest / PALETTE_FALLOFF);
+// Plain white and black paper (and the greys near them) carry no brand hue: the library palettes exclude them too.
+export function isNeutral(hex: string): boolean {
+  const { L, C } = hexToOklch(hex);
+  return C < 0.04 && (L > 0.9 || L < 0.25);
 }
 
-function score(query: ResearchQuery, reference: IndexedReference): RankedReference {
+// Mean closeness of each colour of `from` (leading colours weigh more) to its nearest colour of `to`.
+function coverage(from: readonly string[], to: readonly string[]): number {
+  let total = 0;
+  let weights = 0;
+  from.forEach((colour, index) => {
+    const weight = 1 / (1 + 0.5 * index);
+    const closest = Math.min(...to.map((other) => deltaEOk(colour, other)));
+    total += weight * Math.exp(-closest / PALETTE_FALLOFF);
+    weights += weight;
+  });
+  return weights === 0 ? 0 : total / weights;
+}
+
+function paletteAffinity(query: readonly string[], palette: readonly string[]): number {
+  if (query.length === 0 || palette.length === 0) return 0;
+  const chromatic = query.filter((colour) => !isNeutral(colour));
+  const brand = chromatic.length > 0 ? chromatic : query;
+  return (
+    PALETTE_FORWARD * coverage(brand, palette) +
+    (1 - PALETTE_FORWARD) * coverage(palette.slice(0, PALETTE_DEPTH), brand)
+  );
+}
+
+function score(
+  query: ResearchQuery,
+  reference: IndexedReference,
+  purpose: SearchPurpose | undefined,
+): RankedReference {
   const { card } = reference;
   const breakdown: ScoreBreakdown = {
-    sector: reference.sector === query.sector ? 1 : 0,
+    sector: sectorAffinity(query.sector, reference.sector),
     style: jaccard(query.styles, card.styles),
     palette: paletteAffinity(query.palette, card.palette),
     quality: (card.quality - 1) / 4,
@@ -79,6 +137,11 @@ function score(query: ResearchQuery, reference: IndexedReference): RankedReferen
     WEIGHTS.palette * breakdown.palette +
     WEIGHTS.quality * breakdown.quality;
   let weight = WEIGHTS.sector + WEIGHTS.style + WEIGHTS.palette + WEIGHTS.quality;
+  if (purpose !== undefined) {
+    breakdown.kind = KIND_FIT[purpose][card.kind] ?? 0;
+    total += WEIGHTS.kind * breakdown.kind;
+    weight += WEIGHTS.kind;
+  }
   if (query.logoEmbedding && query.logoEmbedding.length === reference.embedding.length) {
     breakdown.visual = Math.max(0, cosine(query.logoEmbedding, reference.embedding));
     total += WEIGHTS.visual * breakdown.visual;
@@ -96,7 +159,7 @@ export function rankReferences(
   const lambda = options.relevanceWeight ?? 0.7;
   const candidates = library
     .filter((reference) => reference.card.quality >= minQuality)
-    .map((reference) => score(query, reference))
+    .map((reference) => score(query, reference, options.purpose))
     .sort((a, b) => b.score - a.score || a.reference.id.localeCompare(b.reference.id));
   const selected: RankedReference[] = [];
   while (selected.length < options.limit && candidates.length > 0) {

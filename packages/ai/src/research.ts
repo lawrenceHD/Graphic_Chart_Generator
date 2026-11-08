@@ -12,7 +12,7 @@ import {
 } from './gemini/logo-reading.js';
 import type { AiError, AiErrorCode, GeminiTransport } from './gemini/transport.js';
 import { buildArtDirection, type ArtDirection } from './references/direction.js';
-import { rankReferences } from './references/rank.js';
+import { rankReferences, type SearchPurpose } from './references/rank.js';
 
 export interface ResearchDeps {
   transport: GeminiTransport;
@@ -25,10 +25,16 @@ export interface ResearchInput {
   logo: ImageInput;
   // Palette extracted from the logo by color-engine.
   palette: string[];
+  // What the references are for (default 'charter': guideline spreads and brand boards weigh most).
+  purpose?: SearchPurpose;
 }
 
 export type ResearchWarning =
-  'visual-similarity-unavailable' | 'library-embedding-mismatch' | 'empty-library';
+  | 'visual-similarity-unavailable'
+  | 'library-embedding-mismatch'
+  | 'empty-library'
+  // The library holds no reference of the brand's sector: sector similarity then rests on related sectors only.
+  | 'sector-not-indexed';
 
 export interface BrandResearch {
   reading: LogoReading;
@@ -93,6 +99,13 @@ export async function researchBrand(
   ]);
   if (!reading.ok) return reading;
   if (embedding && !embedding.ok) warnings.push('visual-similarity-unavailable');
+  if (
+    deps.library.length > 0 &&
+    reading.value.sector !== 'other' &&
+    !deps.library.some((reference) => reference.sector === reading.value.sector)
+  ) {
+    warnings.push('sector-not-indexed');
+  }
 
   const ranked = rankReferences(
     {
@@ -102,7 +115,7 @@ export async function researchBrand(
       ...(embedding?.ok ? { logoEmbedding: embedding.value } : {}),
     },
     deps.library,
-    { limit: REFERENCE_COUNT },
+    { limit: REFERENCE_COUNT, purpose: input.purpose ?? 'charter' },
   );
   const direction = buildArtDirection(ranked);
   const lettering = reading.value.letteringType;

@@ -26,12 +26,32 @@ export {
   type PlannedSection,
 } from './references/direction.js';
 export { parseReferenceIndex, type ReferenceIndex } from './references/library.js';
+export { canonicalMockup } from './references/mockups.js';
+export { sectorAffinity } from './references/sectors.js';
+export {
+  deriveLibraryStats,
+  type LibraryStats,
+  type SectorStats,
+  type Share,
+} from './references/stats.js';
+export {
+  createPacer,
+  extractPreviewImage,
+  MAX_ON_DEMAND_REFERENCES,
+  onDemandQueries,
+  parseSourceLink,
+  referenceFileName,
+  type OnDemandTask,
+  type SourceLink,
+  type SourceLinkError,
+} from './references/on-demand.js';
 export {
   cosine,
   rankReferences,
   type RankedReference,
   type ResearchQuery,
   type ScoreBreakdown,
+  type SearchPurpose,
 } from './references/rank.js';
 export {
   buildDeepQueries,
