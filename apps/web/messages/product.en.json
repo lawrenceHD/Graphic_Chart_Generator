@@ -21,7 +21,20 @@
       "lead": "Drop the file: Charta measures its colours, checks every contrast, and composes the pages and mockups. Then you edit each page by hand or by talking to the copilot.",
       "start": "Try without an account",
       "signup": "Create an account",
-      "note": "No credit card. Your logo is never redrawn."
+      "note": "No credit card. Your logo is never redrawn.",
+      "eyebrow": "Brand guidelines · A4 pages · mockups",
+      "demo": "See a guideline",
+      "pick": "Pick an example brand: the whole page changes with it",
+      "fiction": "Fictional brands made for the demonstration, not customers.",
+      "proof": {
+        "palette": "Measured palette",
+        "level": {
+          "aaa": "AAA",
+          "aa": "AA",
+          "large-ui": "Large text",
+          "fail": "Fails"
+        }
+      }
     },
     "atelier": {
       "title": "The studio, with a real guideline",

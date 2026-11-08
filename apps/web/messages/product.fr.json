@@ -21,7 +21,20 @@
       "lead": "Déposez le fichier : Charta mesure ses couleurs, vérifie chaque contraste, compose les pages et les mises en situation. Vous reprenez ensuite chaque page, à la main ou en parlant au copilote.",
       "start": "Essayer sans compte",
       "signup": "Créer un compte",
-      "note": "Sans carte bancaire. Votre logo n’est jamais redessiné."
+      "note": "Sans carte bancaire. Votre logo n’est jamais redessiné.",
+      "eyebrow": "Charte graphique · pages A4 · mises en situation",
+      "demo": "Voir une charte",
+      "pick": "Choisissez une marque d’exemple : toute la page change avec elle",
+      "fiction": "Marques fictives créées pour la démonstration, pas des clients.",
+      "proof": {
+        "palette": "Palette mesurée",
+        "level": {
+          "aaa": "AAA",
+          "aa": "AA",
+          "large-ui": "Grand texte",
+          "fail": "Insuffisant"
+        }
+      }
     },
     "atelier": {
       "title": "L’atelier, avec une vraie charte",
