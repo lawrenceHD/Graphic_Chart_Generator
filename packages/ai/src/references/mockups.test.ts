@@ -32,8 +32,8 @@ describe('buildArtDirection: mockups', () => {
     );
     const mockups = buildArtDirection(ranked).mockups;
     expect(mockups[0]?.subject).toBe('paper bag');
-    expect(mockups[0]?.evidence.toSorted()).toEqual(['a', 'b', 'c']);
+    expect(mockups[0]?.evidence.slice().sort()).toEqual(['a', 'b', 'c']);
     expect(mockups.map((entry) => entry.subject)).toEqual(['paper bag', 'coffee cup']);
-    expect(mockups[1]?.evidence.toSorted()).toEqual(['a', 'c']);
+    expect(mockups[1]?.evidence.slice().sort()).toEqual(['a', 'c']);
   });
 });

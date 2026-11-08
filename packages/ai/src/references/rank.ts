@@ -91,9 +91,9 @@ function jaccard<T>(a: readonly T[], b: readonly T[]): number {
 }
 
 // Plain white and black paper (and the greys near them) carry no brand hue: the library palettes exclude them too.
-function isNeutral(hex: string): boolean {
+export function isNeutral(hex: string): boolean {
   const { L, C } = hexToOklch(hex);
-  return C < 0.03 && (L > 0.9 || L < 0.25);
+  return C < 0.04 && (L > 0.9 || L < 0.25);
 }
 
 // Mean closeness of each colour of `from` (leading colours weigh more) to its nearest colour of `to`.

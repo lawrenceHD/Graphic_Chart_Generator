@@ -9,13 +9,16 @@ Output: corpus-reel/pinterest/index.jsonl, one line per reference:
 The vocabulary is tools/references/vocabulary.json, mirrored by the Zod schema in packages/contracts (a test keeps
 both in sync), and every line is validated again by Zod when the studio loads it.
 
-Usage (from the repository root): python tools/references/analyze.py [--limit N] [--sector NAME]
+Usage (from the repository root): python tools/references/analyze.py [--limit N] [--sector NAME] [--root DIR]
+--root DIR: analyse another library laid out like corpus-reel/pinterest (manifest.json, <sector>/<file>, and the
+index.jsonl written there); tools/references/fetch-on-demand.mjs uses it on a temporary folder it deletes afterwards.
 """
 
 import argparse
 import base64
 import http.client
 import json
+import os
 import re
 import sys
 import time
@@ -35,6 +38,8 @@ MIME = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp
 
 
 def api_key() -> str:
+    if os.environ.get("AI_API_KEY", "").strip():
+        return os.environ["AI_API_KEY"].strip()
     text = (ROOT / ".env.local").read_text(encoding="utf-8")
     match = re.search(r"^AI_API_KEY=(.*)$", text, re.M)
     if not match or not match.group(1).strip():
@@ -153,8 +158,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--sector", default="")
+    parser.add_argument("--root", default="", help="library folder (default corpus-reel/pinterest)")
     parser.add_argument("--pace", type=float, default=4.5, help="seconds between references (free tier RPM)")
     args = parser.parse_args()
+    global OUT, INDEX
+    if args.root:
+        OUT = Path(args.root).resolve()
+        INDEX = OUT / "index.jsonl"
     key = api_key()
     manifest = json.loads((OUT / "manifest.json").read_text(encoding="utf-8"))
     done = set()
@@ -209,7 +219,8 @@ def main() -> None:
                     break
                 time.sleep(args.pace)
                 continue
-            line = {"id": Path(entry["file"]).stem[:80],  # unique key is "file"; id is a label "sector": entry["sector"], "file": entry["file"],
+            # The unique key is "file"; "id" is only a label.
+            line = {"id": Path(entry["file"]).stem[:80], "sector": entry["sector"], "file": entry["file"],
                     "card": card, "embedding": embedding,
                     "model": {"vision": VISION_MODEL, "embedding": EMBED_MODEL, "dimensions": EMBED_DIM}}
             sink.write(json.dumps(line, ensure_ascii=False) + "\n")

@@ -13,6 +13,8 @@
     "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run deps:check",
     "logos:fetch": "node tools/logo-library/fetch.mjs",
     "corpus:fetch": "node tools/corpus/fetch-private.mjs",
+    "refs:stats": "node tools/references/derive-stats.mjs",
+    "refs:on-demand": "node tools/references/fetch-on-demand.mjs",
     "dev:storage": "node tools/dev-storage/server.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local tools/db/migrate.mjs",
     "clean": "node -e \"for (const p of ['.turbo/cache','apps/web/.next','apps/worker/dist']) require('node:fs').rmSync(p,{recursive:true,force:true})\""

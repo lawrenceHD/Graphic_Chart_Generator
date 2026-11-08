@@ -38,3 +38,13 @@ foncé, monogramme, logo avec texte fin), de 5 à 15 marques.
 | Isolement | logo seul, fond uni | fond uni avec marge irrégulière | logo sur photo ou mockup |
 | Compression | PNG ou JPEG net | JPEG avec halos légers | artefacts visibles, filigrane |
 | Charte | codes hex/RGB lisibles | couleurs visibles sans codes | absente (le logo reste utile) |
+
+## Ce qui sert vraiment (audit du 2026-11-09)
+- `pinterest/` : 1 500 images (1,3 Go) et 1 500 légendes. Les images ne sont **lues qu'une fois**, par
+  `tools/references/analyze.py`, pour produire `pinterest/index.jsonl` (492 références analysées, 4 Mo : fiche +
+  embedding). **Seul cet index sert à l'exécution** (le worker lit tout `index.jsonl` sous ce dossier). Les images,
+  elles, n'ont aucun rôle une fois indexées.
+- **Sauvegarde** : `pinterest/` et `index.jsonl` ne sont **pas** dans le dépôt privé `Graph_Charta` (qui ne contient que
+  `raw/`, 8 chartes, `library/`). Copier `index.jsonl` avant toute suppression.
+- Statistiques agrégées et commitables : `pnpm refs:stats` (`tools/references/derived/library-stats.json`).
+- Références ponctuelles pour une tâche, sans garder les images : `pnpm refs:on-demand` (voir son en-tête).
