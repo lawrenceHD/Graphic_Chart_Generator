@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import type { Actor, JobName, JobPayload, JobQueue, ObjectStorage } from '@app/contracts';
-import { assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
+import { and, assets, eq, guestSessions, inArray, projects, readProjectEvents } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { ok, uuidV7 } from '@app/kernel';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assetHandlers, type AssetRouteDeps } from './asset-routes';
 import { createRateLimiter } from './rate-limiter';
 
@@ -79,6 +79,14 @@ describe.runIf(adminUrl !== '')(
     afterAll(async () => {
       await test.dispose();
     });
+    // Every test declares in the same project: unfinished uploads of earlier ones must not use up the
+    // per-project ceiling of 6 logos.
+    beforeEach(async () => {
+      await test.database.orm
+        .update(assets)
+        .set({ deletedAt: new Date() })
+        .where(and(eq(assets.projectId, projectId), inArray(assets.status, ['pending'])));
+    });
 
     const request = (method: string, actor: string, body?: unknown): Request =>
       new Request(`${APP_URL}/api/v1/x`, {
@@ -149,10 +157,55 @@ describe.runIf(adminUrl !== '')(
           (await limited.declareUpload(request('POST', 'owner', body), params(projectId))).status,
         );
       }
-      expect(statuses.filter((status) => status === 201)).toHaveLength(15);
+      // 15 declarations pass the rate limit; the per-project ceiling (6 logos) answers 409 after the sixth.
+      expect(statuses.filter((status) => status !== 429)).toHaveLength(15);
+      expect(statuses.slice(0, 6).every((status) => status === 201)).toBe(true);
       expect(statuses[15]).toBe(429);
       // The fixed clock above must not leak its window into the other tests.
       await test.database.pool.query('DELETE FROM rate_limit');
+    });
+
+    it('stores the role and the primary flag of a logo, and refuses a seventh one', async () => {
+      const first = await declare('owner', {
+        kind: 'logo_original',
+        fileName: 'logo-noir.svg',
+        bytes: 10,
+        role: 'mono-black',
+        primary: false,
+      });
+      const assetId = String(field((await json(first)).asset, 'id'));
+      const [row] = await test.database.orm.select().from(assets).where(eq(assets.id, assetId));
+      expect(row?.meta).toEqual({ fileName: 'logo-noir.svg', role: 'mono-black', primary: false });
+      for (let count = 1; count < 6; count += 1) await declareId(`v${count}.svg`, 5);
+      const seventh = await declare('owner', {
+        kind: 'logo_original',
+        fileName: 'v7.svg',
+        bytes: 5,
+      });
+      expect(seventh.status).toBe(409);
+      expect((await json(seventh)).code).toBe('ASSET_LIMIT_REACHED');
+    });
+
+    it('accepts one manifest document, caps it at 2 MB, forbids a role on it, and never serves it', async () => {
+      const doc = { kind: 'brief_doc', fileName: 'manifeste.md', bytes: 800 };
+      expect((await declare('owner', { ...doc, bytes: 2 * 1024 * 1024 + 1 })).status).toBe(400);
+      expect((await declare('owner', { ...doc, role: 'icon' })).status).toBe(400);
+      const created = await declare('owner', doc);
+      expect(created.status).toBe(201);
+      expect((await json(created)).asset).toMatchObject({ kind: 'brief_doc', status: 'pending' });
+      const second = await declare('owner', doc);
+      expect(second.status).toBe(409);
+      expect((await json(second)).code).toBe('ASSET_LIMIT_REACHED');
+      const served = id();
+      await test.database.orm.insert(assets).values({
+        id: served,
+        projectId,
+        kind: 'brief_doc',
+        status: 'clean',
+        mime: 'text/plain',
+        storageKey: `d/${served}`,
+      });
+      expect((await routes.content(request('GET', 'owner'), params(served))).status).toBe(404);
     });
 
     it('completes only once the object exists, quarantines and enqueues the scan idempotently', async () => {

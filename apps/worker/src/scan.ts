@@ -1,15 +1,19 @@
 import { createHash, randomBytes } from 'node:crypto';
 import {
   AssetErrorCodeSchema,
+  LogoAssetMetaSchema,
+  MAX_BRIEF_DOC_BYTES,
+  type ManifestFormat,
   type AssetErrorCode,
   type ObjectStorage,
   type RasterError,
   type RasterImage,
   type Rasterizer,
 } from '@app/contracts';
-import { and, appendProjectEvent, assets, eq, isNull, type createDatabase } from '@app/db';
+import { and, appendProjectEvent, assets, eq, isNull, sql, type createDatabase } from '@app/db';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
 import { detectType, ensureViewBox, sanitizeSvg, type DetectedType } from '@app/svg-engine';
+import { extractManifest } from './manifest.js';
 
 // Job asset.scan (02_ARCHITECTURE.md §5.1): magic bytes (SEC-12), limits (SEC-13), allowlist sanitizing
 // (SEC-14) or raster normalisation, isolated rendering (SEC-15). The sanitized copy is what the product uses;
@@ -81,6 +85,7 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
   const reject = (code: AssetErrorCode, mime: string | null = null): Promise<void> =>
     markRejected(orm, asset.projectId, assetId, code, { mime });
 
+  if (asset.kind === 'brief_doc') return scanDocument(deps, asset, pending, reject);
   if (asset.kind !== 'logo_original') return reject('ASSET_TYPE_UNSUPPORTED');
   const read = await storage.get(asset.storageKey, MAX_RASTER_BYTES);
   if (!read.ok)
@@ -103,7 +108,7 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
         sha256: sha256(read.value),
         width: derived.value.width,
         height: derived.value.height,
-        meta: { sanitizedAssetId: sanitizedId },
+        meta: sql`${assets.meta} || ${JSON.stringify({ sanitizedAssetId: sanitizedId })}::jsonb`,
       })
       .where(pending)
       .returning({ id: assets.id });
@@ -112,6 +117,15 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
       type: 'asset.status',
       data: { assetId, status: 'clean' },
     });
+    // The role and primary flag chosen at upload follow the sanitized copy, the one the product uses.
+    const declared = LogoAssetMetaSchema.safeParse(asset.meta);
+    const carried = declared.success
+      ? {
+          ...(declared.data.role === undefined ? {} : { role: declared.data.role }),
+          ...(declared.data.primary === undefined ? {} : { primary: declared.data.primary }),
+          ...(declared.data.fileName === undefined ? {} : { fileName: declared.data.fileName }),
+        }
+      : {};
     await tx.insert(assets).values({
       id: sanitizedId,
       projectId: asset.projectId,
@@ -123,7 +137,57 @@ export async function scanAsset(deps: ScanDeps, assetId: string): Promise<void> 
       bytes: derived.value.bytes.length,
       width: derived.value.width,
       height: derived.value.height,
-      meta: { sourceAssetId: asset.id },
+      meta: { sourceAssetId: asset.id, ...carried },
+    });
+  });
+}
+
+const DOCUMENT_MIME: Record<ManifestFormat, string> = {
+  text: 'text/plain',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pdf: 'application/pdf',
+};
+
+type Asset = typeof assets.$inferSelect;
+
+// A manifest: text extracted, cleaned and capped (untrusted data, 07_AI_COPILOT.md); the cleaned text is kept
+// in the asset's meta, the original stays private like a logo original.
+async function scanDocument(
+  deps: ScanDeps,
+  asset: Asset,
+  pending: ReturnType<typeof and>,
+  reject: (code: AssetErrorCode, mime?: string | null) => Promise<void>,
+): Promise<void> {
+  const read = await deps.storage.get(asset.storageKey, MAX_BRIEF_DOC_BYTES);
+  if (!read.ok)
+    return reject(read.error === 'TOO_LARGE' ? 'ASSET_TOO_LARGE' : 'ASSET_DECODE_FAILED');
+  const manifest = extractManifest(read.value);
+  if (!manifest.ok) return reject(manifest.error);
+  const { format, text, filteredLines, truncated } = manifest.value;
+  const declared = LogoAssetMetaSchema.safeParse(asset.meta);
+  const fileName = declared.success ? declared.data.fileName : undefined;
+  const meta = {
+    ...(fileName === undefined ? {} : { fileName }),
+    format,
+    text,
+    filteredLines,
+    truncated,
+  };
+  await deps.orm.transaction(async (tx) => {
+    const [moved] = await tx
+      .update(assets)
+      .set({
+        status: 'clean',
+        mime: DOCUMENT_MIME[format],
+        sha256: sha256(read.value),
+        meta,
+      })
+      .where(pending)
+      .returning({ id: assets.id });
+    if (!moved) return;
+    await appendProjectEvent(tx, asset.projectId, {
+      type: 'asset.status',
+      data: { assetId: asset.id, status: 'clean' },
     });
   });
 }

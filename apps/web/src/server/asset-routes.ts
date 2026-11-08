@@ -1,8 +1,13 @@
-import { userText, type JobQueue, type ObjectStorage } from '@app/contracts';
-import { z } from 'zod';
 import {
+  DeclareUploadBodySchema,
+  MAX_BRIEF_DOCS_PER_PROJECT,
+  MAX_LOGOS_PER_PROJECT,
+  type JobQueue,
+  type ObjectStorage,
+} from '@app/contracts';
+import {
+  countLiveAssets,
   declareAsset,
-  MAX_UPLOAD_BYTES,
   publicAsset,
   quarantineAsset,
   type AssetRow,
@@ -24,13 +29,11 @@ const DECLARATIONS_PER_ACTOR = { max: 15, windowMs: 60_000 };
 const DECLARATIONS_PER_IP = { max: 30, windowMs: 60_000 };
 
 // The announced type is ignored (SEC-12): the scan reads the magic bytes. The file name is kept for display.
-const DeclareBody = z
-  .object({
-    kind: z.literal('logo_original'),
-    fileName: userText(255, 1),
-    bytes: z.number().int().min(1).max(MAX_UPLOAD_BYTES),
-  })
-  .strict();
+// A project holds several logos (one primary, variants with a role) and at most one manifest document.
+const LIMITS = {
+  logo_original: MAX_LOGOS_PER_PROJECT,
+  brief_doc: MAX_BRIEF_DOCS_PER_PROJECT,
+} as const;
 
 type Context = { params: RouteParams };
 
@@ -59,14 +62,13 @@ export function assetHandlers(deps: AssetRouteDeps) {
         },
       ]);
       if (wait > 0) return tooManyRequests(request, wait);
-      const body = await readJson(request, DeclareBody);
+      const body = await readJson(request, DeclareUploadBodySchema);
       if (!body.ok) return body.error;
-      const row = await declareAsset(
-        deps.orm,
-        guard.value.params.id,
-        body.value.bytes,
-        body.value.fileName,
-      );
+      const projectId = guard.value.params.id;
+      const live = await countLiveAssets(deps.orm, projectId, body.value.kind);
+      if (live >= LIMITS[body.value.kind])
+        return problemResponse(request, 409, 'ASSET_LIMIT_REACHED', 'too many files of this kind');
+      const row = await declareAsset(deps.orm, projectId, body.value);
       const upload = await deps.storage.presignPut(row.storageKey, body.value.bytes);
       return Response.json(
         {
@@ -105,7 +107,12 @@ export function assetHandlers(deps: AssetRouteDeps) {
       if (!guard.ok) return guard.error;
       const { asset } = guard.value;
       // Originals are never served, and nothing is served before the scan (SEC-16).
-      if (asset.status !== 'clean' || asset.kind === 'logo_original' || asset.mime === null)
+      if (
+        asset.status !== 'clean' ||
+        asset.kind === 'logo_original' ||
+        asset.kind === 'brief_doc' ||
+        asset.mime === null
+      )
         return problemResponse(request, 404, 'NOT_FOUND', 'no such resource');
       const exported = asset.kind === 'export_pdf' || asset.kind === 'export_zip';
       const location = await deps.storage.presignGet(asset.storageKey, {
