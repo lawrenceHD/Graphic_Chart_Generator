@@ -13,6 +13,7 @@ export interface RouteEntry {
 export const ROUTES: readonly RouteEntry[] = [
   { method: 'POST', path: '/guest-sessions', action: 'public' },
   { method: 'POST', path: '/guest-sessions/claim', action: 'guest:claim' },
+  { method: 'DELETE', path: '/account', action: 'account:delete' },
   { method: 'GET', path: '/projects', action: 'project:read' },
   { method: 'POST', path: '/projects', action: 'project:create' },
   { method: 'GET', path: '/projects/[id]', action: 'project:read' },
