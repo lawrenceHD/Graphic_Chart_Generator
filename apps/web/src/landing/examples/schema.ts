@@ -47,3 +47,24 @@ export const DemoExampleSchema = z
   .strict();
 
 export type DemoExample = z.infer<typeof DemoExampleSchema>;
+
+/**
+ * One logo of the curated selection shown on mock-ups: a real mark from the project's reference library, copied
+ * under /public/demo/logos. The name is the mark's own; the palette is read from the file, never invented.
+ */
+export const LogoPickSchema = z
+  .object({
+    id: z.string().regex(/^[a-z][a-z0-9-]{1,30}$/u),
+    name: z.string().min(1).max(60),
+    /** File name in the reference library (before it was copied to /public). */
+    sourceFile: z.string().regex(/^[\w.-]+\.svg$/u),
+    /** Path of the copy served by the app. */
+    logo: LogoSchema,
+    sector: z.string().min(1).max(80),
+    markType: z.enum(['wordmark', 'lettermark', 'letterform', 'emblem', 'pictorial', 'abstract']),
+    /** Colours read from the SVG, one to three. */
+    palette: z.array(HexSchema).min(1).max(3),
+  })
+  .strict();
+
+export type LogoPick = z.infer<typeof LogoPickSchema>;

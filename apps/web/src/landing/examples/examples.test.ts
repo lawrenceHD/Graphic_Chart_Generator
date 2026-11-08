@@ -23,9 +23,9 @@ describe('example set', () => {
     expect(new Set(EXAMPLES.map((example) => example.pairingId)).size).toBe(EXAMPLES.length);
   });
 
-  it('covers hospitality, bakery, consulting, beauty and food production', () => {
+  it('covers education, hosting, travel, e-commerce tooling and hospitality, on real logos', () => {
     expect(EXAMPLES.map((example) => example.id)).toEqual(
-      expect.arrayContaining(['maison-alba', 'halden-advisory', 'atelier-nacre', 'harrow-fields']),
+      expect.arrayContaining(['khan-academy', 'dreamhost', 'getyourguide', 'shogun', 'la-meza']),
     );
     expect(EXAMPLES).toHaveLength(5);
   });
