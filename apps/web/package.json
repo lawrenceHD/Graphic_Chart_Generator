@@ -27,6 +27,7 @@
     "@app/db": "workspace:*",
     "@app/document": "workspace:*",
     "@app/kernel": "workspace:*",
+    "@app/logo-kit": "workspace:*",
     "@app/mockup-engine": "workspace:*",
     "@app/storage": "workspace:*",
     "@fontsource-variable/bricolage-grotesque": "5.3.0",

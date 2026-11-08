@@ -83,11 +83,10 @@
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "title": "Simple pricing, built to grow with you.",
+    "title": "Free to start, paid plans to come.",
     "lead": "Start free with three projects. Paid plans arrive after the beta.",
-    "hypothesis": "Indicative prices, to be validated. No payment is possible for now.",
-    "toValidate": "to be validated",
-    "soon": "Soon",
+    "hypothesis": "Indicative prices, not billed for now: no payment is possible.",
+    "toValidate": "indicative price, to be validated",
     "perMonth": "€{price}",
     "perMonthUnit": "per month",
     "free": "€0",
@@ -125,10 +124,15 @@
       "support": "Dedicated support"
     },
     "faqTitle": "Frequently asked questions",
-    "q1": "Can I pay right now?",
-    "a1": "No. Payment does not exist yet. The free plan is the only active one, with three projects.",
-    "q2": "What happens if I go past three projects?",
-    "a2": "You keep access to your guidelines. Creating a fourth project is refused with a message that explains why."
+    "q1": "Which files can I drop?",
+    "a1": "An SVG logo (5 MB at most), PNG, WebP or JPEG (10 MB and 8192 × 8192 px at most). The file is checked before it is read.",
+    "q2": "Do my files belong to me?",
+    "a2": "You keep your rights on your logos. The terms on generated texts and layouts will be set out in the terms of use, worded with care.",
+    "ctaSoon": "Coming soon",
+    "q3": "What does the PDF export contain?",
+    "a3": "Every page of the guideline, with texts and logos as vectors. It is a reference PDF in RGB: it is not presented as print-ready.",
+    "q4": "What happens to my logo?",
+    "a4": "It is sanitised, stays private and can only be read from your project. It is never redrawn by an AI: variants and mockups are computed from your file."
   },
   "auth": {
     "loginMeta": "Sign in",
