@@ -17,15 +17,14 @@
   "homePage": {
     "metaTitle": "Charta · A complete brand guideline from your logo",
     "hero": {
-      "title": "Your logo becomes a complete guideline.",
-      "lead": "Drop the file: Charta measures its colours, checks every contrast, and composes the pages and mockups. Then you edit each page by hand or by talking to the copilot.",
+      "title": "Your logo becomes a complete brand guideline.",
+      "lead": "Drop the file and a short brief. Charta measures the colours, checks every contrast, and composes the pages and mockups. You then take over each page, by hand or by talking to the copilot.",
       "start": "Try without an account",
       "signup": "Create an account",
       "note": "No credit card. Your logo is never redrawn.",
-      "eyebrow": "Brand guidelines · A4 pages · mockups",
-      "demo": "See a guideline",
+      "demo": "See an example guideline",
       "pick": "Pick an example brand: the whole page changes with it",
-      "fiction": "Fictional brands made for the demonstration, not customers.",
+      "fiction": "Fictional brands made for the demonstration, not clients.",
       "proof": {
         "palette": "Measured palette",
         "level": {
@@ -34,7 +33,8 @@
           "large-ui": "Large text",
           "fail": "Fails"
         }
-      }
+      },
+      "accent": "guideline"
     },
     "atelier": {
       "title": "The studio, with a real guideline",
@@ -87,15 +87,131 @@
       "logo": "The logo is never redrawn by an AI.",
       "measured": "Every value shown is computed, with its source.",
       "undo": "Every change can be undone and redone.",
-      "export": "PDF export, logo files and CSS tokens."
+      "export": "PDF export, logo files and CSS tokens.",
+      "label": "Verifiable promises"
     },
     "final": {
       "title": "Drop your logo.",
-      "lead": "The first guideline takes a few minutes, no account needed."
-    }
+      "lead": "The first guideline takes a few minutes, no account needed.",
+      "account": "Create an account"
+    },
+    "story": {
+      "file": "{name} · logo dropped",
+      "role": {
+        "primary": "Primary",
+        "accent": "Accent",
+        "neutralLight": "Paper",
+        "neutralDark": "Ink"
+      },
+      "level": {
+        "aaa": "AAA",
+        "aa": "AA",
+        "large-ui": "Large text",
+        "fail": "Fails"
+      },
+      "say": "Make the contrast page easier to read.",
+      "done": "Page recomposed.",
+      "undoable": "Undoable command"
+    },
+    "wall": {
+      "title": "Your logo, placed on <em>real</em> objects.",
+      "lead": "Cards, posters, mug, signage, bag, letterhead: the logo is placed pixel-exact, with computed perspective and shading. It is never redrawn.",
+      "alt": "{scene} with the {brand} logo",
+      "failed": "This scene could not be loaded.",
+      "retry": "Retry",
+      "note": "Photographed objects; fictional example brands. Rendered in your browser.",
+      "scene": {
+        "poster-hanging": "Hanging poster",
+        "cards-floating": "Business cards",
+        "mug-stripes": "Striped mug",
+        "a4-sheet": "Letterhead",
+        "paper-bag": "Paper bag",
+        "storefront-sign": "Shop sign"
+      }
+    },
+    "proof": {
+      "title": "Every number is measured, not guessed.",
+      "lead": "Palette, contrasts, variants and tokens come out of the same engines as the studio. Switch brand: everything is recomputed.",
+      "variants": "Logo variants",
+      "noVariant": "Not provided",
+      "variant": {
+        "color": "Colour",
+        "black": "Black",
+        "white": "White"
+      },
+      "matrix": "Contrast matrix",
+      "matrixNote": "Each colour as text on each background, WCAG ratio.",
+      "files": "Tokens and files",
+      "kind": {
+        "pdf": "PDF guideline",
+        "svg": "SVG logo",
+        "css": "CSS tokens"
+      }
+    },
+    "brands": {
+      "title": "Example brands",
+      "note": "Fictional brands drawn for the demonstration: no customers, no existing logos."
+    },
+    "problem": {
+      "title": "Judgement is your <em>craft</em>. The rest is repetition.",
+      "text": "Palette in five formats, contrast matrix, black and white variants, clear space, layout, mockups, files to deliver: with every brand, the same steps again. Charta handles them so your time goes to direction."
+    },
+    "outputs": {
+      "title": "Files you can actually <em>hand over</em>.",
+      "lead": "Every output comes from the brand on screen: switch example and the excerpts change with it.",
+      "pdf": {
+        "title": "PDF guideline",
+        "text": "Every page, vector."
+      },
+      "kit": {
+        "title": "Logo kit",
+        "text": "Colour, black and white, as SVG and PNG, with usage rules."
+      },
+      "css": {
+        "title": "CSS variables",
+        "text": "Ready to paste into a stylesheet."
+      },
+      "tailwind": {
+        "title": "Tailwind theme",
+        "text": "The same values, as @theme."
+      },
+      "dtcg": {
+        "title": "DTCG tokens",
+        "text": "The W3C format Figma can read."
+      },
+      "note": "The PDF is an RGB reference document: it is not presented as print-ready."
+    },
+    "faq": {
+      "title": "The questions we get, answered plainly.",
+      "q1": {
+        "q": "Will an AI redraw my logo?",
+        "a": "No. The logo is never redrawn by a generative model. Variants and mockups are computed from your file."
+      },
+      "q2": {
+        "q": "Is the result designer-grade?",
+        "a": "Charta does the systematic part: palette, contrasts, variants, layout, files. Direction stays yours: every page can be edited by hand or with the copilot, and you judge the result."
+      },
+      "q3": {
+        "q": "What happens to my logo?",
+        "a": "The logo is sanitised, stays private and is only readable from your project. You keep your rights on your logos."
+      },
+      "q4": {
+        "q": "Is the PDF print-ready?",
+        "a": "No: it is an RGB reference PDF with vector text and logos. It is not presented as print-ready."
+      },
+      "q5": {
+        "q": "Which files can I drop?",
+        "a": "SVG (up to 5 MB), PNG, WebP or JPEG (up to 10 MB and 8,192 × 8,192 px). An SVG with unconverted text is flagged: export it with text outlined."
+      },
+      "q6": {
+        "q": "Can I try it without an account, and what does it cost?",
+        "a": "Yes: a guest session lets you test. The free plan offers 3 projects. Paid plans are not open yet and their prices are indicative."
+      }
+    },
+    "metaDescription": "Drop your logo: Charta measures its colors, checks every contrast and builds the brand guideline, the mockups and the files."
   },
   "pricing": {
-    "metaTitle": "Pricing",
+    "metaTitle": "Pricing · Charta",
     "title": "Free to start, paid plans to come.",
     "lead": "Start free with three projects. Paid plans arrive after the beta.",
     "hypothesis": "Indicative prices, not billed for now: no payment is possible.",
@@ -145,11 +261,12 @@
     "q3": "What does the PDF export contain?",
     "a3": "Every page of the guideline, with texts and logos as vectors. It is a reference PDF in RGB: it is not presented as print-ready.",
     "q4": "What happens to my logo?",
-    "a4": "It is sanitised, stays private and can only be read from your project. It is never redrawn by an AI: variants and mockups are computed from your file."
+    "a4": "It is sanitised, stays private and can only be read from your project. It is never redrawn by an AI: variants and mockups are computed from your file.",
+    "metaDescription": "Start free with three projects. Paid plans arrive after the beta; indicative prices, no payment is possible yet."
   },
   "auth": {
-    "loginMeta": "Sign in",
-    "signupMeta": "Create an account",
+    "loginMeta": "Sign in · Charta",
+    "signupMeta": "Create an account · Charta",
     "back": "Back to the home page",
     "login": {
       "title": "Good to see you again.",
@@ -197,7 +314,9 @@
       "rateLimited": "Too many attempts. Wait a few minutes, then try again.",
       "generic": "The operation failed on our side. Try again in a moment.",
       "network": "The server cannot be reached. Check your connection, then try again."
-    }
+    },
+    "loginDescription": "Find your brand guidelines again.",
+    "signupDescription": "Create an account to save your brand guidelines."
   },
   "dashboard": {
     "metaTitle": "My projects",

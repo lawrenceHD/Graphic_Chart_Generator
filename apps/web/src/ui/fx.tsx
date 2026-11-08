@@ -212,8 +212,11 @@ export function SplitWords({
   delay = 0,
   step = 0.06,
   now = false,
+  accent,
 }: {
   readonly text: string;
+  /** One word set in the editorial italic (punctuation ignored). */
+  readonly accent?: string;
   readonly delay?: number;
   readonly step?: number;
   readonly now?: boolean;
@@ -230,7 +233,10 @@ export function SplitWords({
         return (
           <Fragment key={key}>
             <span aria-hidden="true" className="word-mask">
-              <span className="word" style={style}>
+              <span
+                className={`word ${accent !== undefined && word.replace(/[.,;:!?]/g, '') === accent ? 'font-accent font-normal italic' : ''}`}
+                style={style}
+              >
                 {word}
               </span>
             </span>
@@ -242,7 +248,7 @@ export function SplitWords({
   );
 }
 
-/** Ambient bobbing (CSS keyframes, still under reduced motion). */
+/** Ambient bobbing (CSS keyframes; motion.css stops it under prefers-reduced-motion). */
 export function Float({
   children,
   className = '',
