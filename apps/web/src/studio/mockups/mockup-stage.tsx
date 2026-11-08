@@ -20,6 +20,11 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
+import { SceneOverlay } from './scene-overlay';
+import { maskOf, photoHits, psdHits, rememberObjects, type SceneHits } from './scene-hits';
+import { brandInks, loadImage, logoSource, logoTexture, renderKey } from './stage-assets';
+
+export { brandInks, logoSource, renderKey };
 
 // Computed mockups (ADR-008, 06_MOCKUP_ENGINE v2). Each scene is a photograph whose objects are painted in
 // the brand's colours — their light, folds and grain kept — and on which the real logo file is projected
@@ -68,63 +73,6 @@ function loadScene(id: SceneId): Promise<AnyScene | null> {
     });
   cache.set(id, loading);
   return loading;
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  const image = new Image();
-  image.decoding = 'async';
-  // Logo files are redirected to the object storage (another origin, CORS-enabled): without CORS the
-  // image would taint the canvas and WebGL would refuse it.
-  image.crossOrigin = 'anonymous';
-  image.src = src;
-  return image.decode().then(() => image);
-}
-
-/** The logo file for a version: the vector drawing when there is one, the upload otherwise. */
-export function logoSource(view: BrandView, version: LogoVersion): string {
-  if (version === 'white') return view.logo['mono-white'] ?? view.logo.color;
-  if (version === 'black') return view.logo['mono-black'] ?? view.logo.color;
-  return view.logo.vector ?? view.logo.color;
-}
-
-/** Colours of the logo: the palette's main colours, its neutrals when they were read on the logo. */
-export function brandInks(view: BrandView): string[] {
-  const neutrals = (['neutralLight', 'neutralDark'] as const)
-    .filter((role) => view.sources[role] === 'extracted')
-    .map((role) => view.colors[role]);
-  return [view.colors.primary, view.colors.accent, ...view.extra, ...neutrals];
-}
-
-/** What the render depends on: a view with the same colours and files keeps the picture. */
-export function renderKey(view: BrandView): string {
-  const { colors, logo } = view;
-  return [
-    colors.primary,
-    colors.accent,
-    colors.neutralLight,
-    colors.neutralDark,
-    ...view.extra,
-    logo.color,
-    logo.vector,
-    logo['mono-black'],
-    logo['mono-white'],
-  ].join('|');
-}
-
-const LOGO_TEXELS = 2048;
-/** The logo drawn on a canvas LOGO_TEXELS wide (an SVG is rasterised at that size, never upscaled). */
-async function logoTexture(src: string): Promise<{ canvas: HTMLCanvasElement; aspect: number }> {
-  const image = await loadImage(src);
-  const aspect = image.naturalWidth / Math.max(1, image.naturalHeight);
-  const canvas = document.createElement('canvas');
-  canvas.width = LOGO_TEXELS;
-  canvas.height = Math.max(1, Math.round(LOGO_TEXELS / aspect));
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  }
-  return { canvas, aspect };
 }
 
 const PAINT_ORDER = ['primary', 'accent', 'neutralLight', 'neutralDark'] as const;
@@ -261,6 +209,32 @@ function sharedCompositor(width: number, height: number) {
   return shared;
 }
 
+const hitsCache = new Map<SceneId, Promise<SceneHits | null>>();
+/** The selectable objects of a scene and what lies under a point (masks read once per scene). */
+function hitsOf(id: SceneId): Promise<SceneHits | null> {
+  const known = hitsCache.get(id);
+  if (known !== undefined) return known;
+  const loadMask = (file: string) =>
+    loadImage(`/scenes/${id}/${file}`)
+      .then(maskOf)
+      .catch(() => null);
+  const loading = loadScene(id)
+    .then((any) => {
+      if (any === null) return null;
+      return any.kind === 'psd'
+        ? psdHits(any.scene, loadMask)
+        : photoHits(any.loaded.scene, loadMask);
+    })
+    .catch(() => null)
+    .then((found) => {
+      if (found === null) hitsCache.delete(id);
+      else rememberObjects(id, found.objects);
+      return found;
+    });
+  hitsCache.set(id, loading);
+  return loading;
+}
+
 const SHAPE_ONLY = new Set(['foil', 'emboss', 'deboss', 'engrave']);
 
 type Stage = 'loading' | 'ready' | 'failed';
@@ -273,6 +247,7 @@ export function MockupStage({
   retryLabel,
   className = '',
   proof = false,
+  pick,
 }: {
   readonly scene: SceneId;
   readonly view: BrandView;
@@ -283,6 +258,12 @@ export function MockupStage({
   readonly className?: string;
   /** Show the art direction applied under the picture (finish, colour, logo version). */
   readonly proof?: boolean;
+  /** Makes the objects of the picture selectable (the studio canvas); absent on guideline pages. */
+  readonly pick?: {
+    readonly selected: string | null;
+    readonly onSelect: (id: string | null) => void;
+    readonly labelOf: (kind: 'surface' | 'paint', index: number) => string;
+  };
 }) {
   const t = useTranslations('workspace.proof');
   const a = useTranslations('workspace.artwork');
@@ -291,8 +272,10 @@ export function MockupStage({
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(view);
   const [stage, setStage] = useState<Stage>('loading');
+  const [sceneHits, setSceneHits] = useState<SceneHits | null>(null);
   const [attempt, setAttempt] = useState(0);
   const key = renderKey(view);
+  const interactive = pick !== undefined;
 
   useEffect(() => {
     latest.current = view;
@@ -326,18 +309,38 @@ export function MockupStage({
     };
   }, [id, attempt, key, a]);
 
+  useEffect(() => {
+    if (!interactive || stage !== 'ready') return;
+    let alive = true;
+    void hitsOf(id).then((found) => {
+      if (alive) setSceneHits(found);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [id, stage, interactive]);
+
   return (
     <figure className={`m-0 ${className}`}>
       <div
-        role="img"
-        aria-label={label}
         className="relative w-full overflow-hidden bg-preview"
         style={{ aspectRatio: `${String(size.width)} / ${String(size.height)}` }}
       >
         <canvas
           ref={canvas}
+          role="img"
+          aria-label={label}
           className={`absolute inset-0 size-full transition-opacity duration-500 ${stage === 'ready' ? 'opacity-100' : 'opacity-0'}`}
         />
+        {pick !== undefined && sceneHits !== null && stage === 'ready' ? (
+          <SceneOverlay
+            sceneHits={sceneHits}
+            size={size}
+            selected={pick.selected}
+            onSelect={pick.onSelect}
+            labelOf={pick.labelOf}
+          />
+        ) : null}
         {stage === 'failed' ? (
           <div className="absolute inset-0 grid place-items-center p-6 text-center">
             <div className="flex flex-col items-center gap-3">

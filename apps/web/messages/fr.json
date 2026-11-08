@@ -379,6 +379,22 @@
       "email": "contact@votremarque.com",
       "address": "Adresse de la marque",
       "dear": "Madame, Monsieur,"
+    },
+    "mockup": {
+      "object": {
+        "surface": "Objet {n}",
+        "paint": "Fond de couleur {n}"
+      },
+      "inspectorTitle": "Objet sélectionné",
+      "pickHint": "Cliquez un objet dans l’image pour voir ce qu’il permet de régler.",
+      "available": {
+        "paint": "Couleur : choix parmi les couleurs de la palette",
+        "paintFixed": "Couleur : fixe sur cet objet",
+        "finish": "Finitions : {list}",
+        "finishFixed": "Finition : fixe sur cet objet",
+        "logo": "Logo : {list}",
+        "logoFixed": "Logo : choisi par l’objet"
+      }
     }
   }
 }

@@ -20,7 +20,7 @@ import type { Phase } from './use-studio';
 // While the analysis runs, each page waits for its step, then is "composed" (sweep) and laid down.
 export type Selection =
   | { readonly kind: 'page'; readonly id: string }
-  | { readonly kind: 'mockup'; readonly id: SceneId };
+  | { readonly kind: 'mockup'; readonly id: SceneId; readonly object?: string };
 
 const INITIAL_PAGES: readonly PageType[] = [
   'cover',
@@ -345,6 +345,18 @@ export function PageCanvas({
                         >
                           <MockupStage
                             proof
+                            pick={{
+                              selected: selected ? (selection.object ?? null) : null,
+                              onSelect: (object) => {
+                                onSelect(
+                                  object === null
+                                    ? { kind: 'mockup', id: scene }
+                                    : { kind: 'mockup', id: scene, object },
+                                );
+                              },
+                              labelOf: (kind, position) =>
+                                t(`mockup.object.${kind}`, { n: position + 1 }),
+                            }}
                             failedLabel={t('mockupFailed')}
                             retryLabel={t('retry')}
                             scene={scene}

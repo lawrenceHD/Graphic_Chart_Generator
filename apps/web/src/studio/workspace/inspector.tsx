@@ -22,6 +22,7 @@ import {
 } from '../../brand/color';
 import { PAIRINGS } from '../../brand/pairings';
 import { COLOR_ROLES, type ColorRole } from './brand-view';
+import { MockupObjectPanel } from './mockup-inspector';
 import type { Selection } from './page-canvas';
 
 // Right column (09 §7 PageInspector): it follows the selection. A page shows its own settings first, then
@@ -677,7 +678,8 @@ export function Inspector({
       ) : selection?.kind === 'mockup' ? (
         <section aria-label={t('mockups')}>
           <Heading>{t(`scenes.${selection.id}`)}</Heading>
-          <p className="m-0 text-sm leading-relaxed text-ink-2">{t('inspector.mockup')}</p>
+          <p className="m-0 mb-3 text-sm leading-relaxed text-ink-2">{t('inspector.mockup')}</p>
+          <MockupObjectPanel scene={selection.id} objectId={selection.object} document={document} />
         </section>
       ) : null}
       {sections.map((section) => (

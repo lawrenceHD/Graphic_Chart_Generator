@@ -379,6 +379,22 @@
       "email": "hello@yourbrand.com",
       "address": "Brand address",
       "dear": "Dear Sir or Madam,"
+    },
+    "mockup": {
+      "object": {
+        "surface": "Object {n}",
+        "paint": "Colour field {n}"
+      },
+      "inspectorTitle": "Selected object",
+      "pickHint": "Click an object in the picture to see what it lets you adjust.",
+      "available": {
+        "paint": "Colour: any colour of the palette",
+        "paintFixed": "Colour: fixed on this object",
+        "finish": "Finishes: {list}",
+        "finishFixed": "Finish: fixed on this object",
+        "logo": "Logo: {list}",
+        "logoFixed": "Logo: set by the object"
+      }
     }
   }
 }
