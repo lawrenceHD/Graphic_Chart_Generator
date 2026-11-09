@@ -1,13 +1,15 @@
-// The logo chosen on "Démarrer" travels to /studio/[id] in memory (client navigation keeps the module):
-// the studio sends it as soon as it subscribes to the project's events. Taken once.
-const pending = new Map<string, File>();
+import type { BrandInputs } from './brand-inputs-model';
 
-export function holdLogo(projectId: string, file: File): void {
-  pending.set(projectId, file);
+// The files chosen on "Démarrer" (logos and document) travel to /studio/[id] in memory (client navigation
+// keeps the module): the studio sends them as soon as it subscribes to the project's events. Taken once.
+const pending = new Map<string, BrandInputs>();
+
+export function holdInputs(projectId: string, inputs: BrandInputs): void {
+  pending.set(projectId, inputs);
 }
 
-export function takeLogo(projectId: string): File | undefined {
-  const file = pending.get(projectId);
+export function takeInputs(projectId: string): BrandInputs | undefined {
+  const inputs = pending.get(projectId);
   pending.delete(projectId);
-  return file;
+  return inputs;
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import type { AssetErrorCode, ProjectEvent } from '@app/contracts';
+import type { ProjectEvent } from '@app/contracts';
 import { apply, type BrandDocument, type Command } from '@app/document';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { takeLogo } from '../pending-logo';
+import type { BrandInputs } from '../brand-inputs-model';
+import { takeInputs } from '../pending-logo';
 import { subscribeProjectEvents, type EventSourceLike, type StreamState } from '../project-stream';
 import {
   INITIAL_TIMELINE,
@@ -13,7 +14,14 @@ import {
   type AssetVerdict,
   type Timeline,
 } from '../timeline';
-import { startAnalysis, uploadLogo, type Fetcher, type UploadFailure } from '../upload';
+import { startAnalysis, type Fetcher, type UploadFailure } from '../upload';
+import {
+  settleBatch,
+  uploadBatch,
+  type BatchUpload,
+  type Notice,
+  type SentFile,
+} from '../upload-batch';
 import {
   loadProject,
   redoLast,
@@ -56,7 +64,10 @@ export interface StudioState {
   readonly timeline: Timeline;
   readonly journal: readonly JournalEntry[];
   readonly stream: StreamState;
-  readonly rejection: AssetErrorCode | undefined;
+  /** Files the server refused (name and reason). */
+  readonly notices: readonly Notice[];
+  /** Some files were refused but the analysis goes on with the others. */
+  readonly partial: boolean;
   readonly failure: StudioFailure | null;
   readonly canRetry: boolean;
   readonly fileName: string;
@@ -66,7 +77,8 @@ export interface StudioState {
 }
 
 export interface StudioActions {
-  readonly send: (file: File) => Promise<void>;
+  /** Sends the logos (primary first) and the optional document, then starts the analysis. */
+  readonly send: (inputs: BrandInputs) => Promise<void>;
   readonly analyze: () => Promise<void>;
   /** Retries the first load after a failure. */
   readonly reload: () => Promise<void>;
@@ -116,7 +128,8 @@ export function useStudio({
   const [timeline, dispatch] = useReducer(reduceTimeline, INITIAL_TIMELINE);
   const [journal, setJournal] = useState<readonly JournalEntry[]>([]);
   const [stream, setStream] = useState<StreamState>('open');
-  const [rejection, setRejection] = useState<AssetErrorCode | undefined>();
+  const [notices, setNotices] = useState<readonly Notice[]>([]);
+  const [partial, setPartial] = useState(false);
   const [failure, setFailure] = useState<StudioFailure | null>(null);
   const [canRetry, setCanRetry] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -127,7 +140,13 @@ export function useStudio({
 
   // Synchronous state shared with the stream handler and the command queue.
   const verdicts = useRef(new Map<string, AssetVerdict>());
-  const awaiting = useRef<string | null>(null);
+  const batch = useRef<readonly SentFile[]>([]);
+  const refusedAtUpload = useRef<readonly Notice[]>([]);
+  const sentFiles = useRef(new Set<File>());
+  const cleanLogos = useRef(0);
+  const uploading = useRef(false);
+  // A failed batch waits for the person's retry: late verdicts must not start an analysis meanwhile.
+  const halted = useRef(false);
   const analyzing = useRef(false);
   const current = useRef<Revision | null>(null);
   const inFlight = useRef<Command[]>([]);
@@ -206,16 +225,26 @@ export function useStudio({
     }
   }, [fetcher, newKey, projectId]);
 
-  /** Acts on the verdict of the awaited asset once both are known, whichever came first. */
-  const settle = (assetId: string): void => {
-    const verdict = verdicts.current.get(assetId);
-    if (awaiting.current !== assetId || verdict === undefined) return;
-    awaiting.current = null;
-    if (verdict.status === 'clean') void analyze();
-    else {
-      setRejection(verdict.code);
-      setPhase('empty');
-    }
+  /**
+   * Acts once every file of the batch is sent and has its verdict, whichever came first (the verdict or the
+   * upload answer). Refused files are listed; the analysis goes on while one logo is clean.
+   */
+  const settle = (): void => {
+    if (halted.current || uploading.current || batch.current.length === 0) return;
+    const settled = settleBatch(
+      batch.current,
+      verdicts.current,
+      refusedAtUpload.current,
+      cleanLogos.current,
+    );
+    if (settled === null) return;
+    batch.current = [];
+    refusedAtUpload.current = [];
+    cleanLogos.current = settled.cleanLogos;
+    setNotices(settled.refused);
+    setPartial(settled.cleanLogos > 0 && settled.refused.length > 0);
+    if (settled.cleanLogos > 0) void analyze();
+    else setPhase('empty');
   };
   const latestSettle = useRef(settle);
   const latestRefresh = useRef(refresh);
@@ -264,7 +293,7 @@ export function useStudio({
             const verdict = assetVerdict(event, event.data.assetId);
             if (verdict === null) return;
             verdicts.current.set(event.data.assetId, verdict);
-            latestSettle.current(event.data.assetId);
+            latestSettle.current();
           },
           connection: setStream,
         },
@@ -274,31 +303,59 @@ export function useStudio({
   );
 
   const send = useCallback(
-    async (file: File): Promise<void> => {
-      setRejection(undefined);
+    async (inputs: BrandInputs): Promise<void> => {
+      if (uploading.current) return;
+      uploading.current = true;
+      setNotices([]);
+      setPartial(false);
       setFailure(null);
       setCanRetry(false);
-      setFileName(file.name);
       setPhase('sending');
+      halted.current = false;
+      const into: BatchUpload = { accepted: [], refused: [] };
       try {
-        const uploaded = await uploadLogo(fetcher, projectId, file);
+        const uploaded = await uploadBatch(
+          fetcher,
+          projectId,
+          inputs,
+          sentFiles.current,
+          setFileName,
+          into,
+        );
         if (!uploaded.ok) {
-          if (uploaded.error.kind === 'rejected') setRejection(uploaded.error.code);
-          else setFailure(uploaded.error);
+          halted.current = true;
+          setFailure(uploaded.error);
+          setNotices(into.refused);
           setPhase('empty');
           return;
         }
-        const { assetId, status } = uploaded.value;
-        if (status === 'clean') verdicts.current.set(assetId, { status: 'clean' });
-        awaiting.current = assetId;
         setPhase('scanning');
-        latestSettle.current(assetId);
       } catch {
+        halted.current = true;
         setFailure(UNEXPECTED);
+        setNotices(into.refused);
         setPhase('empty');
+        return;
+      } finally {
+        // What was accepted before a failure still gets its verdict (the retry skips those files), even
+        // when the batch ended on an exception.
+        batch.current = [...batch.current, ...into.accepted];
+        refusedAtUpload.current = [...refusedAtUpload.current, ...into.refused];
+        uploading.current = false;
       }
+      if (batch.current.length > 0) {
+        latestSettle.current();
+        return;
+      }
+      // Nothing new to scan (every file was refused, or already accepted by an earlier try).
+      const refused = refusedAtUpload.current;
+      refusedAtUpload.current = [];
+      setNotices(refused);
+      setPartial(cleanLogos.current > 0 && refused.length > 0);
+      if (cleanLogos.current > 0) void analyze();
+      else setPhase('empty');
     },
-    [fetcher, projectId],
+    [analyze, fetcher, projectId],
   );
 
   // First load: a project with a document opens ready; a project without one sends the logo chosen on
@@ -322,7 +379,7 @@ export function useStudio({
         setPhase((value) => (value === 'loading' || value === 'analysing' ? 'ready' : value));
         return;
       }
-      const pending = takeLogo(projectId);
+      const pending = takeInputs(projectId);
       if (pending === undefined) setPhase((value) => (value === 'loading' ? 'empty' : value));
       else await latestSend.current(pending);
     },
@@ -477,7 +534,8 @@ export function useStudio({
     timeline,
     journal,
     stream,
-    rejection,
+    notices,
+    partial,
     failure,
     canRetry,
     fileName,

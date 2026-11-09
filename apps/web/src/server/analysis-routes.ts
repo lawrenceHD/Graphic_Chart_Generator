@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { JobQueue } from '@app/contracts';
+import { choosePrimaryLogo, type JobQueue } from '@app/contracts';
 import { analysisRuns, and, assets, desc, eq, isNull, type createDatabase } from '@app/db';
 import { uuidV7 } from '@app/kernel';
 import { clientIp, problemResponse, tooManyRequests } from './http';
@@ -39,8 +39,8 @@ async function findRun(orm: Orm, projectId: string, key: string): Promise<RunRow
 }
 
 async function latestCleanLogo(orm: Orm, projectId: string): Promise<string | undefined> {
-  const [logo] = await orm
-    .select({ id: assets.id })
+  const logos = await orm
+    .select({ id: assets.id, meta: assets.meta })
     .from(assets)
     .where(
       and(
@@ -51,7 +51,8 @@ async function latestCleanLogo(orm: Orm, projectId: string): Promise<string | un
       ),
     )
     .orderBy(desc(assets.id));
-  return logo?.id;
+  // The primary logo among those supplied, else the latest (a project may hold several).
+  return choosePrimaryLogo(logos);
 }
 
 export function analysisHandlers(deps: AnalysisRouteDeps) {

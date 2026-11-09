@@ -11,6 +11,8 @@ const view: BrandView = {
     'mono-black': '/black.svg',
     'mono-white': '/white.svg',
     favicon: null,
+    horizontal: null,
+    vertical: null,
   },
 };
 

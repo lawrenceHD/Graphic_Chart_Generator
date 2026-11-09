@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { assignRoles, brandClusters, extractPalette, type PaletteRoles } from '@app/color-engine';
-import type { ObjectStorage, ProjectEvent, Vectorizer } from '@app/contracts';
+import type { ObjectStorage, ProjectEvent, VariantKind, Vectorizer } from '@app/contracts';
 import {
   analysisRuns,
   and,
@@ -25,7 +25,9 @@ import {
   type MonoTarget,
 } from '@app/logo-kit';
 import { z } from 'zod';
+import { loadBrandContext } from './brand-context.js';
 import { LOGO_FOR_AI, researchStep, type ResearchStepDeps } from './research-step.js';
+import { loadSuppliedVariants } from './supplied-logos.js';
 
 // Job project.analyze (02_ARCHITECTURE.md §5.2, decision T-019 part 2): 1 palette (color-engine) stored in
 // the meta of the logo_sanitized asset, 2 black and white variants (logo-kit) stored as logo_variant assets,
@@ -150,6 +152,11 @@ async function variants(
   logo: Asset,
   bytes: Uint8Array,
 ): Promise<Result<StepDone, string>> {
+  // A black or white version the user supplied is used as it is, never derived.
+  const supplied = await loadSuppliedVariants(deps.orm, logo.projectId, logo.id);
+  const targets = VARIANTS.filter(
+    ([name]) => !supplied.has(name === 'black' ? 'mono-black' : 'mono-white'),
+  );
   const made: Variant[] = [];
   let svg: string;
   if (logo.mime === SVG) svg = new TextDecoder().decode(bytes);
@@ -170,7 +177,7 @@ async function variants(
       },
     });
   }
-  for (const [name, target] of VARIANTS) {
+  for (const [name, target] of targets) {
     const variant = await monochromeVariant(svg, target, deps.rasterizer);
     if (!variant.ok) return err(variant.error.code);
     // Masks and filters need the raster drawing (§5.2), which comes with vectorisation as well.
@@ -244,6 +251,9 @@ async function brandAnalysis(
       ? await deps.rasterizer.rasterize(new TextDecoder().decode(bytes), LOGO_FOR_AI)
       : await deps.normalizeRaster(bytes);
   if (!image.ok) return err(image.error.code);
+  // The typed brief and the manifest document, cleaned and fenced as untrusted data.
+  const brief = await loadBrandContext(deps.orm, logo.projectId);
+  if (!brief.ok) return err(brief.error);
   const language = Language.safeParse(project.language);
   const analysis = await analyzeBrand(
     deps.ai.transport,
@@ -251,7 +261,7 @@ async function brandAnalysis(
       brandName: project.title,
       language: language.success ? language.data : 'fr',
       palette: stored.data.palette.clusters.map(({ hex }) => hex),
-      brief: project.briefText ?? '',
+      brief: brief.value,
       logo: { data: image.value.png, mimeType: 'image/png' },
     },
     deps.ai.model,
@@ -304,7 +314,7 @@ const StoredClusters = z.object({
 
 type VariantRefs = {
   assetId: string;
-  kind: 'vector' | 'mono-black' | 'mono-white';
+  kind: VariantKind;
   needsReview: boolean;
   fidelity?: number;
 }[];
@@ -322,6 +332,7 @@ async function variantRefs(deps: AnalyzeDeps, logo: Asset): Promise<Result<Varia
         sql`${assets.meta}->>'logoAssetId' = ${logo.id}`,
       ),
     );
+  const supplied = await loadSuppliedVariants(deps.orm, logo.projectId, logo.id);
   const refs: VariantRefs = [];
   for (const row of rows) {
     const meta = StoredVariant.safeParse(row.meta);
@@ -337,13 +348,16 @@ async function variantRefs(deps: AnalyzeDeps, logo: Asset): Promise<Result<Varia
       continue;
     }
     const { variant, structure, warnings } = stored;
+    const kind = variant === 'black' ? 'mono-black' : 'mono-white';
+    if (supplied.has(kind)) continue; // the user's own file replaces the derived one
     refs.push({
       assetId: row.id,
-      kind: variant === 'black' ? 'mono-black' : 'mono-white',
+      kind,
       needsReview: warnings.length > 0 || (structure ?? 0) < STRUCTURE_THRESHOLD,
       ...(structure === null ? {} : { fidelity: Math.min(1, Math.max(0, structure)) }),
     });
   }
+  for (const [kind, assetId] of supplied) refs.push({ assetId, kind, needsReview: false });
   return ok(refs.sort((a, b) => a.kind.localeCompare(b.kind)));
 }
 

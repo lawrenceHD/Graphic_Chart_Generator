@@ -1,6 +1,7 @@
 import { AssetErrorCodeSchema, type AssetErrorCode } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 import { z } from 'zod';
+import type { UploadDeclaration } from './brand-inputs-model';
 
 // Browser side of 04_API_CONTRACTS.md §3 "Assets": declare the file, PUT its bytes to the presigned URL
 // (ADR-013, the application never proxies them), then confirm so the scan starts. Every answer is
@@ -70,12 +71,13 @@ async function steps(
   fetcher: Fetcher,
   projectId: string,
   file: File,
+  declaration: UploadDeclaration,
 ): Promise<Result<UploadedAsset, UploadFailure>> {
   const declared = await readAnswer(
     await send(
       fetcher,
       `/api/v1/projects/${encodeURIComponent(projectId)}/assets/uploads`,
-      json({ kind: 'logo_original', fileName: file.name, bytes: file.size }),
+      json({ ...declaration, fileName: file.name, bytes: file.size }),
     ),
     DeclareAnswer,
   );
@@ -100,18 +102,27 @@ async function steps(
   return ok({ assetId: id, status });
 }
 
-export async function uploadLogo(
+/** A logo (with its role) or the manifest document; the server decides from the bytes, not from this. */
+export async function uploadBrandFile(
   fetcher: Fetcher,
   projectId: string,
   file: File,
+  declaration: UploadDeclaration,
 ): Promise<Result<UploadedAsset, UploadFailure>> {
   try {
-    return await steps(fetcher, projectId, file);
+    return await steps(fetcher, projectId, file, declaration);
   } catch (error) {
     if (error instanceof NetworkError) return err({ kind: 'network' });
     throw error;
   }
 }
+
+export const uploadLogo = (
+  fetcher: Fetcher,
+  projectId: string,
+  file: File,
+): Promise<Result<UploadedAsset, UploadFailure>> =>
+  uploadBrandFile(fetcher, projectId, file, { kind: 'logo_original' });
 
 const AnalysisAnswer = z.object({ analysis: z.object({ id: z.uuid() }) });
 

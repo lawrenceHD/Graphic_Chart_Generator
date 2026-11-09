@@ -145,13 +145,14 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
               project={studio.project}
               selection={selection}
               onSelect={setSelection}
-              onLogo={(file) => {
-                void studio.send(file);
+              onSend={(inputs) => {
+                void studio.send(inputs);
               }}
               onReload={() => {
                 void studio.reload();
               }}
-              rejection={studio.rejection}
+              notices={studio.notices}
+              partial={studio.partial}
               sending={studio.phase === 'sending' || studio.phase === 'scanning'}
             />
           </div>

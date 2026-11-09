@@ -57,7 +57,7 @@
     "ready": "Brand guidelines ready: palette, contrast and variants are computed."
   },
   "studio": {
-    "startTitle": "Drop your logo",
+    "startTitle": "Drop your logos",
     "startLead": "Charta reads your logo, extracts its palette, checks contrast and assembles your brand guidelines.",
     "sending": "Sending {name}…",
     "scanning": "Checking the file…",
@@ -69,20 +69,26 @@
     "rateLimited": "Too many analyses started in a short time. Wait a few minutes, then try again.",
     "forbidden": "This project is not available to your session. Reload the page or sign in again.",
     "unexpected": "Something unexpected went wrong. Try again; if it persists, reload the page.",
-    "streamClosed": "Live tracking is unavailable. Reload the page to resume it."
+    "streamClosed": "Live tracking is unavailable. Reload the page to resume it.",
+    "analyze": "Start the analysis",
+    "needLogo": "Add at least one logo.",
+    "partial": "These files were not kept, the analysis goes on without them:"
   },
   "dropzone": {
     "label": "Drag your logo here",
     "hint": "SVG, PNG, WebP or JPEG. Up to 5 MB for an SVG, 10 MB for an image.",
     "choose": "Choose a file",
     "errors": {
-      "ASSET_TOO_LARGE": "This file is over the limit: 5 MB for an SVG, 10 MB and 8,192 px per side for an image. Make it smaller, then try again.",
-      "ASSET_TYPE_UNSUPPORTED": "This format is not recognised. Drop an SVG, PNG, WebP or JPEG file.",
+      "ASSET_TOO_LARGE": "This file is over the limit: logo up to 5 MB (SVG) or 10 MB and 8,192 px per side (image), document up to 2 MB. Make it smaller, then try again.",
+      "ASSET_TYPE_UNSUPPORTED": "This format is not recognised. Drop an SVG, PNG, WebP or JPEG logo, or a TXT, Markdown or DOCX document.",
       "ASSET_SVG_FORBIDDEN_CONTENT": "This SVG contains scripts or external links. Export it again without interactivity or linked resources.",
       "ASSET_SVG_UNSUPPORTED_FEATURE": "This SVG contains unconverted text or unsupported elements. Export it with text converted to outlines.",
       "ASSET_SVG_TOO_COMPLEX": "This SVG is too complex. Simplify or merge its paths, then try again.",
       "ASSET_DECODE_FAILED": "This file looks damaged. Export it again from your design software.",
-      "ASSET_SCAN_TIMEOUT": "Checking took too long. Try again in a moment."
+      "ASSET_SCAN_TIMEOUT": "Checking took too long. Try again in a moment.",
+      "ASSET_DOCUMENT_EMPTY": "This document has no usable text.",
+      "ASSET_DOCUMENT_TOO_COMPLEX": "This document is too large once opened. Export it as plain text or Markdown.",
+      "ASSET_PDF_UNSUPPORTED": "PDFs are not read yet. Export your document as DOCX, Markdown or text, or paste it in the field below."
     },
     "liveText": {
       "title": "This SVG contains live text.",
@@ -93,7 +99,9 @@
       "other": "Choose another file",
       "missing": "Fonts missing on this computer: {fonts}. Converting here would draw a substitute font: export the SVG with text converted to outlines instead.",
       "convertAnyway": "Convert anyway"
-    }
+    },
+    "labelMany": "Drag your logos and brand document here",
+    "hintMany": "Logos: SVG, PNG, WebP or JPEG (5 MB for an SVG, 10 MB for an image), six at most. Optional document: TXT, Markdown or DOCX, 2 MB at most."
   },
   "start": {
     "metaTitle": "Start",
@@ -101,15 +109,13 @@
     "lead": "A name and a logo are enough. The more you tell us, the more the guidelines look like you.",
     "name": "Brand name",
     "namePlaceholder": "E.g. Atelier Horizon",
-    "logo": "Logo",
-    "chosen": "Chosen logo: {name}",
-    "change": "Change",
+    "logo": "Logos and brand document",
     "brief": "Brand world (optional)",
-    "briefHint": "Mission, audience, values, tone… Paste your brief: Gemini uses it to write the manifesto and tone of voice.",
+    "briefHint": "Mission, audience, values, tone… Paste your brief or drop a document above: Gemini uses it to write the manifesto and tone of voice.",
     "submit": "Create my guidelines",
     "creating": "Creating the project…",
     "needName": "Enter the brand name.",
-    "needLogo": "Drop your logo.",
+    "needLogo": "Drop at least your primary logo.",
     "coverLabel": "Cover preview",
     "coverKicker": "Brand guidelines · {year}",
     "coverName": "Your brand",
@@ -120,7 +126,7 @@
     "quota": "Your free plan has reached its project limit. Delete one from \"My projects\", or see the pricing.",
     "quotaLink": "See pricing",
     "refused": "The request was refused (code {code}). Try again in a moment.",
-    "logoHint": "The only field needed with the name",
+    "logoHint": "The primary logo is required. Add its variants (horizontal, vertical, icon, black, white) and, if you have one, the document describing your brand.",
     "briefPlaceholder": "E.g.: Atelier Horizon brings the neighbourhood’s craftspeople together in a workshop open to all…",
     "after": "You land in the studio: the guideline builds before your eyes, page after page.",
     "coverLead": "The brief sets the tone of the cover.",
@@ -380,5 +386,23 @@
       "address": "Brand address",
       "dear": "Dear Sir or Madam,"
     }
+  },
+  "brandInputs": {
+    "logosTitle": "Logos ({count}/{max})",
+    "primary": "Primary",
+    "roleOf": "Role of {name}",
+    "rolesHint": "The role is guessed from the file name: fix it if needed. Black, white, icon, horizontal and vertical versions feed the logo kit directly.",
+    "roles": {
+      "horizontal": "Horizontal",
+      "vertical": "Vertical",
+      "icon": "Icon",
+      "mono-black": "Black",
+      "mono-white": "White",
+      "other": "Other version"
+    },
+    "remove": "Remove {name}",
+    "removeShort": "Remove",
+    "documentTitle": "Brand document",
+    "tooMany": "Six logos at most: remove one before adding another."
   }
 }

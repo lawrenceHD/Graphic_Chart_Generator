@@ -36,6 +36,22 @@ describe.each(EXAMPLES)('logoKitPlan of $id — the files of the logo kit', (exa
     expect(tinted?.tint).toBe(withVariants.colors.primary);
   });
 
+  it('adds the horizontal and vertical lockups the owner supplied, as PNG only', () => {
+    const plan = logoKitPlan({
+      ...withVariants,
+      logo: {
+        ...withVariants.logo,
+        horizontal: '/api/v1/assets/h/content',
+        vertical: '/api/v1/assets/t/content',
+      },
+    });
+    const names = plan.map((entry) => entry.path);
+    expect(names).toContain(`${folder}/horizontal/${stem}-horizontal-512.png`);
+    expect(names).toContain(`${folder}/vertical/${stem}-vertical-2048.png`);
+    expect(names.some((name) => name.endsWith('horizontal.svg'))).toBe(false);
+    expect(plan).toHaveLength(23);
+  });
+
   it('keeps to the upload when the logo has no vector version', () => {
     const plan = logoKitPlan({
       ...withVariants,

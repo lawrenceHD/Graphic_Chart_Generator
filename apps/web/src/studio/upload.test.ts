@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { startAnalysis, uploadLogo } from './upload';
+import { startAnalysis, uploadBrandFile, uploadLogo } from './upload';
 
 const PROJECT = '0190a0b0-0000-7000-8000-00000000000a';
 const ASSET = '0190a0b0-0000-7000-8000-000000000001';
@@ -77,6 +77,34 @@ describe('uploadLogo (04 §3: declare, presigned PUT, complete)', () => {
     });
     expect(calls[1]?.headers.get('content-length')).toBe('3');
     expect(calls[1]?.body).toBe(file);
+  });
+
+  it('declares the role and primary flag of a logo, and a document as a brief_doc', async () => {
+    const answers = () => [
+      Response.json(declared, { status: 201 }),
+      new Response(null, { status: 200 }),
+      Response.json({ asset: asset('quarantined') }, { status: 202 }),
+    ];
+    const logo = server(...answers());
+    await uploadBrandFile(logo.fetcher, PROJECT, file, {
+      kind: 'logo_original',
+      role: 'mono-black',
+      primary: false,
+    });
+    expect(JSON.parse(String(logo.calls[0]?.body))).toEqual({
+      kind: 'logo_original',
+      role: 'mono-black',
+      primary: false,
+      fileName: 'logo.svg',
+      bytes: 3,
+    });
+    const doc = server(...answers());
+    await uploadBrandFile(doc.fetcher, PROJECT, file, { kind: 'brief_doc' });
+    expect(JSON.parse(String(doc.calls[0]?.body))).toEqual({
+      kind: 'brief_doc',
+      fileName: 'logo.svg',
+      bytes: 3,
+    });
   });
 
   it('reports a rejection decided at completion with its reason', async () => {
