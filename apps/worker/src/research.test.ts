@@ -8,7 +8,12 @@ import type { ChartPlan } from '@app/contracts';
 import { standardChartPlan } from '@app/document';
 import { err, ok } from '@app/kernel';
 import { describe, expect, it } from 'vitest';
-import { indexText, okTransport, quotaTransport } from './research-fixtures.js';
+import {
+  indexText,
+  okTransport,
+  otherSectorIndexText,
+  quotaTransport,
+} from './research-fixtures.js';
 import {
   aiResearch,
   defaultResearch,
@@ -177,6 +182,24 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
     expect(codes(outcome.ok ? outcome.value.warnings : undefined)).toEqual(
       expect.arrayContaining(['RESEARCH_REFERENCE_INDEX_MISSING']),
     );
+  });
+
+  it('a sector missing from the library rides as RESEARCH_SECTOR_NOT_INDEXED, and the plan is kept', async () => {
+    const outcome = await port({ readIndex: () => Promise.resolve(otherSectorIndexText) }).plan(
+      input,
+    );
+    expect(outcome.ok).toBe(true);
+    const planned = await planWithFallback(
+      port({ readIndex: () => Promise.resolve(otherSectorIndexText) }),
+      input,
+    );
+    expect(codes(planned.warnings)).toContain('RESEARCH_SECTOR_NOT_INDEXED');
+    expect(planned.plan.sections.length).toBeGreaterThan(0);
+  });
+
+  it('a covered sector raises no such warning', async () => {
+    const planned = await planWithFallback(port({}), input);
+    expect(codes(planned.warnings)).not.toContain('RESEARCH_SECTOR_NOT_INDEXED');
   });
 
   it('without a rendered logo the research is unavailable', async () => {
