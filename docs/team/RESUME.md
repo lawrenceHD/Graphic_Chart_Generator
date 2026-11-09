@@ -28,3 +28,7 @@
 - Export complet pour un invité vs compte (copy de l'accueil « Essayer sans compte »).
 - Tokens gratuits ou réservés au Pro. Tarifs marqués « à valider ».
 - Mur de logos de marques réelles : module isolé `landing/home/logo-wall.ts`, retirable.
+
+## Journal de reprise
+- 2026-11-09 nuit : sécurité fusionnée (`9a929c5`) : `signup-guard.ts` (Turnstile) exige l'en-tête `x-turnstile-token` : **le formulaire d'inscription DOIT l'envoyer, sinon 403** (QUEUE R9 vers R5, à faire par l'agent de l'accueil/pages publiques). Dette sécurité à traiter en vague F : limiteur d'inscription sans try/catch, seau `sign-up:unknown` partagé, panne Cloudflare indistinguable d'un bot, aucun log si secret absent, secret factice accepté en http, liste d'autorisation inversée, compte OAuth non supprimable, audit anonyme, `eraseAccountRows` sans try/catch, course sur les clés de stockage. Reste aussi : `tsc` signale `PageProps` dans `app/studio/[id]/page.tsx` (types générés par Next, lancer `next typegen`).
+- `prototypes/showcase-flow` : supprimé de Git ; vidage du dossier résiduel (dist, node_modules) en cours.
