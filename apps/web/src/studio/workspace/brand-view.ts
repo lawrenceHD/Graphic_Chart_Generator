@@ -24,7 +24,11 @@ export interface BrandView {
   readonly sources: Readonly<Record<ColorRole, 'extracted' | 'derived' | 'user'>>;
   readonly pairing: Pairing;
   /** Logo files by kind; the colour logo is always there (the sanitised upload). */
-  readonly logo: Readonly<Record<VariantKind, string | null>> & { readonly color: string };
+  // horizontal and vertical exist only when the user supplied them (optional: older views omit them).
+  readonly logo: Readonly<Record<Exclude<VariantKind, 'horizontal' | 'vertical'>, string | null>> &
+    Readonly<Partial<Record<'horizontal' | 'vertical', string | null>>> & {
+      readonly color: string;
+    };
   readonly needsReview: readonly VariantKind[];
   readonly rules: BrandDocument['tokens']['logo'];
   readonly mission: string;
@@ -69,6 +73,8 @@ export function brandView(document: BrandDocument, project: ProjectSummary): Bra
       'mono-black': variant('mono-black'),
       'mono-white': variant('mono-white'),
       favicon: variant('favicon'),
+      horizontal: variant('horizontal'),
+      vertical: variant('vertical'),
     },
     needsReview: document.assets.variants
       .filter((entry) => entry.needsReview)

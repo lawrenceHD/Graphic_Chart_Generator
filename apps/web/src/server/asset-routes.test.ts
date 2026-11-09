@@ -176,7 +176,7 @@ describe.runIf(adminUrl !== '')(
       const assetId = String(field((await json(first)).asset, 'id'));
       const [row] = await test.database.orm.select().from(assets).where(eq(assets.id, assetId));
       expect(row?.meta).toEqual({ fileName: 'logo-noir.svg', role: 'mono-black', primary: false });
-      for (let count = 1; count < 6; count += 1) await declareId(`v${count}.svg`, 5);
+      for (let count = 1; count < 6; count += 1) await declareId(`v${String(count)}.svg`, 5);
       const seventh = await declare('owner', {
         kind: 'logo_original',
         fileName: 'v7.svg',

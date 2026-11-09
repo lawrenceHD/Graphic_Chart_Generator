@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { DEMO_DOCUMENT } from '../../landing/demo';
 import { FakeEventSource } from '../fake-event-source';
-import { holdLogo, takeLogo } from '../pending-logo';
+import { addLogo, EMPTY_INPUTS } from '../brand-inputs-model';
+import { holdInputs, takeInputs } from '../pending-logo';
 import type { Fetcher } from '../upload';
 import { useStudio } from './use-studio';
 
@@ -74,7 +75,7 @@ describe('studio state', () => {
 
   it('treats a failed load as a failure, never as "no document", and keeps the pending logo', async () => {
     const logo = new File(['x'], 'logo.png', { type: 'image/png' });
-    holdLogo(PROJECT, logo);
+    holdInputs(PROJECT, addLogo(EMPTY_INPUTS, logo, () => 'a').state);
     const { fetcher, calls } = api({ load: () => json({ code: 'INTERNAL' }, 500) });
     const { hook } = setup(fetcher);
     await waitFor(() => {
@@ -82,7 +83,7 @@ describe('studio state', () => {
     });
     expect(hook.result.current.canRetry).toBe(true);
     expect(calls.some((call) => call.includes('/assets/'))).toBe(false);
-    expect(takeLogo(PROJECT)).toBe(logo);
+    expect(takeInputs(PROJECT)?.logos[0]?.file).toBe(logo);
   });
 
   it('never lets an older revision overwrite a newer edit (replayed analysis.done)', async () => {

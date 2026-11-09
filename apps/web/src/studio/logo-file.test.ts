@@ -14,7 +14,10 @@ describe('checkBrandFile (a logo or a manifest document, by signature)', () => {
   const MD = text('# Ma marque\n\nNous faisons du pain.');
   const DOCX = bytes(0x50, 0x4b, 0x03, 0x04, 0x14, 0);
   it('tells logos from documents from the bytes', () => {
-    expect(checkBrandFile(PNG.length, PNG)).toEqual({ ok: true, value: { kind: 'logo', type: 'png' } });
+    expect(checkBrandFile(PNG.length, PNG)).toEqual({
+      ok: true,
+      value: { kind: 'logo', type: 'png' },
+    });
     expect(checkBrandFile(MD.length, MD)).toEqual({
       ok: true,
       value: { kind: 'document', format: 'text' },

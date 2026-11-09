@@ -23,9 +23,7 @@ export type AddError = 'TOO_MANY_LOGOS';
 function normalize(logos: readonly LogoEntry[]): readonly LogoEntry[] {
   const flagged = logos.find((logo) => logo.primary)?.id ?? logos[0]?.id;
   return logos.map((logo) =>
-    logo.id === flagged
-      ? { ...logo, primary: true, role: 'primary' }
-      : { ...logo, primary: false },
+    logo.id === flagged ? { ...logo, primary: true, role: 'primary' } : { ...logo, primary: false },
   );
 }
 
@@ -34,7 +32,8 @@ export function addLogo(
   file: File,
   newId: () => string,
 ): { readonly state: BrandInputs; readonly error?: AddError } {
-  if (inputs.logos.length >= MAX_LOGOS_PER_PROJECT) return { state: inputs, error: 'TOO_MANY_LOGOS' };
+  if (inputs.logos.length >= MAX_LOGOS_PER_PROJECT)
+    return { state: inputs, error: 'TOO_MANY_LOGOS' };
   const entry: LogoEntry = {
     id: newId(),
     file,

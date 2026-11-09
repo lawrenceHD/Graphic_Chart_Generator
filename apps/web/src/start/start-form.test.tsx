@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { frMessages, renderFr } from '../studio/intl-test-utils';
-import { takeLogo } from '../studio/pending-logo';
+import { takeInputs } from '../studio/pending-logo';
 import { StartForm } from './start-form';
 
 const PROJECT = '0190a0b0-0000-7000-8000-00000000000b';
@@ -55,7 +55,7 @@ describe('StartForm ("Démarrer", US-01 then US-02)', () => {
     ]);
     await userEvent.type(screen.getByLabelText(t.name), 'La Mèza');
     await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), PNG);
-    await screen.findByText(t.chosen.replace('{name}', 'la-meza.png'));
+    await screen.findByText('la-meza.png');
     expect(screen.getByText('La Mèza')).toBeDefined(); // the cover follows the name
     await userEvent.type(screen.getByLabelText(t.brief), 'Une table, des inconnus.');
     await userEvent.click(screen.getByRole('button', { name: t.submit }));
@@ -63,7 +63,7 @@ describe('StartForm ("Démarrer", US-01 then US-02)', () => {
       expect(navigate).toHaveBeenCalledWith(`/studio/${PROJECT}`);
     });
     expect(urls).toEqual(['/api/v1/projects']);
-    expect(takeLogo(PROJECT)).toBe(PNG);
+    expect(takeInputs(PROJECT)?.logos[0]).toMatchObject({ file: PNG, primary: true });
   });
 
   it('presents a light logo on a dark cover', async () => {
@@ -79,7 +79,7 @@ describe('StartForm ("Démarrer", US-01 then US-02)', () => {
     setup([Response.json({ code: 'QUOTA_PROJECTS' }, { status: 403 })]);
     await userEvent.type(screen.getByLabelText(t.name), 'A');
     await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), PNG);
-    await screen.findByText(t.chosen.replace('{name}', 'la-meza.png'));
+    await screen.findByText('la-meza.png');
     await userEvent.click(screen.getByRole('button', { name: t.submit }));
     expect((await screen.findByRole('alert')).textContent).toContain(t.quota);
     expect(screen.getByRole('link', { name: t.quotaLink }).getAttribute('href')).toBe('/tarifs');
@@ -89,7 +89,7 @@ describe('StartForm ("Démarrer", US-01 then US-02)', () => {
     const { navigate } = setup([Response.json({ code: 'RATE_LIMITED' }, { status: 429 })]);
     await userEvent.type(screen.getByLabelText(t.name), 'A');
     await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), PNG);
-    await screen.findByText(t.chosen.replace('{name}', 'la-meza.png'));
+    await screen.findByText('la-meza.png');
     await userEvent.click(screen.getByRole('button', { name: t.submit }));
     expect((await screen.findByRole('alert')).textContent).toBe(t.rateLimited);
     expect(navigate).not.toHaveBeenCalled();

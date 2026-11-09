@@ -126,8 +126,8 @@ export function detectManifestFormat(head: Uint8Array): ManifestFormat | null {
   return 'text';
 }
 
-const INVISIBLE = /[­​-‏‪-‮⁠-⁤⁦-⁩﻿-]/gu;
-// eslint-disable-next-line no-control-regex -- stripping control characters is the purpose
+const INVISIBLE =
+  /[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uE000-\uF8FF]/gu;
 const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/gu;
 const DELIMITER = /<{3,}[A-Z_]*>{0,3}|>{3,}/gu;
 const TAG = /<\/?[A-Za-z!][^>]*>/gu;

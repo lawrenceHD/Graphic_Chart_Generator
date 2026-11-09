@@ -25,6 +25,7 @@ import {
   type MonoTarget,
 } from '@app/logo-kit';
 import { z } from 'zod';
+import { loadBrandContext } from './brand-context.js';
 import { LOGO_FOR_AI, researchStep, type ResearchStepDeps } from './research-step.js';
 import { loadSuppliedVariants } from './supplied-logos.js';
 
@@ -250,6 +251,9 @@ async function brandAnalysis(
       ? await deps.rasterizer.rasterize(new TextDecoder().decode(bytes), LOGO_FOR_AI)
       : await deps.normalizeRaster(bytes);
   if (!image.ok) return err(image.error.code);
+  // The typed brief and the manifest document, cleaned and fenced as untrusted data.
+  const brief = await loadBrandContext(deps.orm, logo.projectId);
+  if (!brief.ok) return err(brief.error);
   const language = Language.safeParse(project.language);
   const analysis = await analyzeBrand(
     deps.ai.transport,
@@ -257,7 +261,7 @@ async function brandAnalysis(
       brandName: project.title,
       language: language.success ? language.data : 'fr',
       palette: stored.data.palette.clusters.map(({ hex }) => hex),
-      brief: project.briefText ?? '',
+      brief: brief.value,
       logo: { data: image.value.png, mimeType: 'image/png' },
     },
     deps.ai.model,

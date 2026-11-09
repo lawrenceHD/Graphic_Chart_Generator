@@ -1,16 +1,18 @@
 'use client';
 
-import type { AssetErrorCode, PageType } from '@app/contracts';
+import type { PageType } from '@app/contracts';
 import type { BrandDocument, Page } from '@app/document';
 import { Columns2, Maximize2, Minus, Plus, RectangleHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { LogoDropzone } from '../logo-dropzone';
+import { EMPTY_INPUTS, type BrandInputs } from '../brand-inputs-model';
+import { BrandInputsPanel } from '../brand-inputs-panel';
 import { MockupStage, SCENES, type SceneId } from '../mockups/mockup-stage';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf, type Occurrence } from '../pages/variant';
 import type { Timeline } from '../timeline';
+import type { Notice } from '../upload-batch';
 import { PAGE_STEP, brandView, orderedPages, type BrandView } from './brand-view';
 import type { ProjectSummary } from './document-client';
 import { IconButton } from './top-bar';
@@ -173,9 +175,10 @@ export function PageCanvas({
   project,
   selection,
   onSelect,
-  onLogo,
+  onSend,
   onReload,
-  rejection,
+  notices,
+  partial,
   sending,
 }: {
   readonly phase: Phase;
@@ -184,12 +187,16 @@ export function PageCanvas({
   readonly project: ProjectSummary | null;
   readonly selection: Selection | null;
   readonly onSelect: (selection: Selection) => void;
-  readonly onLogo: (file: File) => void;
+  readonly onSend: (inputs: BrandInputs) => void;
   readonly onReload: () => void;
-  readonly rejection: AssetErrorCode | undefined;
+  readonly notices: readonly Notice[];
+  readonly partial: boolean;
   readonly sending: boolean;
 }) {
   const t = useTranslations('workspace');
+  const tStudio = useTranslations('studio');
+  const tDrop = useTranslations('dropzone');
+  const [inputs, setInputs] = useState<BrandInputs>(EMPTY_INPUTS);
   const area = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.62);
   const [columns, setColumns] = useState<1 | 2 | null>(null);
@@ -265,7 +272,34 @@ export function PageCanvas({
                 {t('dropTitle')}
               </h2>
               <p className="m-0 mt-1 mb-5 text-sm text-ink-2">{t('dropLead')}</p>
-              <LogoDropzone onAccept={onLogo} rejection={rejection} disabled={sending} />
+              <BrandInputsPanel value={inputs} onChange={setInputs} disabled={sending} />
+              <div className="mt-4 flex flex-col items-start gap-2">
+                <button
+                  type="button"
+                  disabled={sending || inputs.logos.length === 0}
+                  onClick={() => {
+                    onSend(inputs);
+                  }}
+                  className="inline-flex h-11 items-center rounded-full bg-accent px-6 text-sm font-semibold text-on-accent disabled:opacity-50"
+                >
+                  {tStudio('analyze')}
+                </button>
+                {inputs.logos.length === 0 ? (
+                  <p className="m-0 text-sm text-ink-2">{tStudio('needLogo')}</p>
+                ) : null}
+              </div>
+              {notices.length === 0 ? null : (
+                <div role="alert" className="mt-4 flex flex-col gap-1 text-sm text-danger">
+                  {partial ? <p className="m-0">{tStudio('partial')}</p> : null}
+                  <ul className="m-0 list-none p-0">
+                    {notices.map((notice) => (
+                      <li key={notice.name}>
+                        {notice.name} : {tDrop(`errors.${notice.code}`)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         ) : (

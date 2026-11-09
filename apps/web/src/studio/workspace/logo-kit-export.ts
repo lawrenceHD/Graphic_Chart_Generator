@@ -44,6 +44,9 @@ export function logoKitPlan(view: BrandView): KitEntry[] {
   version('noir', view.logo['mono-black'], true);
   version('blanc', view.logo['mono-white'], true);
   version('couleur-principale', view.logo['mono-black'], true, view.colors.primary);
+  // Lockups the owner supplied (any file type): exported as PNG only.
+  version('horizontal', view.logo.horizontal ?? null, false);
+  version('vertical', view.logo.vertical ?? null, false);
   return entries;
 }
 

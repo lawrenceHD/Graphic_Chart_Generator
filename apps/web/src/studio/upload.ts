@@ -124,7 +124,7 @@ export const uploadLogo = (
 ): Promise<Result<UploadedAsset, UploadFailure>> =>
   uploadBrandFile(fetcher, projectId, file, { kind: 'logo_original' });
 
-const AnalysisAnswer =z.object({ analysis: z.object({ id: z.uuid() }) });
+const AnalysisAnswer = z.object({ analysis: z.object({ id: z.uuid() }) });
 
 /** POST /projects/:id/analyze (04 §8): a new key per attempt, the same key would return the same run. */
 export async function startAnalysis(

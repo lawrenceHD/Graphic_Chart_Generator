@@ -152,7 +152,7 @@ describe('extractManifest: DOCX', () => {
   it('refuses an archive that declares too many entries', () => {
     const many = zip(
       Array.from({ length: 1001 }, (_, index) => ({
-        name: `f${index}`,
+        name: `f${String(index)}`,
         data: utf8('x'),
         method: 0 as const,
       })),

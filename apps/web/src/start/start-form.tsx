@@ -4,9 +4,9 @@ import { ArrowRight, ImageUp, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState, type SyntheticEvent } from 'react';
-import { Button } from '../components/button';
-import { LogoDropzone } from '../studio/logo-dropzone';
-import { holdLogo } from '../studio/pending-logo';
+import { EMPTY_INPUTS, primaryLogo, type BrandInputs } from '../studio/brand-inputs-model';
+import { BrandInputsPanel } from '../studio/brand-inputs-panel';
+import { holdInputs } from '../studio/pending-logo';
 import type { Fetcher } from '../studio/upload';
 import { isLightLogoFile } from './logo-image';
 import { startProject, type StartFailure } from './start-flow';
@@ -30,7 +30,8 @@ export function StartForm({
   const t = useTranslations('start');
   const [name, setName] = useState('');
   const [brief, setBrief] = useState('');
-  const [logo, setLogo] = useState<File | null>(null);
+  const [inputs, setInputs] = useState<BrandInputs>(EMPTY_INPUTS);
+  const logo = primaryLogo(inputs) ?? null;
   const [preview, setPreview] = useState<string | null>(null);
   const [light, setLight] = useState(false);
   const [missing, setMissing] = useState<'name' | 'logo' | null>(null);
@@ -38,7 +39,11 @@ export function StartForm({
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (logo === null) return;
+    if (logo === null) {
+      setPreview(null);
+      setLight(false);
+      return;
+    }
     const url = URL.createObjectURL(logo);
     setPreview(url);
     let current = true;
@@ -71,7 +76,7 @@ export function StartForm({
         setFailure(started.error);
         return;
       }
-      holdLogo(started.value, logo);
+      holdInputs(started.value, inputs);
       navigate(`/studio/${started.value}`);
     } catch {
       setFailure({ kind: 'network' });
@@ -112,32 +117,7 @@ export function StartForm({
             <span className="text-base font-semibold">{t('logo')}</span>
             <span className="text-sm text-ink-3">{t('logoHint')}</span>
           </legend>
-          {logo === null ? (
-            <LogoDropzone onAccept={setLogo} disabled={sending} />
-          ) : (
-            <div className="flex items-center gap-4 rounded-xl border border-line-strong bg-surface p-3">
-              <div
-                aria-hidden="true"
-                className={`size-14 shrink-0 rounded-lg bg-contain bg-center bg-no-repeat ${light ? 'bg-[oklch(0.25_0.01_60)]' : 'bg-preview'}`}
-                style={preview === null ? undefined : { backgroundImage: `url("${preview}")` }}
-              />
-              <p className="m-0 min-w-0 flex-1 truncate text-sm">
-                {t('chosen', { name: logo.name })}
-              </p>
-              <Button
-                variant="secondary"
-                className="rounded-full"
-                disabled={sending}
-                onClick={() => {
-                  setLogo(null);
-                  setPreview(null);
-                  setLight(false);
-                }}
-              >
-                {t('change')}
-              </Button>
-            </div>
-          )}
+          <BrandInputsPanel value={inputs} onChange={setInputs} disabled={sending} />
           {missing === 'logo' ? (
             <p role="alert" className="m-0 text-sm text-danger">
               {t('needLogo')}

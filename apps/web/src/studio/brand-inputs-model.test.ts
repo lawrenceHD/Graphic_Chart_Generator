@@ -34,7 +34,8 @@ describe('brand inputs (several logos, one primary, an optional document)', () =
 
   it('refuses a seventh logo and says so', () => {
     let state = EMPTY_INPUTS;
-    for (let index = 0; index < 6; index += 1) state = addLogo(state, file(`l${index}.svg`), id).state;
+    for (let index = 0; index < 6; index += 1)
+      state = addLogo(state, file(`l${String(index)}.svg`), id).state;
     const seventh = addLogo(state, file('l7.svg'), id);
     expect(seventh.state.logos).toHaveLength(6);
     expect(seventh.error).toBe('TOO_MANY_LOGOS');
@@ -80,9 +81,7 @@ describe('brand inputs (several logos, one primary, an optional document)', () =
     state = setPrimary(state, 'b');
     state = setDocument(state, file('manifeste.md'));
     expect(primaryLogo(state)?.name).toBe('logo.svg');
-    expect(
-      toUploads(state).map((upload) => [upload.file.name, upload.declaration]),
-    ).toEqual([
+    expect(toUploads(state).map((upload) => [upload.file.name, upload.declaration])).toEqual([
       ['logo.svg', { kind: 'logo_original', role: 'primary', primary: true }],
       ['icon.svg', { kind: 'logo_original', role: 'icon', primary: false }],
       ['manifeste.md', { kind: 'brief_doc' }],

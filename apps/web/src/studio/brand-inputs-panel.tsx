@@ -1,6 +1,11 @@
 'use client';
 
-import { LOGO_ROLES, MAX_LOGOS_PER_PROJECT, type AssetErrorCode, type LogoRole } from '@app/contracts';
+import {
+  LOGO_ROLES,
+  MAX_LOGOS_PER_PROJECT,
+  type AssetErrorCode,
+  type LogoRole,
+} from '@app/contracts';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../components/button';
@@ -90,7 +95,9 @@ export function BrandInputsPanel({
       ) : null}
 
       {value.logos.length === 0 ? null : (
-        <section aria-label={t('logosTitle', { count: value.logos.length, max: MAX_LOGOS_PER_PROJECT })}>
+        <section
+          aria-label={t('logosTitle', { count: value.logos.length, max: MAX_LOGOS_PER_PROJECT })}
+        >
           <h3 className="m-0 mb-2 text-sm font-semibold text-ink-2">
             {t('logosTitle', { count: value.logos.length, max: MAX_LOGOS_PER_PROJECT })}
           </h3>
@@ -127,8 +134,11 @@ export function BrandInputsPanel({
                       value={logo.role}
                       disabled={disabled}
                       onChange={(event) => {
-                        const role = LOGO_ROLES.find((candidate) => candidate === event.target.value);
-                        if (role !== undefined) update((current) => setRole(current, logo.id, role));
+                        const role = LOGO_ROLES.find(
+                          (candidate) => candidate === event.target.value,
+                        );
+                        if (role !== undefined)
+                          update((current) => setRole(current, logo.id, role));
                       }}
                     >
                       {ROLE_OPTIONS.map((role) => (

@@ -120,7 +120,7 @@ RULES:
 CATALOGUES: <pairings>${PAIRINGS}</pairings> <scene_categories>${SceneCategory.options.join(', ')}</scene_categories>
 <brand_name>${escapeData(input.brandName.slice(0, BRAND_NAME_MAX))}</brand_name>
 <logo_palette>${input.palette.join(' ')}</logo_palette>
-<brief>${escapeData(input.brief.slice(0, 8000))}</brief>`;
+<brief>${escapeData(input.brief.slice(0, 21000))}</brief>`;
 }
 
 const CandidateSchema = z.object({
