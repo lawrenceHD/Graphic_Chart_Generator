@@ -1,3 +1,4 @@
+import { monoLogosOf } from './logo-selection';
 import type { DemoExample } from '../schema';
 
 // E-commerce tooling. Real logo taken from the project's reference library (public/demo/logos/shogun.svg),
@@ -12,6 +13,7 @@ export const SHOGUN: DemoExample = {
   briefText:
     'A page builder for online shops: merchants design product and landing pages visually, test what converts and ship without waiting for a developer. A confident, fast-moving tool for growing brands.',
   logo: '/demo/logos/shogun.svg',
+  monoLogos: monoLogosOf('shogun'),
   logoProvenance: "Real logo from the project's reference library, shown as a demonstration",
   colors: {
     primary: { hex: '#5D50C6', source: 'extracted' },
