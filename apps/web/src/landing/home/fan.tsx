@@ -11,6 +11,7 @@ import {
 } from 'motion/react';
 import { useRef } from 'react';
 import { Float } from '../../ui/fx';
+import { MockupStage, type SceneId } from '../../studio/mockups/mockup-stage';
 import { DemoSheet } from '../demo-sheet';
 import { useBrand } from './brand-context';
 
@@ -53,6 +54,30 @@ function FanCard({
   );
 }
 
+/** A real mockup, projected by the product's WebGL compositor, floating in front of the fan. */
+function MockupCard({
+  scene,
+  className,
+  rotate,
+  delay,
+}: {
+  readonly scene: SceneId;
+  readonly className: string;
+  readonly rotate: number;
+  readonly delay: number;
+}) {
+  const { example, view } = useBrand();
+  return (
+    <div className={`absolute z-20 ${className}`}>
+      <Float rotate={rotate} delay={delay} duration={9}>
+        <div className="overflow-hidden rounded-[22px] shadow-[0_40px_70px_-36px_rgb(0_0_0/0.65)] ring-1 ring-line">
+          <MockupStage scene={scene} view={view} label={example.name} failedLabel="" retryLabel="" />
+        </div>
+      </Float>
+    </div>
+  );
+}
+
 /** The example brands' covers fanning out of a stack; scrolling opens the fan wider. */
 export function Fan() {
   const reduce = useReducedMotion() ?? false;
@@ -81,6 +106,18 @@ export function Fan() {
           index={index}
         />
       ))}
+      <MockupCard
+        scene="cards-floating"
+        className="bottom-[-6%] left-[1%] hidden w-[30%] sm:block"
+        rotate={-5}
+        delay={1}
+      />
+      <MockupCard
+        scene="mug-stripes"
+        className="right-[1%] bottom-[-8%] w-[44%] sm:w-[30%]"
+        rotate={4}
+        delay={2}
+      />
     </div>
   );
 }
