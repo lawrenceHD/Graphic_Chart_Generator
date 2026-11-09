@@ -12,6 +12,8 @@ import { authenticate, type RouteDeps } from './route-guard';
 export interface AccountRouteDeps extends RouteDeps {
   readonly storage: ObjectStorage;
   readonly limiter: RateLimiter;
+  /** Audit trail of a completed erasure: counts only, never an identifier or personal data. */
+  readonly onErased: (summary: { readonly files: number }) => void;
   /** Receives unexpected failures; the caller logs them without personal data. */
   readonly onError: (error: unknown) => void;
 }
@@ -46,13 +48,20 @@ export function accountHandlers(deps: AccountRouteDeps) {
       }
 
       // Files first, rows second: a storage failure leaves everything in place and the call can be repeated.
+      let files: string[];
       try {
-        for (const key of await storageKeysOf(deps.orm, userId)) await deps.storage.delete(key);
+        files = await storageKeysOf(deps.orm, userId);
+        for (const key of files) await deps.storage.delete(key);
       } catch (error) {
         deps.onError(error);
         return problemResponse(request, 503, 'STORAGE_UNAVAILABLE', 'try again later');
       }
       await eraseAccountRows(deps.orm, userId);
+      try {
+        deps.onErased({ files: files.length });
+      } catch (error) {
+        deps.onError(error); // the erasure is done: a failing audit log must not turn it into a 500
+      }
       return gone();
     },
   };

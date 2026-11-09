@@ -36,6 +36,7 @@ describe.runIf(adminUrl !== '')('DELETE /account (AC-13.3, 08_SECURITY_PRIVACY.m
   let storageDown = false;
   const deletedKeys: string[] = [];
   const failures: unknown[] = [];
+  const erasures: unknown[] = [];
   const actors: Record<string, Actor> = {};
   const keys: Record<string, string[]> = {};
   let guestOfAlice = '';
@@ -127,6 +128,7 @@ describe.runIf(adminUrl !== '')('DELETE /account (AC-13.3, 08_SECURITY_PRIVACY.m
         Promise.resolve(actors[request.headers.get('x-test-actor') ?? ''] ?? null),
       storage,
       limiter: createRateLimiter(orm, () => new Date()),
+      onErased: (summary) => erasures.push(summary),
       onError: (error) => failures.push(error),
     });
   });
@@ -201,13 +203,23 @@ describe.runIf(adminUrl !== '')('DELETE /account (AC-13.3, 08_SECURITY_PRIVACY.m
     expect(failures).toHaveLength(1);
     expect(await count(user, 'alice')).toBe(1);
     expect(await count(projects, 'alice')).toBe(1);
+    expect(erasures).toHaveLength(0); // nothing is logged as erased while rows remain
     storageDown = false;
-    expect((await remove('alice')).status).toBe(204);
+    const done = await remove('alice');
+    expect(done.status).toBe(204);
+    // The session cookies are expired in the same answer.
+    const cookies = done.headers.getSetCookie();
+    expect(cookies).toHaveLength(2);
+    for (const cookie of cookies) expect(cookie).toContain('Max-Age=0');
   });
 
   it("erases the caller's data, files, sessions and identity, and nothing of anyone else", async () => {
     const { orm } = test.database;
     expect(deletedKeys).toEqual(keys.alice);
+    // Audit trail: a count of files, nothing that identifies the person.
+    expect(erasures).toEqual([{ files: 1 }]);
+    expect(JSON.stringify(erasures)).not.toContain('alice');
+    expect(JSON.stringify(erasures)).not.toContain(userId('alice'));
     expect(await count(user, 'alice')).toBe(0);
     expect(await count(session, 'alice')).toBe(0);
     expect(await count(projects, 'alice')).toBe(0);
