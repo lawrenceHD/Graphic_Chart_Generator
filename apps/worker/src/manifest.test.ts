@@ -94,6 +94,16 @@ describe('extractManifest: text and markdown', () => {
   });
 });
 
+describe('extractManifest: limits are reported', () => {
+  it('flags a text cut at the reading limit and a DOCX body cut at its own', () => {
+    const long = extractManifest(utf8('mot '.repeat(300_000)));
+    expect(long.ok && long.value.truncated).toBe(true);
+    const body = `<w:p><w:t>${'a '.repeat(150_000)}</w:t></w:p>`;
+    const cutDocx = extractManifest(docx(body));
+    expect(cutDocx.ok && cutDocx.value.truncated).toBe(true);
+  });
+});
+
 describe('extractManifest: DOCX', () => {
   it('reads paragraphs, tabs and breaks, and decodes entities', () => {
     const out = extractManifest(

@@ -99,7 +99,11 @@ export function LogoDropzone({
       return false;
     }
     if (checked.value.type === 'svg') {
-      const svg = await file.text().catch(() => '');
+      const svg = await file.text().catch(() => null);
+      if (svg === null) {
+        refuse(file.name, 'ASSET_DECODE_FAILED');
+        return false;
+      }
       const found = findLiveText(svg);
       if (found !== null) {
         waiting.current = after;
@@ -119,9 +123,13 @@ export function LogoDropzone({
 
   const take = async (list: FileList | null | undefined): Promise<void> => {
     if (list === null || list === undefined || disabled) return;
-    const files = Array.from(list).slice(0, multiple ? MAX_FILES_PER_DROP : 1);
+    const all = Array.from(list);
+    const files = all.slice(0, multiple ? MAX_FILES_PER_DROP : 1);
     if (files.length === 0) return;
-    setRefusals([]);
+    waiting.current = [];
+    setRefusals(
+      all.slice(files.length).map((file) => ({ name: file.name, code: 'ASSET_TOO_LARGE' })),
+    );
     setLiveText(null);
     await run(files);
   };

@@ -100,6 +100,21 @@ describe('uploadBatch (logos, primary first, then the document)', () => {
     expect(logo).toMatchObject({ ok: false, error: { kind: 'http', code: 'ASSET_LIMIT_REACHED' } });
   });
 
+  it('treats an outage on the document as a failure, not as a refused file', async () => {
+    const down = (url: string): Promise<Response> =>
+      Promise.resolve(
+        url.endsWith('/uploads')
+          ? Response.json({ code: 'INTERNAL' }, { status: 500 })
+          : new Response(null),
+      );
+    const only = setDocument(EMPTY_INPUTS, file('manifeste.md'));
+    const out = await uploadBatch(down, P, only, new Set(), () => undefined, {
+      accepted: [],
+      refused: [],
+    });
+    expect(out).toMatchObject({ ok: false, error: { kind: 'http', status: 500 } });
+  });
+
   it('skips files an earlier try already sent', async () => {
     const { fetcher, calls } = server(['ok']);
     const skip = new Set(inputs.logos.map((logo) => logo.file));

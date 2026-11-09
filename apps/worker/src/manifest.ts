@@ -105,9 +105,10 @@ function decodeEntities(text: string): string {
 }
 
 /** Text of the runs of a WordprocessingML body; paragraphs, tabs and breaks keep their separators. */
-function wordText(xml: string): string {
+function wordText(xml: string): { text: string; cut: boolean } {
   let out = '';
   let inText = false;
+  let cut = false;
   for (const match of xml.matchAll(/<[^>]*>|[^<]+/gu)) {
     const token = match[0];
     if (token.startsWith('<')) {
@@ -119,9 +120,12 @@ function wordText(xml: string): string {
       else if (!closing && name === 'w:tab') out += '\t';
       else if (!closing && (name === 'w:br' || name === 'w:cr')) out += '\n';
     } else if (inText) out += decodeEntities(token);
-    if (out.length > MAX_RAW_TEXT) break;
+    if (out.length > MAX_RAW_TEXT) {
+      cut = true;
+      break;
+    }
   }
-  return out;
+  return { text: out, cut };
 }
 
 export function extractManifest(bytes: Uint8Array): Result<Manifest, AssetErrorCode> {
@@ -129,14 +133,25 @@ export function extractManifest(bytes: Uint8Array): Result<Manifest, AssetErrorC
   if (format === null) return err('ASSET_TYPE_UNSUPPORTED');
   if (format === 'pdf') return err('ASSET_PDF_UNSUPPORTED');
   let raw: string;
+  let cut = false;
   if (format === 'text') {
-    raw = new TextDecoder('utf-8').decode(bytes.subarray(0, MAX_RAW_TEXT * 4));
+    cut = bytes.length > MAX_RAW_TEXT * 4;
+    try {
+      // `stream` tolerates a character cut by the limit; invalid UTF-8 is refused, never turned into U+FFFD.
+      raw = new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(0, MAX_RAW_TEXT * 4), {
+        stream: true,
+      });
+    } catch {
+      return err('ASSET_DECODE_FAILED');
+    }
   } else {
     const xml = readDocumentPart(bytes);
     if (!xml.ok) return xml;
-    raw = wordText(xml.value);
+    const words = wordText(xml.value);
+    raw = words.text;
+    cut = words.cut;
   }
   const cleaned = sanitizeManifestText(raw);
   if (cleaned.text.length === 0) return err('ASSET_DOCUMENT_EMPTY');
-  return ok({ format, ...cleaned });
+  return ok({ format, ...cleaned, truncated: cleaned.truncated || cut });
 }

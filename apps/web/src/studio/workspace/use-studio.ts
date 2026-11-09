@@ -145,6 +145,8 @@ export function useStudio({
   const sentFiles = useRef(new Set<File>());
   const cleanLogos = useRef(0);
   const uploading = useRef(false);
+  // A failed batch waits for the person's retry: late verdicts must not start an analysis meanwhile.
+  const halted = useRef(false);
   const analyzing = useRef(false);
   const current = useRef<Revision | null>(null);
   const inFlight = useRef<Command[]>([]);
@@ -228,7 +230,7 @@ export function useStudio({
    * upload answer). Refused files are listed; the analysis goes on while one logo is clean.
    */
   const settle = (): void => {
-    if (uploading.current || batch.current.length === 0) return;
+    if (halted.current || uploading.current || batch.current.length === 0) return;
     const settled = settleBatch(
       batch.current,
       verdicts.current,
@@ -309,8 +311,9 @@ export function useStudio({
       setFailure(null);
       setCanRetry(false);
       setPhase('sending');
+      halted.current = false;
+      const into: BatchUpload = { accepted: [], refused: [] };
       try {
-        const into: BatchUpload = { accepted: [], refused: [] };
         const uploaded = await uploadBatch(
           fetcher,
           projectId,
@@ -319,20 +322,25 @@ export function useStudio({
           setFileName,
           into,
         );
-        // What was accepted before a failure still gets its verdict (the retry skips those files).
-        batch.current = [...batch.current, ...into.accepted];
-        refusedAtUpload.current = [...refusedAtUpload.current, ...into.refused];
         if (!uploaded.ok) {
+          halted.current = true;
           setFailure(uploaded.error);
+          setNotices(into.refused);
           setPhase('empty');
           return;
         }
         setPhase('scanning');
       } catch {
+        halted.current = true;
         setFailure(UNEXPECTED);
+        setNotices(into.refused);
         setPhase('empty');
         return;
       } finally {
+        // What was accepted before a failure still gets its verdict (the retry skips those files), even
+        // when the batch ended on an exception.
+        batch.current = [...batch.current, ...into.accepted];
+        refusedAtUpload.current = [...refusedAtUpload.current, ...into.refused];
         uploading.current = false;
       }
       if (batch.current.length > 0) {

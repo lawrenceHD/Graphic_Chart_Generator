@@ -141,6 +141,12 @@ describe('sanitizeManifestText (the document is untrusted data)', () => {
     expect(out.truncated).toBe(true);
   });
 
+  it('stays linear on unclosed tags (no regex blow-up)', () => {
+    const started = Date.now();
+    sanitizeManifestText('<a'.repeat(200_000));
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
   it('reports an empty document', () => {
     expect(sanitizeManifestText('  \n​ \n').text).toBe('');
   });

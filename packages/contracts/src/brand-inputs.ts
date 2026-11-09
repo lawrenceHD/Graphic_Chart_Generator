@@ -130,7 +130,9 @@ const INVISIBLE =
   /[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uE000-\uF8FF]/gu;
 const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/gu;
 const DELIMITER = /<{3,}[A-Z_]*>{0,3}|>{3,}/gu;
-const TAG = /<\/?[A-Za-z!][^>]*>/gu;
+// Bounded: an unclosed "<a<a<a…" must not make the scan quadratic.
+const TAG = /<\/?[A-Za-z!][^>]{0,200}>/gu;
+const MAX_SANITIZE_INPUT = 400_000;
 
 // Lines that talk to the model rather than describe a brand. Dropped whole, never "defused" in place.
 const INJECTION: readonly RegExp[] = [
@@ -158,12 +160,14 @@ const dropLoneSurrogate = (value: string): string =>
 /** Extracted document text → plain, bounded prose without anything that could steer the model. */
 export function sanitizeManifestText(raw: string): SanitizedManifest {
   const flat = raw
+    .slice(0, MAX_SANITIZE_INPUT)
     .normalize('NFC')
     .replace(/\r\n?/gu, '\n')
     .replace(INVISIBLE, '')
     .replace(CONTROL, '')
     .replace(DELIMITER, '')
-    .replace(TAG, '');
+    .replace(TAG, '')
+    .replace(DELIMITER, '');
   let filteredLines = 0;
   const kept: string[] = [];
   for (const line of flat.split('\n')) {

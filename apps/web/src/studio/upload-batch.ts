@@ -7,6 +7,11 @@ import { uploadBrandFile, type Fetcher, type UploadFailure } from './upload';
 // Sends everything the person gave at the start (logos, primary first, then the optional document) and
 // decides, once every scan verdict is known, whether the analysis can start. Files the server refuses are
 // listed; as long as one logo is clean the analysis goes on without them.
+// The manifest is optional: a refusal for what the file is (4xx other than auth and rate limit) is reported and
+// the rest goes on; an outage or a session problem is a failure of the batch.
+const isValidationStatus = (status: number): boolean =>
+  status >= 400 && status < 500 && status !== 401 && status !== 403 && status !== 429;
+
 export interface Notice {
   readonly name: string;
   readonly code: AssetErrorCode;
@@ -47,7 +52,11 @@ export async function uploadBatch(
     if (!uploaded.ok) {
       const failure = uploaded.error;
       if (failure.kind === 'rejected') refused.push({ name: file.name, code: failure.code });
-      else if (declaration.kind === 'brief_doc' && failure.kind === 'http')
+      else if (
+        declaration.kind === 'brief_doc' &&
+        failure.kind === 'http' &&
+        isValidationStatus(failure.status)
+      )
         refused.push({ name: file.name, code: 'ASSET_DECODE_FAILED' });
       else return err(failure);
       continue;
