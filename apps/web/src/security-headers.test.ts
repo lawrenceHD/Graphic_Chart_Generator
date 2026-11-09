@@ -70,3 +70,25 @@ describe('secureResponse', () => {
     expect(secondNonce).not.toBe(firstNonce);
   });
 });
+
+describe('crawler files and JSON-LD nonce', () => {
+  it('lets /robots.txt and /sitemap.xml through: the proxy only adds headers, it never rewrites or blocks', () => {
+    for (const path of ['/robots.txt', '/sitemap.xml']) {
+      const response = secureResponse(new NextRequest(`http://localhost:3000${path}`), options);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('x-middleware-next')).toBe('1');
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.headers.get('x-middleware-rewrite')).toBeNull();
+    }
+  });
+
+  it('hands the nonce to the render through the request headers, the same one the CSP announces', () => {
+    const response = secureResponse(new NextRequest('http://localhost:3000/'), options);
+    const forwarded = response.headers.get('x-middleware-request-x-nonce');
+    expect(forwarded).not.toBeNull();
+    expect(nonceOf(response.headers.get('content-security-policy'))).toBe(forwarded);
+    expect(response.headers.get('x-middleware-request-content-security-policy')).toContain(
+      `'nonce-${forwarded ?? ''}'`,
+    );
+  });
+});
