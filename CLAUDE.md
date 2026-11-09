@@ -98,3 +98,9 @@ Le dépôt dispose des agents et compétences suivants (dans `.claude/`, provena
 - **Outils MCP (`.mcp.json`)** :
   - `playwright` : Navigation et capture visuelle des composants / scènes WebGL.
 
+
+---
+
+## 6. Règles de travail permanentes (propriétaire, 2026-11-09)
+
+Lire `docs/team/WORK-RULES.md` et `docs/team/RESUME.md` avant d'agir : **jamais sans skills (outil Skill), jamais sans agents, jamais sans concertation des rôles concernés**, trace des sous-agents vérifiée, `CHANGELOG.md` et `RESUME.md` mis à jour à chaque jalon.

@@ -7,6 +7,17 @@ Modifications notables du projet, par ticket. Format inspiré de
 ## [Unreleased]
 
 ### Ajouté
+- **Équipe et méthode** (2026-11-09) : agents persistants `design-director`, `seo-specialist`, `marketing-strategist`, `uiux-lead` (`.claude/agents/`) ; `docs/team/WORK-RULES.md` (jamais sans skills ni agents, concertation par rôle), `RESUME.md` (reprise après arrêt), `NIGHT-PLAN.md`.
+- **Accueil** (2026-11-09) : briefs `docs/team/landing/01-04` (direction artistique, copy FR/EN, SEO, UI/UX) ; base du portage = `prototypes/studio`.
+- **SEO** (2026-11-09) : `lib/seo.ts`, `sitemap.ts`, `robots.ts` (+ tests).
+- **ai / tools** (2026-11-09) : classement des références par secteurs voisins, couverture de palette et `purpose` ; `pnpm refs:on-demand` (téléchargement à la demande, images brutes supprimées après usage) et `pnpm refs:stats` ; correctif d'`analyze.py` (clés `sector` et `file`).
+- **worker** (2026-11-09) : avertissement `RESEARCH_SECTOR_NOT_INDEXED` testé.
+- **apps/web** (2026-11-09) : `DELETE /api/v1/account` (AC-13.3), pages tarifs, connexion, inscription, projets, quota de 3 projets.
+
+### Retiré
+- **prototypes/showcase-flow** (2026-11-09) : supprimé (copie sur la branche `comp/prototype-snapshot`). Caches `.turbo`, `.cache/psd-mockups`, copies `.github/{skills,hooks,agents}` d'impeccable.
+
+### Ajouté
 - **T-019 partie 2a** (2026-10-23) : `POST /projects/:id/analyze` (idempotent par `Idempotency-Key`, limites §7),
   table `analysis_runs`, job `project.analyze` : palette (étape 1) et variantes noire et blanche (étape 2),
   événements `analysis.step`, reprise après la dernière étape faite, lettre morte.
