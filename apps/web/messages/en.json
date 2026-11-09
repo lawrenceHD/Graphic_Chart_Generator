@@ -388,13 +388,42 @@
       "inspectorTitle": "Selected object",
       "pickHint": "Click an object in the picture to see what it lets you adjust.",
       "available": {
-        "paint": "Colour: any colour of the palette",
         "paintFixed": "Colour: fixed on this object",
-        "finish": "Finishes: {list}",
         "finishFixed": "Finish: fixed on this object",
-        "logo": "Logo: {list}",
         "logoFixed": "Logo: set by the object"
-      }
+      },
+      "groups": {
+        "logo": "Logo",
+        "finish": "Finish",
+        "paint": "Surface colour"
+      },
+      "logoVersion": {
+        "color": "Colour",
+        "black": "Black",
+        "white": "White"
+      },
+      "auto": "Auto",
+      "autoNow": "Auto ({value})",
+      "stock": "Original surface",
+      "undo": "Undo choice",
+      "redo": "Redo choice",
+      "reset": "Reset everything to automatic",
+      "exportPng": "Export this scene (PNG)",
+      "exportZip": "Export all scenes (ZIP)",
+      "exported": {
+        "png": "{file} downloaded.",
+        "zip": "{count, plural, one {# scene} other {# scenes}} downloaded in a ZIP.",
+        "failed": "Export failed: the picture is not ready yet."
+      },
+      "announce": {
+        "set": "{object}: {group} set to {value}.",
+        "auto": "{object}: {group} back to automatic.",
+        "reset": "{object}: every setting back to automatic.",
+        "undone": "Choice undone.",
+        "redone": "Choice redone."
+      },
+      "keys": "Arrows: move between objects. Enter: select. Escape: deselect. Ctrl+Z: undo.",
+      "pickGroup": "Objects of the scene {scene}"
     }
   }
 }

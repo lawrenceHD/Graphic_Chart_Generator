@@ -6,7 +6,9 @@ import { Columns2, Maximize2, Minus, Plus, RectangleHorizontal } from 'lucide-re
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { LogoDropzone } from '../logo-dropzone';
+import type { SurfaceDirection } from '@app/mockup-engine';
 import { MockupStage, SCENES, type SceneId } from '../mockups/mockup-stage';
+import type { Directing } from './mockup-inspector';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf, type Occurrence } from '../pages/variant';
@@ -177,7 +179,11 @@ export function PageCanvas({
   onReload,
   rejection,
   sending,
+  directing,
+  onDirected,
 }: {
+  readonly directing: Directing;
+  readonly onDirected: (scene: SceneId, directions: readonly SurfaceDirection[]) => void;
   readonly phase: Phase;
   readonly timeline: Timeline;
   readonly document: BrandDocument | null;
@@ -345,7 +351,10 @@ export function PageCanvas({
                         >
                           <MockupStage
                             proof
+                            choices={directing.choices(scene)}
+                            onDirected={onDirected}
                             pick={{
+                              groupLabel: t('mockup.pickGroup', { scene: t(`scenes.${scene}`) }),
                               selected: selected ? (selection.object ?? null) : null,
                               onSelect: (object) => {
                                 onSelect(

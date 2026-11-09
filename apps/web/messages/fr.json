@@ -388,13 +388,42 @@
       "inspectorTitle": "Objet sélectionné",
       "pickHint": "Cliquez un objet dans l’image pour voir ce qu’il permet de régler.",
       "available": {
-        "paint": "Couleur : choix parmi les couleurs de la palette",
         "paintFixed": "Couleur : fixe sur cet objet",
-        "finish": "Finitions : {list}",
         "finishFixed": "Finition : fixe sur cet objet",
-        "logo": "Logo : {list}",
         "logoFixed": "Logo : choisi par l’objet"
-      }
+      },
+      "groups": {
+        "logo": "Logo",
+        "finish": "Finition",
+        "paint": "Couleur du support"
+      },
+      "logoVersion": {
+        "color": "Couleur",
+        "black": "Noir",
+        "white": "Blanc"
+      },
+      "auto": "Auto",
+      "autoNow": "Auto ({value})",
+      "stock": "Support d’origine",
+      "undo": "Annuler le choix",
+      "redo": "Rétablir le choix",
+      "reset": "Tout remettre en automatique",
+      "exportPng": "Exporter cette scène (PNG)",
+      "exportZip": "Exporter toutes les scènes (ZIP)",
+      "exported": {
+        "png": "{file} téléchargé.",
+        "zip": "{count, plural, one {# scène téléchargée} other {# scènes téléchargées}} dans un ZIP.",
+        "failed": "Export impossible : l’image n’est pas encore prête."
+      },
+      "announce": {
+        "set": "{object} : {group} réglé sur {value}.",
+        "auto": "{object} : {group} remis en automatique.",
+        "reset": "{object} : tous les réglages remis en automatique.",
+        "undone": "Choix annulé.",
+        "redone": "Choix rétabli."
+      },
+      "keys": "Flèches : changer d’objet. Entrée : choisir. Échap : désélectionner. Ctrl+Z : annuler.",
+      "pickGroup": "Objets de la scène {scene}"
     }
   }
 }

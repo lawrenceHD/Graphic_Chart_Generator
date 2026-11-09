@@ -13,13 +13,14 @@ import {
   type Compositor,
   type CompositorLayer,
   type LoadedScene,
-  type LogoVersion,
+  type SurfaceChoices,
   type SurfaceDirection,
 } from '@app/mockup-engine';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
+import { registerCanvas } from './scene-export';
 import { SceneOverlay } from './scene-overlay';
 import { maskOf, photoHits, psdHits, rememberObjects, type SceneHits } from './scene-hits';
 import { brandInks, loadImage, logoSource, logoTexture, renderKey } from './stage-assets';
@@ -85,10 +86,12 @@ async function renderPsd(
   words: ArtworkWords,
   node: HTMLCanvasElement,
   alive: () => boolean,
+  choices: SurfaceChoices,
 ): Promise<readonly SurfaceDirection[] | null> {
   const file = (name: string) => loadImage(`/scenes/${id}/${name}`);
   const logos = await loadLogos(view);
   const layers: PsdRenderLayer[] = [];
+  let field = 0;
   for (const layer of scene.layers) {
     if (layer.type === 'image') {
       layers.push({
@@ -98,7 +101,12 @@ async function renderPsd(
         opacity: layer.opacity,
       });
     } else if (layer.type === 'paint') {
-      const role = PAINT_ORDER.find((entry) => layer.paint.includes(entry)) ?? 'neutralLight';
+      const chosen = choices[`field-${String(field)}`]?.paint;
+      field += 1;
+      const role =
+        chosen !== undefined && chosen !== 'none'
+          ? chosen
+          : (PAINT_ORDER.find((entry) => layer.paint.includes(entry)) ?? 'neutralLight');
       layers.push({
         kind: 'paint',
         mask: await file(layer.mask),
@@ -140,12 +148,13 @@ async function renderScene(
   words: ArtworkWords,
   node: HTMLCanvasElement,
   alive: () => boolean,
+  choices: SurfaceChoices,
 ): Promise<readonly SurfaceDirection[] | null> {
   const any = await loadScene(id);
   if (any === null) throw new Error('scene');
-  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive);
+  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive, choices);
   const { scene, homographies } = any.loaded;
-  const directions = directScene(scene, view.colors, brandInks(view));
+  const directions = directScene(scene, view.colors, brandInks(view), choices);
   const base = await loadImage(`/scenes/${id}/base.webp`);
   const layers: CompositorLayer[] = [];
   for (const surface of scene.surfaces) {
@@ -235,6 +244,7 @@ function hitsOf(id: SceneId): Promise<SceneHits | null> {
   return loading;
 }
 
+const NO_CHOICES: SurfaceChoices = {};
 const SHAPE_ONLY = new Set(['foil', 'emboss', 'deboss', 'engrave']);
 
 type Stage = 'loading' | 'ready' | 'failed';
@@ -248,7 +258,12 @@ export function MockupStage({
   className = '',
   proof = false,
   pick,
+  choices = NO_CHOICES,
+  onDirected,
 }: {
+  readonly choices?: SurfaceChoices;
+  /** Told what the art direction applied to each object once the picture is drawn. */
+  readonly onDirected?: (scene: SceneId, directions: readonly SurfaceDirection[]) => void;
   readonly scene: SceneId;
   readonly view: BrandView;
   readonly label: string;
@@ -263,6 +278,7 @@ export function MockupStage({
     readonly selected: string | null;
     readonly onSelect: (id: string | null) => void;
     readonly labelOf: (kind: 'surface' | 'paint', index: number) => string;
+    readonly groupLabel: string;
   };
 }) {
   const t = useTranslations('workspace.proof');
@@ -274,11 +290,15 @@ export function MockupStage({
   const [stage, setStage] = useState<Stage>('loading');
   const [sceneHits, setSceneHits] = useState<SceneHits | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const key = renderKey(view);
+  const key = `${renderKey(view)}#${JSON.stringify(choices)}`;
+  const latestChoices = useRef(choices);
+  const told = useRef(onDirected);
   const interactive = pick !== undefined;
 
   useEffect(() => {
     latest.current = view;
+    latestChoices.current = choices;
+    told.current = onDirected;
   });
 
   useEffect(() => {
@@ -293,9 +313,11 @@ export function MockupStage({
       address: a('address'),
       dear: a('dear'),
     };
-    renderScene(id, latest.current, words, node, () => alive)
+    renderScene(id, latest.current, words, node, () => alive, latestChoices.current)
       .then((done) => {
         if (alive && done !== null) {
+          registerCanvas(id, node);
+          told.current?.(id, done);
           setSize({ width: node.width, height: node.height });
           setDirections(done);
           setStage('ready');
@@ -306,6 +328,7 @@ export function MockupStage({
       });
     return () => {
       alive = false;
+      registerCanvas(id, null);
     };
   }, [id, attempt, key, a]);
 
@@ -339,6 +362,7 @@ export function MockupStage({
             selected={pick.selected}
             onSelect={pick.onSelect}
             labelOf={pick.labelOf}
+            groupLabel={pick.groupLabel}
           />
         ) : null}
         {stage === 'failed' ? (

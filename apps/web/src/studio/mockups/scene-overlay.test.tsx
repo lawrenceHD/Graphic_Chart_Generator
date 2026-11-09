@@ -17,7 +17,16 @@ const left: MockupObject = {
     [0, 100],
   ],
 };
-const right: MockupObject = { ...left, id: 'right', outline: [[50, 0], [100, 0], [100, 100], [50, 100]] };
+const right: MockupObject = {
+  ...left,
+  id: 'right',
+  outline: [
+    [50, 0],
+    [100, 0],
+    [100, 100],
+    [50, 100],
+  ],
+};
 
 const hits = {
   objects: [left, right],
@@ -57,6 +66,38 @@ describe('SceneOverlay', () => {
     const onSelect = mount(null);
     fireEvent.click(screen.getByRole('button', { name: 'Objet 2' }));
     expect(onSelect).toHaveBeenCalledWith('right');
+  });
+
+  it('is one tab stop, and the arrows move between objects, wrapping round', () => {
+    mount(null);
+    const one = screen.getByRole('button', { name: 'Objet 1' });
+    const two = screen.getByRole('button', { name: 'Objet 2' });
+    expect(one.tabIndex).toBe(0);
+    expect(two.tabIndex).toBe(-1);
+    one.focus();
+    fireEvent.keyDown(one, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(two);
+    expect(two.tabIndex).toBe(0);
+    fireEvent.keyDown(two, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(one);
+    fireEvent.keyDown(one, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(two);
+    fireEvent.keyDown(two, { key: 'Home' });
+    expect(document.activeElement).toBe(one);
+    fireEvent.keyDown(one, { key: 'End' });
+    expect(document.activeElement).toBe(two);
+  });
+
+  it('starts the tab stop on the selected object', () => {
+    mount('right');
+    expect(screen.getByRole('button', { name: 'Objet 2' }).tabIndex).toBe(0);
+    expect(screen.getByRole('button', { name: 'Objet 1' }).tabIndex).toBe(-1);
+  });
+
+  it('clears the selection with Escape', () => {
+    const onSelect = mount('left');
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Objet 1' }), { key: 'Escape' });
+    expect(onSelect).toHaveBeenCalledWith(null);
   });
 
   it('selects the object under the pointer, or none outside the objects', () => {
