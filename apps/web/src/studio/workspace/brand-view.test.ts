@@ -1,6 +1,8 @@
 import { BrandDocumentSchema } from '@app/document';
 import { describe, expect, it } from 'vitest';
-import { DEMO_DOCUMENT, DEMO_VIEW } from '../../landing/demo';
+import { demoFor } from '../../landing/demo';
+
+const { document: DEMO_DOCUMENT, view: DEMO_VIEW } = demoFor('la-meza');
 import { briefLead, briefStatement, orderedPages } from './brand-view';
 
 const BRIEF = [

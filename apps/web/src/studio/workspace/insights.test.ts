@@ -1,7 +1,9 @@
 import { apply } from '@app/document';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '../../brand/color';
-import { DEMO_DOCUMENT } from '../../landing/demo';
+import { demoFor } from '../../landing/demo';
+
+const { document: DEMO_DOCUMENT } = demoFor('la-meza');
 import { insightsOf, reachContrast, suggestionsOf } from './insights';
 
 const BRIEF = [

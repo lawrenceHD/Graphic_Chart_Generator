@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { hexToOklch } from '../../brand/color';
-import { DEMO_DOCUMENT } from '../../landing/demo';
+import { demoFor } from '../../landing/demo';
+
+const { document: DEMO_DOCUMENT } = demoFor('la-meza');
 import { readIntent } from './intents';
 
 const read = (text: string, page: string | null = null) => readIntent(text, DEMO_DOCUMENT, page);
