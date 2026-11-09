@@ -10,7 +10,7 @@ export const GETYOURGUIDE: DemoExample = {
   sector: 'Voyages et expériences',
   language: 'fr',
   briefText:
-    "Une place de marché pour réserver des visites, des billets et des activités sur place, partout dans le monde : des guides locaux, des annulations simples et des avis de voyageurs vérifiés.",
+    'Une place de marché pour réserver des visites, des billets et des activités sur place, partout dans le monde : des guides locaux, des annulations simples et des avis de voyageurs vérifiés.',
   logo: '/demo/logos/getyourguide.svg',
   logoProvenance: 'Logo réel de la bibliothèque de référence du projet, affiché en démonstration',
   colors: {
@@ -25,9 +25,15 @@ export const GETYOURGUIDE: DemoExample = {
   mission: 'Faire de chaque voyage une série de moments à vivre, réservables en quelques secondes.',
   vision: 'Que découvrir un lieu avec un guide du coin devienne le réflexe de tout voyageur.',
   values: [
-    { label: 'Curieux', description: 'Toujours à la recherche de la visite que personne ne raconte.' },
+    {
+      label: 'Curieux',
+      description: 'Toujours à la recherche de la visite que personne ne raconte.',
+    },
     { label: 'Fiable', description: 'Une réservation claire, une annulation sans embarras.' },
-    { label: 'Local', description: 'Des guides qui connaissent la rue, pas seulement le monument.' },
+    {
+      label: 'Local',
+      description: 'Des guides qui connaissent la rue, pas seulement le monument.',
+    },
     { label: 'Enthousiaste', description: 'On donne envie de partir sans promettre la lune.' },
   ],
   tone: {

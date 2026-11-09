@@ -40,11 +40,16 @@ def quad_of(mask: np.ndarray) -> list[list[float]]:
 
 def segment(image: np.ndarray, rect: list[int]) -> np.ndarray:
     x0, y0, x1, y1 = rect
+    # GrabCut at full size takes minutes on a 1920 px photograph: segment at half size, upscale the mask.
+    full = image
+    image = cv2.resize(full, (full.shape[1] // 2, full.shape[0] // 2), interpolation=cv2.INTER_AREA)
+    x0, y0, x1, y1 = x0 // 2, y0 // 2, x1 // 2, y1 // 2
     mask = np.zeros(image.shape[:2], np.uint8)
     bgd = np.zeros((1, 65), np.float64)
     fgd = np.zeros((1, 65), np.float64)
     cv2.grabCut(image, mask, (x0, y0, x1 - x0, y1 - y0), bgd, fgd, 6, cv2.GC_INIT_WITH_RECT)
     binary = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 255, 0).astype(np.uint8)
+    binary = cv2.resize(binary, (full.shape[1], full.shape[0]), interpolation=cv2.INTER_NEAREST)
     # Keep the largest component, fill its holes (a logo-free surface has none).
     count, labels, stats, _ = cv2.connectedComponentsWithStats(binary)
     if count > 1:

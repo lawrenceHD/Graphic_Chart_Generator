@@ -1,0 +1,130 @@
+{
+  "scenes": {
+    "blade-sign-street": {
+      "category": "signage",
+      "light": [-0.4, -0.5, 0.77],
+      "surfaces": {
+        "sign": {
+          "material": "metal",
+          "paint": ["primary", "neutralLight", "neutralDark"],
+          "finishes": ["print", "engrave"],
+          "padding": 0.2
+        }
+      }
+    },
+    "brochure-grey": {
+      "category": "stationery",
+      "light": [-0.6, -0.4, 0.69],
+      "surfaces": {
+        "cover": {
+          "material": "paper",
+          "paint": ["neutralLight", "primary", "neutralDark"],
+          "finishes": ["print", "emboss", "foil"],
+          "padding": 0.22
+        }
+      }
+    },
+    "business-cards-sage": {
+      "category": "stationery",
+      "light": [-0.5, -0.4, 0.77],
+      "surfaces": {
+        "flat": {
+          "material": "card",
+          "paint": ["neutralLight", "primary"],
+          "finishes": ["print", "foil", "emboss"],
+          "padding": 0.24
+        },
+        "lean": {
+          "material": "card",
+          "paint": ["primary", "neutralDark"],
+          "finishes": ["print", "foil", "deboss"],
+          "padding": 0.24
+        }
+      }
+    },
+    "laptop-desk": {
+      "category": "digital",
+      "light": [0, -0.3, 0.95],
+      "surfaces": {
+        "screen": {
+          "material": "screen",
+          "paint": ["none"],
+          "finishes": ["screen"],
+          "padding": 0.2
+        }
+      }
+    },
+    "mailer-box-blue": {
+      "category": "packaging",
+      "light": [-0.4, -0.6, 0.69],
+      "surfaces": {
+        "lid": {
+          "material": "paper",
+          "paint": ["primary", "neutralLight", "neutralDark"],
+          "finishes": ["print", "foil"],
+          "padding": 0.24
+        }
+      }
+    },
+    "notebook-flatlay": {
+      "category": "stationery",
+      "light": [-0.5, -0.5, 0.7],
+      "surfaces": {
+        "cover": {
+          "material": "paper",
+          "paint": ["primary", "neutralDark", "accent"],
+          "finishes": ["deboss", "foil", "print"],
+          "padding": 0.26
+        }
+      }
+    },
+    "poster-frame-console": {
+      "category": "generic",
+      "light": [-0.5, -0.3, 0.81],
+      "surfaces": {
+        "poster": {
+          "material": "paper",
+          "paint": ["neutralLight", "primary"],
+          "finishes": ["print"],
+          "padding": 0.2
+        }
+      }
+    },
+    "stationery-dark": {
+      "category": "stationery",
+      "light": [-0.6, -0.3, 0.74],
+      "surfaces": {
+        "letter": {
+          "material": "paper",
+          "paint": ["neutralLight"],
+          "finishes": ["print"],
+          "padding": 0.3
+        },
+        "envelope": {
+          "material": "paper",
+          "paint": ["neutralLight", "primary"],
+          "finishes": ["print", "foil"],
+          "padding": 0.3
+        },
+        "card": {
+          "material": "card",
+          "paint": ["primary", "neutralLight"],
+          "finishes": ["foil", "print", "emboss"],
+          "padding": 0.2
+        }
+      }
+    },
+    "tote-terracotta": {
+      "category": "apparel",
+      "light": [-0.3, -0.4, 0.87],
+      "surfaces": {
+        "bag": {
+          "material": "fabric",
+          "paint": ["neutralLight", "primary"],
+          "finishes": ["print", "embroidery"],
+          "padding": 0.24
+        }
+      }
+    }
+  }
+}
