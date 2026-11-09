@@ -1,9 +1,9 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { ImageUp, Play } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { Magnetic, SplitWords } from '../../ui/fx';
 import { useBrand } from './brand-context';
 import { Fan } from './fan';
@@ -11,7 +11,10 @@ import { HeroChips } from './hero-chips';
 import { HeroPill } from './hero-pill';
 import { colorOf } from './palette-tools';
 
-const REVEAL = { duration: 0.8, ease: [0.16, 1, 0.3, 1] } as const;
+/** A custom property carried by a style object (the delay read by `.rise`). */
+type Delayed = CSSProperties & { readonly '--d': string };
+const LEAD_DELAY: Delayed = { '--d': '0.45s' };
+const ACTIONS_DELAY: Delayed = { '--d': '0.55s' };
 const BUTTON =
   'flex h-14 w-full items-center justify-center gap-2 rounded-full px-8 text-base no-underline sm:w-auto';
 
@@ -52,19 +55,15 @@ export function Hero() {
           <SplitWords text={t('after')} delay={0.24} now />
         </span>
       </h1>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ ...REVEAL, delay: 0.45 }}
-        className="relative mx-auto mt-6 max-w-xl text-center text-[17px] leading-relaxed text-ink-2"
+      <p
+        className="rise relative mx-auto mt-6 mb-0 max-w-xl text-center text-[17px] leading-relaxed text-ink-2"
+        style={LEAD_DELAY}
       >
         {t('lead')}
-      </motion.p>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...REVEAL, delay: 0.55 }}
-        className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+      </p>
+      <div
+        className="rise relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        style={ACTIONS_DELAY}
       >
         <Magnetic className="w-full sm:w-auto">
           <Link href="/start" className={`${BUTTON} bg-accent font-semibold text-on-accent`}>
@@ -81,7 +80,7 @@ export function Hero() {
             {t('demo')}
           </a>
         </Magnetic>
-      </motion.div>
+      </div>
       <p className="relative mt-4 mb-0 text-center text-sm text-ink-3">{t('note')}</p>
       <Fan />
     </section>

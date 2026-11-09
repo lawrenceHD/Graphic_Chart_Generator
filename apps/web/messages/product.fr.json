@@ -13,7 +13,9 @@
     "footerProduct": "Produit",
     "footerAccount": "Compte",
     "rights": "© 2026 Charta",
-    "mockups": "Mockups"
+    "mockups": "Mockups",
+    "menu": "Menu",
+    "close": "Fermer le menu"
   },
   "homePage": {
     "metaTitle": "Charta · Une charte graphique complète à partir de votre logo",
@@ -295,6 +297,10 @@
       "faq": "Questions",
       "menu": "Menu",
       "close": "Fermer"
+    },
+    "motion": {
+      "pause": "Figer les animations",
+      "play": "Relancer les animations"
     }
   },
   "pricing": {

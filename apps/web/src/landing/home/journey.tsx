@@ -43,7 +43,6 @@ export function Journey() {
               key={key}
               animate={{ opacity: index === step ? 1 : 0.65, x: index === step ? 14 : 0 }}
               transition={SOFT}
-              className="md:[&:not([aria-current])]:opacity-65"
               aria-current={index === step ? 'step' : undefined}
             >
               <span className="font-mono text-sm">0{index + 1}</span>

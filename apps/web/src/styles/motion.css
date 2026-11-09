@@ -250,3 +250,14 @@
     animation: none;
   }
 }
+
+/* The visitor paused the page (MotionToggle): ambient loops stop, what they trigger themselves keeps working. */
+:root[data-motion-paused] .marquee,
+:root[data-motion-paused] .float,
+:root[data-motion-paused] .spin-slow,
+:root[data-motion-paused] .swing,
+:root[data-motion-paused] .flow-dash,
+:root[data-motion-paused] .pulse-dot,
+:root[data-motion-paused] .sheen {
+  animation-play-state: paused;
+}

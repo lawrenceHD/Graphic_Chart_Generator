@@ -13,7 +13,9 @@
     "footerProduct": "Product",
     "footerAccount": "Account",
     "rights": "© 2026 Charta",
-    "mockups": "Mockups"
+    "mockups": "Mockups",
+    "menu": "Menu",
+    "close": "Close the menu"
   },
   "homePage": {
     "metaTitle": "Charta · A complete brand guideline from your logo",
@@ -295,6 +297,10 @@
       "faq": "Questions",
       "menu": "Menu",
       "close": "Close"
+    },
+    "motion": {
+      "pause": "Pause animations",
+      "play": "Resume animations"
     }
   },
   "pricing": {

@@ -12,6 +12,7 @@ import { HomeFooter } from './home/home-footer';
 import { Inside } from './home/inside';
 import { Journey } from './home/journey';
 import { LogoWallStrip } from './home/logo-wall-strip';
+import { MotionToggle } from './home/motion-toggle';
 import { Manifesto } from './home/manifesto';
 import { Metrics } from './home/metrics';
 import { Showcase } from './home/showcase';
@@ -24,6 +25,7 @@ export function Landing() {
     <div className="min-h-dvh overflow-x-clip bg-canvas text-ink">
       <SiteHeader onHome />
       <main id={MAIN_ID} tabIndex={-1} className="focus:outline-none">
+        <MotionToggle />
         <BrandProvider examples={listExamples()}>
           <Hero />
           <LogoWallStrip />
