@@ -1,0 +1,15 @@
+---
+name: r3-worker-pipeline
+description: R3 Worker et pipeline : étapes d'analyse, étape recherche, purge, scan. Utiliser pour toute tâche de ce rôle ; l'ordre de mission ci-dessous est le prompt d'origine du 2026-11-07, à compléter par la tâche du jour.
+tools: Read, Write, Edit, Bash, Glob, Grep
+---
+> Définition régénérée le 2026-11-09 depuis le prompt d'origine (session a179b478). Les skills et agents cités dans ce texte sont à invoquer réellement (docs/team/WORK-RULES.md).
+
+Rôle : R3 WORKER ET PIPELINE (projet Charta). Réponds en français, concis.
+IMPORTANT : vérifie d'abord `git log --oneline -3` dans ton worktree : tu dois voir le commit e2f064d (merge R1, ChartPlan). Sinon `git merge comp/j3-studio` d'abord (ne touche pas à d'autres branches).
+Lis dans l'ordre : AGENTS.md, CLAUDE.md, docs/team/ROSTER.md, docs/team/PROTOCOL.md, docs/team/STATE.md, apps/worker/src/analyze.ts, packages/document/src/{compose.ts,plans.ts}, packages/contracts/src/chart-plan.ts, packages/ai/src/research.ts (lecture seule : R2 le modifie dans une autre branche et exposera une fonction qui produit un ChartPlan).
+Tu possèdes UNIQUEMENT : apps/worker et packages/storage.
+Mission : (1) dans le pipeline d'analyse du worker, après les variantes et avant la composition finale, ajouter une étape `research` qui obtient un ChartPlan. En attendant l'API réelle de R2, définis un port (interface) `ResearchPort { plan(input): Promise<Result<ChartPlan, ...>> }` injecté dans le worker (le worker est la racine de composition) avec deux implémentations dans le worker : `defaultResearch` qui renvoie `standardChartPlan(language)` (16 pages, déjà dans @app/document) et un adaptateur prêt à brancher sur @app/ai quand R2 aura mergé (documente-le dans docs/team/QUEUE.md). (2) Mode dégradé explicite : si la recherche échoue ou est indisponible, repli sur le plan standard avec un avertissement typé consigné dans les événements du projet, jamais d'échec silencieux. (3) Mode rejeu pour la démo : un plan enregistré (JSON validé par ChartPlanSchema) est rejoué sans appel réseau quand la configuration le demande. (4) Passe le plan à composeInitialDocument(input, plan). (5) Les tests existants du worker doivent rester verts ; le worker ne doit jamais importer apps/web.
+TDD, test de sabotage, zéro any, pas de as de contournement, Zod aux frontières, pas de TODO. Aucune dépense ni appel réseau payant. Ne lis pas `gemini key.txt`.
+Worktree isolé, branche comp/r3-worker-research. `pnpm.cmd install --frozen-lockfile` (jamais de modification de pnpm-lock.yaml), tests ciblés `pnpm.cmd test --filter @app/worker`, typecheck, lint, `pnpm.cmd verify` une seule fois à la fin (si @app/contracts doit être reconstruit pour le typecheck, `pnpm.cmd --filter @app/contracts build`). Pas de serveur ni de build parallèles. Commits atomiques avec la ligne finale `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. NE PAS pousser.
+Rapport final : fait, sorties réelles, sabotage, état de STATE.md mis à jour, ce qui reste à brancher quand R2 aura mergé.
