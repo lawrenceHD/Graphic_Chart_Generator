@@ -1,0 +1,60 @@
+{
+  "id": "blade-sign-street",
+  "schemaVersion": 2,
+  "category": "signage",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "sign",
+      "quad": [
+        [
+          569,
+          303
+        ],
+        [
+          1341,
+          328
+        ],
+        [
+          1343,
+          933
+        ],
+        [
+          564,
+          945
+        ]
+      ],
+      "logoBox": {
+        "aspect": 1.244,
+        "fit": "contain",
+        "paddingRatio": 0.2
+      },
+      "baseTint": [
+        0.851,
+        0.847,
+        0.847
+      ],
+      "light": {
+        "direction": [
+          -0.3994,
+          -0.4993,
+          0.7689
+        ]
+      },
+      "finishes": [
+        "print",
+        "engrave"
+      ],
+      "mask": "mask-sign.png",
+      "material": "metal",
+      "paint": [
+        "primary",
+        "neutralLight",
+        "neutralDark"
+      ]
+    }
+  ]
+}

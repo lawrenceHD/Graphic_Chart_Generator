@@ -1,0 +1,57 @@
+{
+  "id": "phone-table",
+  "schemaVersion": 2,
+  "category": "digital",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "screen",
+      "quad": [
+        [
+          645,
+          608
+        ],
+        [
+          909,
+          449
+        ],
+        [
+          1181,
+          782
+        ],
+        [
+          967,
+          946
+        ]
+      ],
+      "logoBox": {
+        "aspect": 0.644,
+        "fit": "contain",
+        "paddingRatio": 0.1
+      },
+      "baseTint": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "light": {
+        "direction": [
+          -0.3006,
+          -0.501,
+          0.8116
+        ]
+      },
+      "finishes": [
+        "screen"
+      ],
+      "mask": "mask-screen.png",
+      "material": "screen",
+      "paint": [
+        "primary"
+      ]
+    }
+  ]
+}

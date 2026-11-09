@@ -1,0 +1,61 @@
+{
+  "id": "notebook-flatlay",
+  "schemaVersion": 2,
+  "category": "stationery",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "cover",
+      "quad": [
+        [
+          462,
+          128
+        ],
+        [
+          1287,
+          66
+        ],
+        [
+          1405,
+          957
+        ],
+        [
+          484,
+          1003
+        ]
+      ],
+      "logoBox": {
+        "aspect": 0.986,
+        "fit": "contain",
+        "paddingRatio": 0.26
+      },
+      "baseTint": [
+        0.91,
+        0.906,
+        0.91
+      ],
+      "light": {
+        "direction": [
+          -0.5025,
+          -0.5025,
+          0.7035
+        ]
+      },
+      "finishes": [
+        "deboss",
+        "foil",
+        "print"
+      ],
+      "mask": "mask-cover.png",
+      "material": "paper",
+      "paint": [
+        "primary",
+        "neutralDark",
+        "accent"
+      ]
+    }
+  ]
+}

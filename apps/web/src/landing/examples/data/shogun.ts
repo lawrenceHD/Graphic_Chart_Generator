@@ -23,7 +23,8 @@ export const SHOGUN: DemoExample = {
   pairingId: 'modern-geometric',
   archetype: 'creator',
   mission: 'Let any merchant build the shop page they imagine, then prove it sells.',
-  vision: 'Online shops that look designed and convert like they were tested, whatever the team size.',
+  vision:
+    'Online shops that look designed and convert like they were tested, whatever the team size.',
   values: [
     { label: 'Speed', description: 'From idea to published page in an afternoon.' },
     { label: 'Craft', description: 'Fine control without the code.' },
