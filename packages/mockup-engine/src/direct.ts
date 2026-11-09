@@ -25,6 +25,15 @@ export interface SurfaceDirection {
   readonly foil?: FoilTone;
 }
 
+/** What the person decided for one object; every field left out stays automatic. */
+export interface SurfaceChoice {
+  /** A palette role, or 'none' for the photograph's own stock. */
+  readonly paint?: SurfacePaint;
+  readonly finish?: MockupFinish;
+  readonly logo?: LogoVersion;
+}
+export type SurfaceChoices = Readonly<Record<string, SurfaceChoice>>;
+
 const channel = (hex: string, offset: number): number => {
   const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
   return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
@@ -90,25 +99,37 @@ export function directScene(
   scene: SceneDefinition,
   palette: BrandPalette,
   inks: readonly string[],
+  decided: SurfaceChoices = {},
 ): SurfaceDirection[] {
   const seen = new Map<string, number>();
   const cool = hue(palette.primary) >= 170 && hue(palette.primary) <= 300;
   return scene.surfaces.map((surface) => {
     const choices: readonly SurfacePaint[] = surface.paint ?? ['none'];
+    const picked = decided[surface.id] ?? {};
+    const repaintable = choices.some((entry) => entry !== 'none');
     // Surfaces offering the same choices take them in turn.
     const key = choices.join();
     const turn = seen.get(key) ?? 0;
     seen.set(key, turn + 1);
-    const role = choices[turn % choices.length] ?? 'none';
+    const own = choices[turn % choices.length] ?? 'none';
+    // A colour is taken only where the scene lets the object be repainted (or keep its stock).
+    const wanted = picked.paint;
+    const role =
+      wanted !== undefined && (wanted === 'none' ? choices.includes('none') : repaintable)
+        ? wanted
+        : own;
     const paint = role === 'none' ? null : palette[role];
     const background = paint ?? toHex(surface.baseTint);
-    const finish = finishOn(surface.finishes, background);
+    const finish =
+      picked.finish !== undefined && surface.finishes.includes(picked.finish)
+        ? picked.finish
+        : finishOn(surface.finishes, background);
     return {
       surfaceId: surface.id,
       paint,
       background,
       finish,
-      logo: logoOn(background, inks),
+      logo: picked.logo ?? logoOn(background, inks),
       ...(finish === 'foil' ? { foil: cool ? ('silver' as const) : ('gold' as const) } : {}),
     };
   });
