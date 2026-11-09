@@ -41,11 +41,14 @@ export async function SiteHeader({ onHome = false }: { readonly onHome?: boolean
           aria-label={t('nav')}
           className="order-last flex w-full min-w-0 items-center gap-1 overflow-x-auto md:order-none md:w-auto"
         >
-          <a href={`${base}#atelier`} className={SHOWN}>
+          <a href={`${base}#fonctionnement`} className={SHOWN}>
+            {t('method')}
+          </a>
+          <a href={`${base}#charte`} className={SHOWN}>
             {t('atelier')}
           </a>
-          <a href={`${base}#methode`} className={SHOWN}>
-            {t('method')}
+          <a href={`${base}#mockups`} className={SHOWN}>
+            {t('mockups')}
           </a>
           <Link href="/tarifs" className={SHOWN}>
             {t('pricing')}

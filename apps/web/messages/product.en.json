@@ -1,7 +1,7 @@
 {
   "site": {
     "nav": "Main navigation",
-    "atelier": "Studio",
+    "atelier": "The guideline",
     "method": "How it works",
     "pricing": "Pricing",
     "login": "Sign in",
@@ -12,7 +12,8 @@
     "footerTagline": "Brand guidelines composed from a logo, measured by engines and adjustable page by page.",
     "footerProduct": "Product",
     "footerAccount": "Account",
-    "rights": "© 2026 Charta"
+    "rights": "© 2026 Charta",
+    "mockups": "Mockups"
   },
   "homePage": {
     "metaTitle": "Charta · A complete brand guideline from your logo",
@@ -34,7 +35,19 @@
           "fail": "Fails"
         }
       },
-      "accent": "guideline"
+      "accent": "guideline",
+      "before": "a complete",
+      "after": ".",
+      "line1": "Your logo becomes",
+      "words": [
+        "guideline",
+        "palette",
+        "typography",
+        "identity"
+      ],
+      "wordsLabel": "What your logo becomes",
+      "chipFont": "Brand typography",
+      "chipFavicon": "favicon.svg"
     },
     "atelier": {
       "title": "The studio, with a real guideline",
@@ -93,7 +106,9 @@
     "final": {
       "title": "Drop your logo.",
       "lead": "The first guideline takes a few minutes, no account needed.",
-      "account": "Create an account"
+      "account": "Create an account",
+      "button": "Try without an account",
+      "note": "No credit card · your logo stays private"
     },
     "story": {
       "file": "{name} · logo dropped",
@@ -127,7 +142,9 @@
         "a4-sheet": "Letterhead",
         "paper-bag": "Paper bag",
         "storefront-sign": "Shop sign"
-      }
+      },
+      "lead1": "Your logo, placed on",
+      "pill": "real objects"
     },
     "proof": {
       "title": "Every number is measured, not guessed.",
@@ -208,7 +225,77 @@
         "a": "Yes: a guest session lets you test. The free plan offers 3 projects. Paid plans are not open yet and their prices are indicative."
       }
     },
-    "metaDescription": "Drop your logo: Charta measures its colors, checks every contrast and builds the brand guideline, the mockups and the files."
+    "metaDescription": "Drop your logo: Charta measures its colors, checks every contrast and builds the brand guideline, the mockups and the files.",
+    "metrics": {
+      "label": "What a guideline produces",
+      "pages": "guideline pages composed",
+      "contrasts": "contrast ratios computed",
+      "scenes": "mockup scenes available",
+      "exports": "export formats",
+      "note": "Values read from the catalogue and from the brand on screen."
+    },
+    "manifesto": {
+      "line1": "Judgement is your craft.",
+      "line2": "The rest is repetition.",
+      "text": "Palette in five formats, contrast matrix, black and white variants, clear space, layout, mockups, files to deliver: with every brand, the same steps again. Charta handles them so your time goes to direction.",
+      "wcag": "WCAG 2.2",
+      "svg": "Vector SVG",
+      "undo": "Undoable",
+      "tokens": "Design tokens",
+      "cmyk": "Indicative CMYK"
+    },
+    "flow": {
+      "title": "One logo, a whole system.",
+      "palette": "Palette",
+      "type": "Typography",
+      "contrast": "Contrasts",
+      "mockups": "Mockups",
+      "rules": "Rules",
+      "tokens": "Tokens",
+      "logoAlt": "{brand} logo"
+    },
+    "journey": {
+      "stage1": "Reading the logo",
+      "stage2": "Palette and contrasts",
+      "stage3": "Typography",
+      "stage4": "Assembly",
+      "verified": "File checked"
+    },
+    "hanging": {
+      "title": "Guidelines with character.",
+      "lead": "Every page is composed from the logo. Grab one.",
+      "alt": "{page} page of the {brand} guideline"
+    },
+    "inside": {
+      "title": "Everything a guideline holds.",
+      "palette": "Palette measured on the logo",
+      "paletteNote": "Roles assigned by the engine: primary, accent, neutrals.",
+      "contrast": "Measured contrasts",
+      "contrastNote": "WCAG 2.2 ratio, with its level written out.",
+      "variants": "Logo variants",
+      "variantsNote": "Colour, black, white: supplied as is or computed.",
+      "tokens": "Exported tokens",
+      "tokensNote": "CSS variables, Tailwind theme, DTCG tokens.",
+      "pick": "Example brand"
+    },
+    "showcase": {
+      "photo": "photo"
+    },
+    "footer": {
+      "tagline": "Brand guidelines composed from a logo, measured by engines and adjustable page by page.",
+      "product": "Product",
+      "account": "Account",
+      "demo": "Demonstration: fictional example brands",
+      "toTop": "Back to the top of the page"
+    },
+    "nav": {
+      "how": "How it works",
+      "guideline": "The guideline",
+      "mockups": "Mockups",
+      "faq": "Questions",
+      "menu": "Menu",
+      "close": "Close"
+    }
   },
   "pricing": {
     "metaTitle": "Pricing · Charta",
