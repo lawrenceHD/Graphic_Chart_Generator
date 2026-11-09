@@ -2,6 +2,7 @@
 
 import type { PageType } from '@app/contracts';
 import { motion, useReducedMotion } from 'motion/react';
+import type { CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import { SplitWords } from '../../ui/fx';
 import { DemoSheet, demoTitle } from '../demo-sheet';
@@ -14,7 +15,16 @@ const PAGES: readonly Exclude<PageType, 'mockup'>[] = [
   'logo',
   'do-dont',
 ];
+type SwingStyle = CSSProperties & { readonly '--a': string };
 const SAG = [14, 46, 58, 46, 14] as const;
+
+function swingStyle(index: number): SwingStyle {
+  return {
+    '--a': `${String(index % 2 > 0 ? -2.5 : 2.5)}deg`,
+    animationDelay: `${String(-index * 0.9)}s`,
+    animationDuration: '5.5s',
+  };
+}
 
 /** Pages of the shown guideline pinned on a string, swaying; each can be dragged and springs back. */
 export function Hanging() {
@@ -64,11 +74,7 @@ export function Hanging() {
             >
               <div
                 className="swing"
-                style={{
-                  ['--a' as string]: `${String(index % 2 > 0 ? -2.5 : 2.5)}deg`,
-                  animationDelay: `${String(-index * 0.9)}s`,
-                  animationDuration: '5.5s',
-                }}
+                style={swingStyle(index)}
               >
                 <motion.div
                   drag

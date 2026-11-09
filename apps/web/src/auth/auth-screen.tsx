@@ -8,7 +8,13 @@ import { AuthPanel } from './auth-panel';
 import type { AuthMode } from './auth-logic';
 
 /** Sign-in and sign-up pages: the form leads, the guest way in sits beside it, never behind a wall. */
-export async function AuthScreen({ mode }: { readonly mode: AuthMode }) {
+export async function AuthScreen({
+  mode,
+  turnstileSiteKey,
+}: {
+  readonly mode: AuthMode;
+  readonly turnstileSiteKey: string;
+}) {
   const t = await getTranslations('auth');
   const other = mode === 'login' ? '/inscription' : '/connexion';
   return (
@@ -39,7 +45,7 @@ export async function AuthScreen({ mode }: { readonly mode: AuthMode }) {
             </h1>
             <p className="m-0 text-lg text-ink-2">{t(`${mode}.lead`)}</p>
           </div>
-          <AuthPanel mode={mode} />
+          <AuthPanel mode={mode} turnstileSiteKey={turnstileSiteKey} />
           <p className="m-0 text-sm text-ink-2">
             {t(`${mode}.switchText`)}{' '}
             <Link href={other} className="font-medium text-ink">

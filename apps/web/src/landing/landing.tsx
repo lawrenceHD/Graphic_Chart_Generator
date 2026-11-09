@@ -26,17 +26,27 @@ export function Landing() {
       <main id={MAIN_ID} tabIndex={-1} className="focus:outline-none">
         <BrandProvider examples={listExamples()}>
           <Hero />
+          <LogoWallStrip />
+          <Metrics />
+          <Manifesto />
           <Deferred>
-            <LogoWallStrip />
-            <Metrics />
-            <Manifesto />
             <FlowGraph />
+          </Deferred>
+          <Deferred>
             <Journey />
+          </Deferred>
+          <Deferred>
             <Hanging />
+          </Deferred>
+          <Deferred>
             <Inside />
+          </Deferred>
+          <Deferred>
             <Showcase />
-            <Faq />
-            <FinalCta />
+          </Deferred>
+          <Faq />
+          <FinalCta />
+          <Deferred>
             <BackToTop />
           </Deferred>
         </BrandProvider>

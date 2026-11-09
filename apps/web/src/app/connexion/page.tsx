@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { publicMetadata } from '../../lib/page-metadata';
+import { getRuntimeEnv } from '../../lib/runtime-env';
 import { AuthScreen } from '../../auth/auth-screen';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,5 +15,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function ConnexionPage() {
-  return <AuthScreen mode="login" />;
+  return <AuthScreen mode="login" turnstileSiteKey={getRuntimeEnv().TURNSTILE_SITE_KEY} />;
 }

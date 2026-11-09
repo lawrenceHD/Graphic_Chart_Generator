@@ -8,6 +8,7 @@ import { useBrand } from './brand-context';
 import { colorOf, inkOn } from './palette-tools';
 
 const WordsSchema = z.array(z.string()).min(1);
+const FALLBACK = [''] as const;
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** The word the logo becomes, cycling in a pill painted with each example brand's own colour. */
@@ -15,7 +16,8 @@ export function HeroPill() {
   const t = useTranslations('homePage.hero');
   const reduce = useReducedMotion() ?? false;
   const { examples } = useBrand();
-  const words = WordsSchema.parse(t.raw('words'));
+  const parsed = WordsSchema.safeParse(t.raw('words'));
+  const words = parsed.success ? parsed.data : FALLBACK;
   const [index, setIndex] = useState(0);
   useEffect(() => {
     if (reduce) return;
