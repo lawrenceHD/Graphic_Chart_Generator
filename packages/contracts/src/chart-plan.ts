@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PageTypeSchema } from './document-types.js';
+import { PAGE_CAPACITY, PageTypeSchema, type PageType } from './document-types.js';
 
 export const MAX_CHART_SECTIONS = 40;
 export const MAX_SECTION_EVIDENCE = 20;
@@ -25,5 +25,18 @@ export type ChartSection = z.infer<typeof ChartSectionSchema>;
 // Ordered sections of a charter: the plan drives the number, the order and the titles of the pages.
 export const ChartPlanSchema = z
   .object({ sections: z.array(ChartSectionSchema).min(1).max(MAX_CHART_SECTIONS) })
-  .strict();
+  .strict()
+  .superRefine((plan, context) => {
+    const counts = new Map<PageType, number>();
+    for (const { type } of plan.sections) counts.set(type, (counts.get(type) ?? 0) + 1);
+    for (const [type, count] of counts) {
+      if (count > PAGE_CAPACITY[type]) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sections'],
+          message: `Too many sections of type ${type} (capacity ${String(PAGE_CAPACITY[type])}).`,
+        });
+      }
+    }
+  });
 export type ChartPlan = z.infer<typeof ChartPlanSchema>;

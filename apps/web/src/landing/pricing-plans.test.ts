@@ -17,6 +17,10 @@ describe('pricing plans (static hypotheses, no payment)', () => {
     expect(PLANS.filter((plan) => plan.price !== null).length).toBe(2);
   });
 
+  it('can only be taken for the free plan: paid plans do not exist yet', () => {
+    expect(PLANS.filter((plan) => plan.available).map((plan) => plan.id)).toEqual(['free']);
+  });
+
   it('has exactly one highlighted plan', () => {
     expect(PLANS.filter((plan) => plan.highlighted)).toHaveLength(1);
   });

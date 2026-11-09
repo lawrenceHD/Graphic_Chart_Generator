@@ -208,6 +208,9 @@ importers:
       '@app/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@app/logo-kit':
+        specifier: workspace:*
+        version: link:../../packages/logo-kit
       '@app/mockup-engine':
         specifier: workspace:*
         version: link:../../packages/mockup-engine

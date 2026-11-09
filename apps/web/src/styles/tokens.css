@@ -4,7 +4,8 @@
  * studio prototype reviewed by the owner; contrast is checked in CI (design-tokens.contrast.test.ts).
  * Only opaque oklch() values inside light-dark(), so the test can read them.
  */
-:root {
+:root,
+.theme-night {
   color-scheme: light dark;
 
   --bg-canvas: light-dark(oklch(0.965 0.008 85), oklch(0.16 0.008 60));
@@ -31,6 +32,11 @@
   --success: light-dark(oklch(0.5 0.14 150), oklch(0.76 0.16 150));
   --warning: light-dark(oklch(0.55 0.14 70), oklch(0.82 0.14 80));
   --danger: light-dark(oklch(0.55 0.2 25), oklch(0.7 0.19 25));
+}
+
+/* A night band inside a day page (landing): the tokens are re-declared on the element so light-dark() resolves there. */
+.theme-night {
+  color-scheme: dark;
 }
 
 :root[data-theme='light'] {

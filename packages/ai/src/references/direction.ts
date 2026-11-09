@@ -4,6 +4,7 @@ import {
   type TypeStyle,
   type VisualStyle,
 } from '@app/contracts';
+import { canonicalMockup } from './mockups.js';
 import type { RankedReference } from './rank.js';
 
 // Sections every professional guideline of the owner's corpus contains, whatever the sector.
@@ -97,7 +98,7 @@ export function buildArtDirection(ranked: readonly RankedReference[]): ArtDirect
     return [{ section, core, support, evidence: found?.evidence ?? [] }];
   });
 
-  const mockups = [...tally(ranked, (entry) => entry.reference.card.mockups)]
+  const mockups = [...tally(ranked, (entry) => entry.reference.card.mockups.map(canonicalMockup))]
     .map(([subject, found]) => ({
       subject,
       support: share(found.weight),

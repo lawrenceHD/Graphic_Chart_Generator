@@ -31,3 +31,5 @@ packages/ai/src/fonts/catalogue.json
 prototypes/showcase-flow/
 # Raw download manifest of the inspiration captures
 journal/research/inspirations/downloads.json
+# Derived statistics of the reference library, written by tools/references/derive-stats.mjs
+tools/references/derived/

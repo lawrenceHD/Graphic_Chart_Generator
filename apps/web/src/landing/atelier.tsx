@@ -47,9 +47,20 @@ function Segmented<T extends string>({
 }
 
 /** Interactive preview of a sample guideline: the sheets are drawn by the studio's own renderers. */
-export function Atelier({ examples }: { readonly examples: readonly LandingExample[] }) {
+export function Atelier({
+  examples,
+  exampleId: controlledId,
+  onExampleChange,
+}: {
+  readonly examples: readonly LandingExample[];
+  /** When given, the parent owns the chosen example (the home page shares it between its sections). */
+  readonly exampleId?: string;
+  readonly onExampleChange?: (id: string) => void;
+}) {
   const t = useTranslations('homePage.atelier');
-  const [exampleId, setExampleId] = useState(examples[0]?.id ?? '');
+  const [ownId, setOwnId] = useState(examples[0]?.id ?? '');
+  const exampleId = controlledId ?? ownId;
+  const setExampleId = onExampleChange ?? setOwnId;
   const [shown, setShown] = useState<Shown>('cover');
   const example = examples.find((entry) => entry.id === exampleId) ?? examples[0];
   if (example === undefined) return null;

@@ -15,8 +15,8 @@ export async function SiteHeader({ onHome = false }: { readonly onHome?: boolean
   const t = await getTranslations('site');
   const base = onHome ? '' : '/';
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas">
-      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 sm:px-6">
+    <header className="sticky top-0 z-40 px-3 pt-3">
+      <div className="glass mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-3xl border border-line bg-surface/85 px-4 py-2 shadow-lg backdrop-blur-md md:rounded-full sm:px-5">
         <Link
           href="/"
           aria-label={t('home')}

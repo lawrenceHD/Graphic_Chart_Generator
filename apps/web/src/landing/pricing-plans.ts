@@ -8,6 +8,8 @@ export interface Plan {
   /** Project quota, or null when unlimited. */
   readonly projects: number | null;
   readonly highlighted: boolean;
+  /** False while the plan cannot be taken: its call to action leads nowhere. */
+  readonly available: boolean;
   readonly features: readonly string[];
 }
 
@@ -18,6 +20,7 @@ export const PLANS: readonly Plan[] = [
     priceToValidate: false,
     projects: 3,
     highlighted: false,
+    available: true,
     features: ['pdf', 'files', 'copilot'],
   },
   {
@@ -26,6 +29,7 @@ export const PLANS: readonly Plan[] = [
     priceToValidate: true,
     projects: null,
     highlighted: true,
+    available: false,
     features: ['unlimited', 'tokens', 'mockups', 'priority'],
   },
   {
@@ -34,6 +38,7 @@ export const PLANS: readonly Plan[] = [
     priceToValidate: true,
     projects: null,
     highlighted: false,
+    available: false,
     features: ['seats', 'share', 'whiteLabel', 'support'],
   },
 ];

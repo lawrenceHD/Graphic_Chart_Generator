@@ -25,6 +25,8 @@
 
   --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  /* One editorial word per heading (landing): never body text. */
+  --font-accent: 'Fraunces Variable', Georgia, serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 
   --spacing: 4px;
@@ -48,6 +50,25 @@
   --text-5xl: clamp(3rem, 9vw, 6rem);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The tailwind colour aliases are substituted where they are declared, so a night band re-points them itself. */
+.theme-night {
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-preview: var(--bg-preview);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--accent-contrast);
+  --color-focus: var(--focus-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 @layer base {
@@ -120,4 +141,14 @@
 @utility drafting {
   background-image: radial-gradient(var(--border-subtle) 1px, transparent 1px);
   background-size: 22px 22px;
+}
+
+/* Millimetre grid with registration crosses (landing hero): fades out towards the edges. */
+@utility blueprint {
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.55;
+  mask-image: radial-gradient(60% 55% at 50% 30%, black 20%, transparent 75%);
 }

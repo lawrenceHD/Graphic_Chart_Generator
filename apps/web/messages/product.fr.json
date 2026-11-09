@@ -18,10 +18,23 @@
     "metaTitle": "Charta · Une charte graphique complète à partir de votre logo",
     "hero": {
       "title": "Votre logo devient une charte complète.",
-      "lead": "Déposez le fichier : Charta mesure ses couleurs, vérifie chaque contraste, compose les pages et les mises en situation. Vous reprenez ensuite chaque page, à la main ou en parlant au copilote.",
+      "lead": "Déposez le fichier et un court brief. Charta mesure les couleurs, vérifie chaque contraste, compose les pages et les mises en situation. Vous reprenez ensuite chaque page, à la main ou en parlant au copilote.",
       "start": "Essayer sans compte",
       "signup": "Créer un compte",
-      "note": "Sans carte bancaire. Votre logo n’est jamais redessiné."
+      "note": "Sans carte bancaire. Votre logo n’est jamais redessiné.",
+      "demo": "Voir une charte d’exemple",
+      "pick": "Choisissez une marque d’exemple : toute la page change avec elle",
+      "fiction": "Marques fictives créées pour la démonstration, pas des clients.",
+      "proof": {
+        "palette": "Palette mesurée",
+        "level": {
+          "aaa": "AAA",
+          "aa": "AA",
+          "large-ui": "Grand texte",
+          "fail": "Insuffisant"
+        }
+      },
+      "accent": "charte"
     },
     "atelier": {
       "title": "L’atelier, avec une vraie charte",
@@ -74,20 +87,135 @@
       "logo": "Le logo n’est jamais redessiné par une IA.",
       "measured": "Chaque valeur affichée est calculée, avec sa source.",
       "undo": "Chaque modification s’annule et se rétablit.",
-      "export": "Export PDF, fichiers du logo et tokens CSS."
+      "export": "Export PDF, fichiers du logo et tokens CSS.",
+      "label": "Promesses vérifiables"
     },
     "final": {
       "title": "Déposez votre logo.",
-      "lead": "La première charte se compose en quelques minutes, sans compte."
-    }
+      "lead": "La première charte se compose en quelques minutes, sans compte.",
+      "account": "Créer un compte"
+    },
+    "story": {
+      "file": "{name} · logo déposé",
+      "role": {
+        "primary": "Principale",
+        "accent": "Accent",
+        "neutralLight": "Papier",
+        "neutralDark": "Encre"
+      },
+      "level": {
+        "aaa": "AAA",
+        "aa": "AA",
+        "large-ui": "Grand texte",
+        "fail": "Insuffisant"
+      },
+      "say": "Rends la page des contrastes plus lisible.",
+      "done": "Page recomposée.",
+      "undoable": "Commande annulable"
+    },
+    "wall": {
+      "title": "Votre logo, posé sur de <em>vrais</em> objets.",
+      "lead": "Cartes, affiches, mug, enseigne, sac, papier à en-tête : le logo est placé au pixel près, avec perspective et ombres calculées. Il n’est jamais redessiné.",
+      "alt": "{scene} avec le logo de {brand}",
+      "failed": "Cette scène n’a pas pu être chargée.",
+      "retry": "Réessayer",
+      "note": "Objets photographiés ; marques d’exemple fictives. Rendu calculé dans votre navigateur.",
+      "scene": {
+        "poster-hanging": "Affiche accrochée",
+        "cards-floating": "Cartes de visite",
+        "mug-stripes": "Mug rayé",
+        "a4-sheet": "Papier à en-tête",
+        "paper-bag": "Sac papier",
+        "storefront-sign": "Enseigne"
+      }
+    },
+    "proof": {
+      "title": "Chaque chiffre est mesuré, pas deviné.",
+      "lead": "La palette, les contrastes, les variantes et les tokens sortent des mêmes moteurs que le studio. Changez de marque : tout se recalcule.",
+      "variants": "Variantes du logo",
+      "noVariant": "Non fournie",
+      "variant": {
+        "color": "Couleur",
+        "black": "Noir",
+        "white": "Blanc"
+      },
+      "matrix": "Matrice de contrastes",
+      "matrixNote": "Texte de chaque couleur sur chaque fond, rapport WCAG.",
+      "files": "Tokens et fichiers",
+      "kind": {
+        "pdf": "Charte PDF",
+        "svg": "Logo SVG",
+        "css": "Tokens CSS"
+      }
+    },
+    "brands": {
+      "title": "Marques d’exemple",
+      "note": "Marques fictives dessinées pour la démonstration : aucun client, aucun logo existant."
+    },
+    "problem": {
+      "title": "Le jugement, c’est votre <em>métier</em>. Le reste est répétitif.",
+      "text": "Palette en cinq formats, matrice de contrastes, variantes noir et blanc, zone d’exclusion, mise en page, mockups, fichiers à livrer : à chaque marque, on refait les mêmes gestes. Charta s’en charge, pour que votre temps aille à la direction."
+    },
+    "outputs": {
+      "title": "Des fichiers que vous pouvez <em>livrer</em>.",
+      "lead": "Chaque sortie vient de la marque affichée : changez d’exemple, les extraits changent avec elle.",
+      "pdf": {
+        "title": "Charte PDF",
+        "text": "Toutes les pages, en vectoriel."
+      },
+      "kit": {
+        "title": "Kit logo",
+        "text": "Couleur, noir et blanc, en SVG et PNG, avec les règles d’usage."
+      },
+      "css": {
+        "title": "Variables CSS",
+        "text": "Prêtes à coller dans une feuille de style."
+      },
+      "tailwind": {
+        "title": "Thème Tailwind",
+        "text": "Les mêmes valeurs, au format @theme."
+      },
+      "dtcg": {
+        "title": "Tokens DTCG",
+        "text": "Le format W3C que Figma sait lire."
+      },
+      "note": "Le PDF est un document de référence en RVB : il n’est pas présenté comme prêt pour l’impression."
+    },
+    "faq": {
+      "title": "Les questions qu’on nous pose, sans détour.",
+      "q1": {
+        "q": "Une IA va-t-elle redessiner mon logo ?",
+        "a": "Non. Le logo n’est jamais redessiné par un modèle génératif. Variantes et mises en situation sont calculées à partir de votre fichier."
+      },
+      "q2": {
+        "q": "Le résultat est-il au niveau d’un designer ?",
+        "a": "Charta fait la partie systématique : palette, contrastes, variantes, mise en page, fichiers. La direction reste la vôtre : chaque page se reprend à la main ou au copilote, et vous jugez le résultat."
+      },
+      "q3": {
+        "q": "Que devient mon logo ?",
+        "a": "Le logo est assaini, reste privé et n’est lisible que depuis votre projet. Vous conservez vos droits sur vos logos."
+      },
+      "q4": {
+        "q": "Le PDF est-il prêt pour l’imprimerie ?",
+        "a": "Non : c’est un PDF de référence en RVB, texte et logos en vectoriel. Il n’est pas présenté comme prêt pour l’impression."
+      },
+      "q5": {
+        "q": "Quels fichiers puis-je déposer ?",
+        "a": "SVG (5 Mo au plus), PNG, WebP ou JPEG (10 Mo et 8 192 × 8 192 px au plus). Un SVG avec texte non vectorisé est signalé : exportez-le avec les textes en contours."
+      },
+      "q6": {
+        "q": "Puis-je essayer sans compte, et combien ça coûte ?",
+        "a": "Oui : une session invitée permet de tester. Le plan gratuit offre 3 projets. Les plans payants ne sont pas encore ouverts et leurs prix sont indicatifs."
+      }
+    },
+    "metaDescription": "Déposez votre logo : Charta mesure les couleurs, vérifie les contrastes et compose la charte graphique, les mises en situation et les fichiers."
   },
   "pricing": {
-    "metaTitle": "Tarifs",
-    "title": "Des tarifs simples, pensés pour grandir.",
+    "metaTitle": "Tarifs · Charta",
+    "title": "Gratuit pour commencer, des plans payants à venir.",
     "lead": "Commencez gratuitement avec trois projets. Les plans payants arrivent après la bêta.",
-    "hypothesis": "Prix indicatifs à valider. Aucun paiement n’est possible pour l’instant.",
-    "toValidate": "à valider",
-    "soon": "Bientôt",
+    "hypothesis": "Prix indicatifs, non facturés pour l’instant : aucun paiement n’est possible.",
+    "toValidate": "prix indicatif, à valider",
     "perMonth": "{price} €",
     "perMonthUnit": "par mois",
     "free": "0 €",
@@ -125,14 +253,20 @@
       "support": "Accompagnement dédié"
     },
     "faqTitle": "Questions fréquentes",
-    "q1": "Puis-je payer dès maintenant ?",
-    "a1": "Non. Le paiement n’existe pas encore. Le plan gratuit est le seul actif, avec trois projets.",
-    "q2": "Que se passe-t-il si je dépasse trois projets ?",
-    "a2": "Vous gardez l’accès à vos chartes. La création d’un quatrième projet est refusée avec un message qui explique pourquoi."
+    "q1": "Quels fichiers puis-je déposer ?",
+    "a1": "Un logo SVG (5 Mo au plus), PNG, WebP ou JPEG (10 Mo et 8192 × 8192 px au plus). Le fichier est vérifié avant toute lecture.",
+    "q2": "Mes fichiers m’appartiennent-ils ?",
+    "a2": "Vous conservez vos droits sur vos logos. Les conditions sur les textes et mises en page générés seront précisées dans les conditions d’utilisation, formulées avec prudence.",
+    "ctaSoon": "Bientôt disponible",
+    "q3": "Que contient l’export PDF ?",
+    "a3": "Toutes les pages de la charte, avec les textes et les logos en vectoriel. C’est un PDF de référence en RVB : il n’est pas présenté comme prêt pour l’impression.",
+    "q4": "Que devient mon logo ?",
+    "a4": "Il est assaini, reste privé et n’est lisible que depuis votre projet. Il n’est jamais redessiné par une IA : les variantes et mises en situation sont calculées à partir de votre fichier.",
+    "metaDescription": "Commencez gratuitement avec trois projets. Les plans payants arrivent après la bêta ; prix indicatifs, aucun paiement possible pour l’instant."
   },
   "auth": {
-    "loginMeta": "Connexion",
-    "signupMeta": "Créer un compte",
+    "loginMeta": "Connexion · Charta",
+    "signupMeta": "Créer un compte · Charta",
     "back": "Retour à l’accueil",
     "login": {
       "title": "Content de vous revoir.",
@@ -180,7 +314,9 @@
       "rateLimited": "Trop de tentatives. Patientez quelques minutes, puis réessayez.",
       "generic": "L’opération a échoué de notre côté. Réessayez dans un instant.",
       "network": "Le serveur est injoignable. Vérifiez votre connexion, puis réessayez."
-    }
+    },
+    "loginDescription": "Retrouvez vos chartes graphiques.",
+    "signupDescription": "Créez un compte pour enregistrer vos chartes."
   },
   "dashboard": {
     "metaTitle": "Mes projets",

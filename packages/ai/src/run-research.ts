@@ -19,6 +19,7 @@ export type ResearchIssueCode =
   | 'reference-index-missing'
   | 'reference-lines-rejected'
   | 'empty-library'
+  | 'sector-not-indexed'
   | 'library-embedding-mismatch'
   | 'research-failed'
   | 'recording-missing'
