@@ -13,6 +13,12 @@ Chaque logo est une **marque de son propriétaire**. La licence MIT du dépôt n
 - **Interdit** : commiter ces fichiers, en faire des fixtures de test versionnées (`docs/05_ENGINES.md` §6 exige
   des logos libres de droits), les intégrer à l'application, aux mockups, aux exemples ou au marketing.
 
+### Exception décidée par le propriétaire (2026-11-09)
+Seize logos de la bibliothèque (`apps/web/src/landing/examples/data/logo-selection.ts`, copies dans
+`apps/web/public/demo/logos/`) sont affichés dans les exemples et mockups de l'accueil, à la place de logos
+synthétiques. Ils restent des marques de leurs propriétaires : aucune relation client n'est revendiquée, et
+tout propriétaire qui le demande obtient le retrait immédiat de son logo. Les autres fichiers restent interdits.
+
 ## Usage avec le skill `logo-design`
 Le skill cherche `assets/library/` à côté de son `SKILL.md`. Pour l'activer en local, copier ou lier le dossier
 `.cache/logo-library/skills/logo-design/assets` dans `.claude/skills/logo-design/` ; ce dossier est ignoré par Git.

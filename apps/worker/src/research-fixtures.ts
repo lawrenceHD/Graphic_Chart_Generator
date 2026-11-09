@@ -6,10 +6,10 @@ const DIMENSIONS = 64;
 export const axis = (index: number): number[] =>
   Array.from({ length: DIMENSIONS }, (_, position) => (position === index ? 1 : 0));
 
-const reference = (id: string, embedding: number[]): IndexedReference => ({
+const reference = (id: string, embedding: number[], sector = 'restaurant'): IndexedReference => ({
   id,
-  sector: 'restaurant',
-  file: `restaurant/${id}.jpg`,
+  sector,
+  file: `${sector}/${id}.jpg`,
   card: {
     kind: 'brand-board',
     sections: ['menu', 'logo', 'palette'],
@@ -28,6 +28,11 @@ const reference = (id: string, embedding: number[]): IndexedReference => ({
 });
 
 export const indexText = [reference('menu-1', axis(0)), reference('menu-2', axis(1))]
+  .map((entry) => JSON.stringify(entry))
+  .join('\n');
+
+/** A library that has no reference of the sector the logo is read as (`restaurant`). */
+export const otherSectorIndexText = [reference('bank-1', axis(0), 'finance')]
   .map((entry) => JSON.stringify(entry))
   .join('\n');
 

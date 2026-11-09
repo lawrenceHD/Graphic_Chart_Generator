@@ -1,0 +1,60 @@
+{
+  "id": "mailer-box-blue",
+  "schemaVersion": 2,
+  "category": "packaging",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "lid",
+      "quad": [
+        [
+          406,
+          336
+        ],
+        [
+          940,
+          116
+        ],
+        [
+          1514,
+          344
+        ],
+        [
+          1030,
+          660
+        ]
+      ],
+      "logoBox": {
+        "aspect": 0.875,
+        "fit": "contain",
+        "paddingRatio": 0.24
+      },
+      "baseTint": [
+        0.906,
+        0.902,
+        0.91
+      ],
+      "light": {
+        "direction": [
+          -0.4008,
+          -0.6012,
+          0.6913
+        ]
+      },
+      "finishes": [
+        "print",
+        "foil"
+      ],
+      "mask": "mask-lid.png",
+      "material": "paper",
+      "paint": [
+        "primary",
+        "neutralLight",
+        "neutralDark"
+      ]
+    }
+  ]
+}

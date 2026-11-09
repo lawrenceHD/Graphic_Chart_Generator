@@ -1,37 +1,80 @@
-import { Plus } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
+import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useId, useState } from 'react';
+import { SplitWords } from '../../ui/fx';
+
+const SOFT = { type: 'spring', stiffness: 120, damping: 20, mass: 1 } as const;
 const QUESTIONS = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'] as const;
 
-/** Six real objections, answered in the page itself (native disclosure: keyboard and screen readers for free). */
-export async function Faq() {
-  const t = await getTranslations('homePage.faq');
+/** Six real objections, answered on the page: an accordion whose buttons announce what they open. */
+export function Faq() {
+  const t = useTranslations('homePage.faq');
+  const [open, setOpen] = useState<string | null>('q1');
+  const base = useId();
   return (
     <section
-      id="questions"
+      id="faq"
       aria-labelledby="faq-title"
-      className="mx-auto grid max-w-[1240px] gap-10 px-6 py-24 sm:py-32 lg:grid-cols-12"
+      className="mx-auto grid max-w-6xl scroll-mt-24 gap-10 px-4 py-24 md:grid-cols-[1fr_1.4fr]"
     >
       <h2
         id="faq-title"
-        className="m-0 font-display text-4xl leading-[0.98] font-extrabold tracking-[-0.03em] text-balance lg:col-span-4"
+        className="m-0 font-display text-[clamp(2.25rem,6vw,4.75rem)] leading-[0.92] font-extrabold tracking-[-0.03em] text-balance"
       >
-        {t('title')}
+        <SplitWords text={t('title')} />
       </h2>
-      <div className="flex flex-col lg:col-span-8">
-        {QUESTIONS.map((key) => (
-          <details key={key} className="group border-t border-line py-5 last:border-b">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 font-display text-xl font-bold tracking-tight [&::-webkit-details-marker]:hidden">
-              <h3 className="m-0 text-xl font-bold">{t(`${key}.q`)}</h3>
-              <Plus
-                aria-hidden="true"
-                className="size-5 shrink-0 transition-transform duration-300 group-open:rotate-45"
-              />
-            </summary>
-            <p className="mt-3 mb-0 max-w-[62ch] text-base text-ink-2">{t(`${key}.a`)}</p>
-          </details>
-        ))}
-      </div>
+      <ul className="m-0 list-none space-y-3 p-0">
+        {QUESTIONS.map((key) => {
+          const expanded = open === key;
+          const panel = `${base}-${key}`;
+          return (
+            <motion.li
+              key={key}
+              layout
+              transition={SOFT}
+              className="rounded-[28px] border border-line bg-surface px-6"
+            >
+              <h3 className="m-0">
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-controls={panel}
+                  onClick={() => {
+                    setOpen(expanded ? null : key);
+                  }}
+                  className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-4 py-5 text-left text-lg font-medium"
+                >
+                  {t(`${key}.q`)}
+                  <motion.span
+                    animate={{ rotate: expanded ? 45 : 0 }}
+                    transition={SOFT}
+                    className="grid size-10 shrink-0 place-items-center rounded-full border border-line"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                  </motion.span>
+                </button>
+              </h3>
+              <AnimatePresence initial={false}>
+                {expanded ? (
+                  <motion.p
+                    id={panel}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="m-0 max-w-xl pb-6 text-ink-2"
+                  >
+                    {t(`${key}.a`)}
+                  </motion.p>
+                ) : null}
+              </AnimatePresence>
+            </motion.li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

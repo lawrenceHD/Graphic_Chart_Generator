@@ -17,6 +17,7 @@ import { guestActorFromCookie } from './guest-service';
 import { createLoginThrottle, type LoginThrottle } from './login-throttle';
 import { guestCookieOf, guestHandlers } from './guest-routes';
 import { parseTrustedProxyHops } from './client-ip';
+import { signupVerifier, type SignupGuardDeps } from './signup-guard';
 import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
 import { createRateLimiter, type RateLimiter } from './rate-limiter';
@@ -91,6 +92,19 @@ function getRateLimiter(): RateLimiter {
   return rateLimiter;
 }
 
+/**
+ * Sign-up anti-bot dependencies. TURNSTILE_SECRET is required by the environment schema, so a missing secret stops
+ * the application at startup; a dummy Cloudflare secret on https closes sign-up (503) instead of opening it.
+ */
+export function getSignupGuardDeps(): SignupGuardDeps {
+  const env = getRuntimeEnv();
+  return {
+    verify: signupVerifier(env.TURNSTILE_SECRET, env.APP_URL, createTurnstileVerifier),
+    limiter: getRateLimiter(),
+    trustedProxyHops: getTrustedProxyHops(),
+  };
+}
+
 let loginThrottle: LoginThrottle | undefined;
 
 export function getLoginThrottle(): LoginThrottle {
@@ -147,6 +161,10 @@ export function getAccountHandlers(): ReturnType<typeof accountHandlers> {
     trustedProxyHops: getTrustedProxyHops(),
     storage: newStorage(),
     limiter: getRateLimiter(),
+    // Counts only: no identifier, e-mail or project content.
+    onErased: (summary) => {
+      appLogger().info({ event: 'account_erased', files: summary.files });
+    },
     // Summary only: no e-mail, no project content.
     onError: (error) => {
       appLogger().error({ event: 'account_erasure_storage_error', error: errorSummary(error) });

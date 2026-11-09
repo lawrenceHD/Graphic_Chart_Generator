@@ -46,3 +46,7 @@
 ## 4. Chaîne des skills
 
 Voir `SKILLS-CHAIN.md` : 2 chercheurs, 3 valideurs, 1 installeur plus un relecteur, soit 6 à 7 profils.
+
+## 5. Agents nommés et rôles régénérés (2026-11-09)
+
+Définitions persistantes dans `.claude/agents/`, régénérées depuis les prompts d'origine du 2026-11-07 : **MIA** (`mia-homepage`, accueil), **NOÉ** (`noe-mockups-webgl`), **KOFI** (`kofi-qa`, QA bout en bout), **JULES** (`jules-design-critic`, critique adversarial), `r1-contrats-document`, `r2-ia-recherche`, `r3-worker-pipeline`, `r4-front-charte`, `r5-front-produit`, `r6-api-securite`, `r7-da-i18n`, `r9-securite-ops`. S'y ajoutent `design-director`, `seo-specialist`, `marketing-strategist`, `uiux-lead` et les relecteurs (`code-reviewer`, `typescript-reviewer`, `security-reviewer`, `silent-failure-hunter`). Les valideurs V1 à V4, chercheurs A et B et l'installeur de la chaîne de skills sont à recréer depuis `SKILLS-CHAIN.md` quand on la relance. Règle : toute tâche passe par l'agent de son rôle (`WORK-RULES.md`).

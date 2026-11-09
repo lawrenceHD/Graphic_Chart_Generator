@@ -229,3 +229,24 @@
     background: var(--bg-surface) !important;
   }
 }
+
+/* Light passing over the giant name of the footer. */
+@keyframes sheen {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+
+  to {
+    transform: translateX(420%) skewX(-20deg);
+  }
+}
+
+.sheen {
+  animation: sheen 6s var(--ease-out-expo) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen {
+    animation: none;
+  }
+}

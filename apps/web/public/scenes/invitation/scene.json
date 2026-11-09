@@ -1,0 +1,57 @@
+{
+  "id": "invitation",
+  "schemaVersion": 2,
+  "category": "stationery",
+  "size": {
+    "width": 1920,
+    "height": 1088
+  },
+  "surfaces": [
+    {
+      "id": "card",
+      "quad": [
+        [
+          453,
+          176
+        ],
+        [
+          1181,
+          159
+        ],
+        [
+          1209,
+          933
+        ],
+        [
+          441,
+          955
+        ]
+      ],
+      "logoBox": {
+        "aspect": 0.963,
+        "fit": "contain",
+        "paddingRatio": 0.26
+      },
+      "baseTint": [
+        0.965,
+        0.965,
+        0.973
+      ],
+      "light": {
+        "direction": [
+          -0.499,
+          -0.499,
+          0.7085
+        ]
+      },
+      "finishes": [
+        "print"
+      ],
+      "mask": "mask-card.png",
+      "material": "paper",
+      "paint": [
+        "none"
+      ]
+    }
+  ]
+}

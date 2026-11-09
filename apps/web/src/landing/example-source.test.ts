@@ -72,8 +72,8 @@ describe('contrast pairs follow what a designer would use', () => {
     }
   });
 
-  it('shows the dark brand Halden with paper on primary, not 1.35:1', () => {
-    const halden = byId('halden-advisory');
+  it('shows the dark brand DreamHost with paper on primary, not 1.35:1', () => {
+    const halden = byId('dreamhost');
     const pair = halden.contrasts.find((p) => p.background === 'primary');
     expect(pair?.foreground).toBe('neutralLight');
     expect(Number(pair?.ratio)).toBeGreaterThan(10);

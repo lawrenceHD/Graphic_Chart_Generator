@@ -1,8 +1,8 @@
 {
   "site": {
     "nav": "Navigation principale",
-    "atelier": "Atelier",
-    "method": "Méthode",
+    "atelier": "La charte",
+    "method": "Fonctionnement",
     "pricing": "Tarifs",
     "login": "Connexion",
     "signup": "Créer un compte",
@@ -12,7 +12,8 @@
     "footerTagline": "Des chartes graphiques composées à partir d’un logo, mesurées par des moteurs et ajustables page par page.",
     "footerProduct": "Produit",
     "footerAccount": "Compte",
-    "rights": "© 2026 Charta"
+    "rights": "© 2026 Charta",
+    "mockups": "Mockups"
   },
   "homePage": {
     "metaTitle": "Charta · Une charte graphique complète à partir de votre logo",
@@ -34,7 +35,19 @@
           "fail": "Insuffisant"
         }
       },
-      "accent": "charte"
+      "accent": "charte",
+      "before": "une",
+      "after": "complète.",
+      "line1": "Votre logo devient",
+      "words": [
+        "charte",
+        "palette",
+        "typographie",
+        "identité"
+      ],
+      "wordsLabel": "Ce que devient votre logo",
+      "chipFont": "Typographie de la marque",
+      "chipFavicon": "favicon.svg"
     },
     "atelier": {
       "title": "L’atelier, avec une vraie charte",
@@ -93,7 +106,9 @@
     "final": {
       "title": "Déposez votre logo.",
       "lead": "La première charte se compose en quelques minutes, sans compte.",
-      "account": "Créer un compte"
+      "account": "Créer un compte",
+      "button": "Essayer sans compte",
+      "note": "Sans carte bancaire · votre logo reste privé"
     },
     "story": {
       "file": "{name} · logo déposé",
@@ -127,7 +142,9 @@
         "a4-sheet": "Papier à en-tête",
         "paper-bag": "Sac papier",
         "storefront-sign": "Enseigne"
-      }
+      },
+      "lead1": "Votre logo, posé sur de",
+      "pill": "vrais objets"
     },
     "proof": {
       "title": "Chaque chiffre est mesuré, pas deviné.",
@@ -208,7 +225,77 @@
         "a": "Oui : une session invitée permet de tester. Le plan gratuit offre 3 projets. Les plans payants ne sont pas encore ouverts et leurs prix sont indicatifs."
       }
     },
-    "metaDescription": "Déposez votre logo : Charta mesure les couleurs, vérifie les contrastes et compose la charte graphique, les mises en situation et les fichiers."
+    "metaDescription": "Déposez votre logo : Charta mesure les couleurs, vérifie les contrastes et compose la charte graphique, les mises en situation et les fichiers.",
+    "metrics": {
+      "label": "Ce que produit une charte",
+      "pages": "pages de charte composées",
+      "contrasts": "rapports de contraste calculés",
+      "scenes": "scènes de mockup disponibles",
+      "exports": "formats d’export",
+      "note": "Valeurs lues sur le catalogue et sur la marque affichée."
+    },
+    "manifesto": {
+      "line1": "Le jugement, c’est votre métier.",
+      "line2": "Le reste est répétitif.",
+      "text": "Palette en cinq formats, matrice de contrastes, variantes noir et blanc, zone d’exclusion, mise en page, mockups, fichiers à livrer : à chaque marque, on refait les mêmes gestes. Charta s’en charge, pour que votre temps aille à la direction.",
+      "wcag": "WCAG 2.2",
+      "svg": "SVG vectoriel",
+      "undo": "Annulable",
+      "tokens": "Design tokens",
+      "cmyk": "CMJN indicatif"
+    },
+    "flow": {
+      "title": "Un logo, tout un système.",
+      "palette": "Palette",
+      "type": "Typographie",
+      "contrast": "Contrastes",
+      "mockups": "Mockups",
+      "rules": "Règles",
+      "tokens": "Tokens",
+      "logoAlt": "Logo de {brand}"
+    },
+    "journey": {
+      "stage1": "Lecture du logo",
+      "stage2": "Palette et contrastes",
+      "stage3": "Typographie",
+      "stage4": "Assemblage",
+      "verified": "Fichier vérifié"
+    },
+    "hanging": {
+      "title": "Des chartes qui ont du caractère.",
+      "lead": "Chaque page est composée à partir du logo. Attrapez-en une.",
+      "alt": "Page {page} de la charte de {brand}"
+    },
+    "inside": {
+      "title": "Tout ce que contient la charte.",
+      "palette": "Palette mesurée sur le logo",
+      "paletteNote": "Rôles attribués par le moteur : principale, accent, neutres.",
+      "contrast": "Contrastes mesurés",
+      "contrastNote": "Rapport WCAG 2.2, avec son niveau écrit.",
+      "variants": "Variantes du logo",
+      "variantsNote": "Couleur, noir, blanc : fournies telles quelles ou calculées.",
+      "tokens": "Tokens exportés",
+      "tokensNote": "Variables CSS, thème Tailwind, tokens DTCG.",
+      "pick": "Marque d’exemple"
+    },
+    "showcase": {
+      "photo": "photo"
+    },
+    "footer": {
+      "tagline": "Des chartes graphiques composées à partir d’un logo, mesurées par des moteurs et ajustables page par page.",
+      "product": "Produit",
+      "account": "Compte",
+      "demo": "Démonstration : marques d’exemple fictives",
+      "toTop": "Revenir en haut de la page"
+    },
+    "nav": {
+      "how": "Fonctionnement",
+      "guideline": "La charte",
+      "mockups": "Mockups",
+      "faq": "Questions",
+      "menu": "Menu",
+      "close": "Fermer"
+    }
   },
   "pricing": {
     "metaTitle": "Tarifs · Charta",
