@@ -67,6 +67,14 @@ describe('Turnstile on sign-up (SEC-25)', () => {
     expect(calls).toHaveLength(0);
   });
 
+  it('also guards a variant spelling of the path (trailing slash, case)', async () => {
+    const { handler, calls } = guard(accept);
+    for (const path of ['/api/auth/sign-up/email/', '/api/auth/Sign-Up/Email']) {
+      expect((await handler(signUp({}, path))).status).toBe(403);
+    }
+    expect(calls).toHaveLength(0);
+  });
+
   it('leaves the other Better Auth routes alone', async () => {
     const { handler, calls } = guard(null, 99);
     for (const path of ['/api/auth/sign-in/email', '/api/auth/get-session']) {

@@ -48,15 +48,20 @@ export function accountHandlers(deps: AccountRouteDeps) {
       }
 
       // Files first, rows second: a storage failure leaves everything in place and the call can be repeated.
-      const files = await storageKeysOf(deps.orm, userId);
+      let files: string[];
       try {
+        files = await storageKeysOf(deps.orm, userId);
         for (const key of files) await deps.storage.delete(key);
       } catch (error) {
         deps.onError(error);
         return problemResponse(request, 503, 'STORAGE_UNAVAILABLE', 'try again later');
       }
       await eraseAccountRows(deps.orm, userId);
-      deps.onErased({ files: files.length });
+      try {
+        deps.onErased({ files: files.length });
+      } catch (error) {
+        deps.onError(error); // the erasure is done: a failing audit log must not turn it into a 500
+      }
       return gone();
     },
   };

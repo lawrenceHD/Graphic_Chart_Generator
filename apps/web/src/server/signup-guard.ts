@@ -42,7 +42,9 @@ export function turnstileSignup(
   deps: SignupGuardDeps,
 ) {
   return async (request: Request): Promise<Response> => {
-    if (!new URL(request.url).pathname.endsWith(SIGN_UP_PATH)) return handler(request);
+    // Case and trailing slashes are normalised so that a variant spelling cannot dodge the check.
+    const path = new URL(request.url).pathname.toLowerCase().replace(/\/+$/u, '');
+    if (!path.endsWith(SIGN_UP_PATH)) return handler(request);
     const ip = clientIp(request, deps.trustedProxyHops);
     // Before the verification call, so that a flood costs neither Cloudflare calls nor rows.
     const wait = await deps.limiter.hit([
