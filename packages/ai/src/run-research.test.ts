@@ -233,6 +233,25 @@ describe('runResearch', () => {
     expect(result.value.issues.map((issue) => issue.code)).toContain('recording-failed');
   });
 
+  it('ranks mockup scenes first when the purpose is mockups, spreads by default', async () => {
+    const mixed = [
+      reference('scene', 'restaurant', axis(0), { kind: 'mockup-scene' }),
+      reference('spread', 'restaurant', axis(0, 1, 0.1), { kind: 'guideline-spread' }),
+    ];
+    const readIndex = (): Promise<string> =>
+      Promise.resolve(mixed.map((entry) => JSON.stringify(entry)).join('\n'));
+    const first = async (purpose?: 'charter' | 'mockups'): Promise<string | undefined> => {
+      const result = await runResearch(deps({ readIndex }), {
+        ...input,
+        ...(purpose === undefined ? {} : { purpose }),
+      });
+      return result.ok ? result.value.research?.direction.references[0]?.id : undefined;
+    };
+    expect(await first()).toBe('spread');
+    expect(await first('charter')).toBe('spread');
+    expect(await first('mockups')).toBe('scene');
+  });
+
   it('rejects a malformed palette at the boundary', async () => {
     const result = await runResearch(deps(), { logo: image, palette: ['red'] });
     expect(result.ok).toBe(false);

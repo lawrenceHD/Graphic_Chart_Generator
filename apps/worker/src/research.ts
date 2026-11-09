@@ -110,7 +110,11 @@ export function aiResearch(options: AiResearchOptions): ResearchPort {
       }
       let produced: Result<AiOutcome, { readonly code: string }>;
       try {
-        produced = await options.run({ logo: input.logo, palette: [...input.palette] });
+        produced = await options.run({
+          logo: input.logo,
+          palette: [...input.palette],
+          purpose: 'charter',
+        });
       } catch (cause) {
         return err(failure('RESEARCH_FAILED', `research threw (${causeOf(cause)})`));
       }
