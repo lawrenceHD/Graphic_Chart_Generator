@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LOGO_FILE_HEAD_BYTES, checkLogoFile } from './logo-file';
+import { LOGO_FILE_HEAD_BYTES, checkBrandFile, checkLogoFile } from './logo-file';
 
 const MiB = 1024 * 1024;
 const bytes = (...values: number[]) => Uint8Array.from(values);
@@ -9,6 +9,34 @@ const PNG = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13);
 const JPEG = bytes(0xff, 0xd8, 0xff, 0xe0, 0, 16);
 const WEBP = text('RIFF\u0000\u0000\u0000\u0000WEBPVP8 ');
 const SVG = text('<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+
+describe('checkBrandFile (a logo or a manifest document, by signature)', () => {
+  const MD = text('# Ma marque\n\nNous faisons du pain.');
+  const DOCX = bytes(0x50, 0x4b, 0x03, 0x04, 0x14, 0);
+  it('tells logos from documents from the bytes', () => {
+    expect(checkBrandFile(PNG.length, PNG)).toEqual({ ok: true, value: { kind: 'logo', type: 'png' } });
+    expect(checkBrandFile(MD.length, MD)).toEqual({
+      ok: true,
+      value: { kind: 'document', format: 'text' },
+    });
+    expect(checkBrandFile(900, DOCX)).toEqual({
+      ok: true,
+      value: { kind: 'document', format: 'docx' },
+    });
+  });
+  it('says PDF is not supported yet, and refuses binaries and oversized documents', () => {
+    expect(checkBrandFile(4, text('%PDF-1.7'))).toEqual({
+      ok: false,
+      error: 'ASSET_PDF_UNSUPPORTED',
+    });
+    expect(checkBrandFile(4, bytes(0x4d, 0x5a, 0, 1))).toEqual({
+      ok: false,
+      error: 'ASSET_TYPE_UNSUPPORTED',
+    });
+    expect(checkBrandFile(2 * MiB + 1, MD)).toEqual({ ok: false, error: 'ASSET_TOO_LARGE' });
+    expect(checkBrandFile(10 * MiB + 1, PNG)).toEqual({ ok: false, error: 'ASSET_TOO_LARGE' });
+  });
+});
 
 describe('checkLogoFile (AC-02.1 to AC-02.3, client pre-check only: the server scan decides)', () => {
   it('reads the type from the bytes, never from the name', () => {

@@ -57,7 +57,7 @@
     "ready": "Charte prête : palette, contrastes et variantes sont calculés."
   },
   "studio": {
-    "startTitle": "Déposez votre logo",
+    "startTitle": "Déposez vos logos",
     "startLead": "Charta lit votre logo, en extrait la palette, vérifie les contrastes et assemble la charte.",
     "sending": "Envoi de {name}…",
     "scanning": "Vérification du fichier…",
@@ -69,20 +69,26 @@
     "rateLimited": "Trop d'analyses lancées en peu de temps. Patientez quelques minutes, puis relancez.",
     "forbidden": "Ce projet n'est pas accessible avec votre session. Rechargez la page ou reconnectez-vous.",
     "unexpected": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, rechargez la page.",
-    "streamClosed": "Le suivi en direct est impossible. Rechargez la page pour le reprendre."
+    "streamClosed": "Le suivi en direct est impossible. Rechargez la page pour le reprendre.",
+    "analyze": "Lancer l'analyse",
+    "needLogo": "Ajoutez au moins un logo.",
+    "partial": "Ces fichiers n'ont pas été retenus, l'analyse continue sans eux :"
   },
   "dropzone": {
     "label": "Glissez votre logo ici",
     "hint": "SVG, PNG, WebP ou JPEG. 5 Mo maximum pour un SVG, 10 Mo pour une image.",
     "choose": "Choisir un fichier",
     "errors": {
-      "ASSET_TOO_LARGE": "Ce fichier dépasse la limite : 5 Mo pour un SVG, 10 Mo et 8 192 px de côté pour une image. Réduisez-le, puis réessayez.",
-      "ASSET_TYPE_UNSUPPORTED": "Ce format n'est pas reconnu. Déposez un fichier SVG, PNG, WebP ou JPEG.",
+      "ASSET_TOO_LARGE": "Ce fichier dépasse la limite : logo de 5 Mo (SVG) ou 10 Mo et 8 192 px de côté (image), document de 2 Mo. Réduisez-le, puis réessayez.",
+      "ASSET_TYPE_UNSUPPORTED": "Ce format n'est pas reconnu. Déposez un logo SVG, PNG, WebP ou JPEG, ou un document TXT, Markdown ou DOCX.",
       "ASSET_SVG_FORBIDDEN_CONTENT": "Ce SVG contient des scripts ou des liens externes. Exportez-le à nouveau sans interactivité ni ressource liée.",
       "ASSET_SVG_UNSUPPORTED_FEATURE": "Ce SVG contient des textes non convertis ou des éléments non pris en charge. Exportez-le avec les textes en contours.",
       "ASSET_SVG_TOO_COMPLEX": "Ce SVG est trop complexe. Simplifiez ou fusionnez les tracés, puis réessayez.",
       "ASSET_DECODE_FAILED": "Ce fichier semble endommagé. Exportez-le à nouveau depuis votre logiciel de dessin.",
-      "ASSET_SCAN_TIMEOUT": "La vérification a pris trop de temps. Réessayez dans un instant."
+      "ASSET_SCAN_TIMEOUT": "La vérification a pris trop de temps. Réessayez dans un instant.",
+      "ASSET_DOCUMENT_EMPTY": "Ce document ne contient aucun texte exploitable.",
+      "ASSET_DOCUMENT_TOO_COMPLEX": "Ce document est trop volumineux une fois ouvert. Exportez-le en texte simple ou en Markdown.",
+      "ASSET_PDF_UNSUPPORTED": "Les PDF ne sont pas encore lus. Exportez votre document en DOCX, Markdown ou texte, ou collez-le dans le champ ci-dessous."
     },
     "liveText": {
       "title": "Ce SVG contient du texte non vectorisé.",
@@ -93,7 +99,9 @@
       "other": "Choisir un autre fichier",
       "missing": "Polices absentes de cet ordinateur : {fonts}. Une conversion ici dessinerait une police de remplacement : exportez plutôt le SVG avec le texte vectorisé.",
       "convertAnyway": "Convertir quand même"
-    }
+    },
+    "labelMany": "Glissez vos logos et votre document de marque ici",
+    "hintMany": "Logos : SVG, PNG, WebP ou JPEG (5 Mo pour un SVG, 10 Mo pour une image), six au maximum. Document facultatif : TXT, Markdown ou DOCX, 2 Mo maximum."
   },
   "start": {
     "metaTitle": "Démarrer",
@@ -101,15 +109,13 @@
     "lead": "Le nom et le logo suffisent. Plus vous en dites, plus la charte vous ressemble.",
     "name": "Nom de la marque",
     "namePlaceholder": "Ex. : Atelier Horizon",
-    "logo": "Logo",
-    "chosen": "Logo choisi : {name}",
-    "change": "Changer",
+    "logo": "Logos et document de marque",
     "brief": "Univers de la marque (facultatif)",
-    "briefHint": "Mission, public, valeurs, ton… Collez votre brief : Gemini s'en sert pour rédiger le manifeste et le ton de voix.",
+    "briefHint": "Mission, public, valeurs, ton… Collez votre brief ou déposez un document ci-dessus : Gemini s'en sert pour rédiger le manifeste et le ton de voix.",
     "submit": "Créer ma charte",
     "creating": "Création du projet…",
     "needName": "Indiquez le nom de la marque.",
-    "needLogo": "Déposez votre logo.",
+    "needLogo": "Déposez au moins votre logo principal.",
     "coverLabel": "Aperçu de la couverture",
     "coverKicker": "Charte graphique · {year}",
     "coverName": "Votre marque",
@@ -120,7 +126,7 @@
     "quota": "Votre plan gratuit a atteint sa limite de projets. Supprimez-en un depuis « Mes projets », ou consultez les tarifs.",
     "quotaLink": "Voir les tarifs",
     "refused": "La création a été refusée (code {code}). Réessayez dans un instant.",
-    "logoHint": "Seul champ indispensable avec le nom",
+    "logoHint": "Le logo principal est obligatoire. Ajoutez ses variantes (horizontal, vertical, icône, noir, blanc) et, si vous en avez un, le document qui décrit votre marque.",
     "briefPlaceholder": "Ex. : Atelier Horizon réunit les artisans du quartier dans un atelier ouvert à tous…",
     "after": "Vous arrivez dans le studio : la charte se compose sous vos yeux, page après page.",
     "coverLead": "Le brief donne le ton de la couverture.",
@@ -380,5 +386,23 @@
       "address": "Adresse de la marque",
       "dear": "Madame, Monsieur,"
     }
+  },
+  "brandInputs": {
+    "logosTitle": "Logos ({count}/{max})",
+    "primary": "Principal",
+    "roleOf": "Rôle de {name}",
+    "rolesHint": "Le rôle est deviné depuis le nom du fichier : corrigez-le si besoin. Les variantes noir, blanc, icône, horizontal et vertical alimentent directement le kit logo.",
+    "roles": {
+      "horizontal": "Horizontal",
+      "vertical": "Vertical",
+      "icon": "Icône",
+      "mono-black": "Noir",
+      "mono-white": "Blanc",
+      "other": "Autre version"
+    },
+    "remove": "Retirer {name}",
+    "removeShort": "Retirer",
+    "documentTitle": "Document de marque",
+    "tooMany": "Six logos au maximum : retirez-en un avant d'en ajouter."
   }
 }

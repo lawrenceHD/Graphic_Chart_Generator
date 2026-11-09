@@ -1,4 +1,4 @@
-import type { AssetErrorCode } from '@app/contracts';
+import { MAX_BRIEF_DOC_BYTES, detectManifestFormat, type AssetErrorCode } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 
 // Client pre-check before an upload (AC-02.1 to AC-02.3): it saves a round trip for an obvious mistake.
@@ -33,6 +33,27 @@ function sniff(head: Uint8Array): LogoFileType | null {
   if (startsWith(head, RIFF) && startsWith(head, WEBP, 8)) return 'webp';
   const text = new TextDecoder('utf-8', { fatal: false }).decode(head);
   return SVG_ROOT.test(text) ? 'svg' : null;
+}
+
+export type BrandFileKind =
+  | { readonly kind: 'logo'; readonly type: LogoFileType }
+  | { readonly kind: 'document'; readonly format: 'text' | 'docx' };
+
+/**
+ * A dropped file is a logo, or a manifest document (txt, md, docx), told from the bytes. PDF is recognised
+ * only to say it is not supported yet. Same caveat as above: the server decides.
+ */
+export function checkBrandFile(
+  size: number,
+  head: Uint8Array,
+): Result<BrandFileKind, AssetErrorCode> {
+  const logo = checkLogoFile(size, head);
+  if (logo.ok) return ok({ kind: 'logo', type: logo.value });
+  if (logo.error !== 'ASSET_TYPE_UNSUPPORTED') return err(logo.error);
+  const format = detectManifestFormat(head);
+  if (format === 'pdf') return err('ASSET_PDF_UNSUPPORTED');
+  if (format === null) return err('ASSET_TYPE_UNSUPPORTED');
+  return size > MAX_BRIEF_DOC_BYTES ? err('ASSET_TOO_LARGE') : ok({ kind: 'document', format });
 }
 
 /** `head` holds the first LOGO_FILE_HEAD_BYTES bytes (or the whole file when smaller). */
