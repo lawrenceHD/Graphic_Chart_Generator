@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { publicMetadata } from '../lib/page-metadata';
+import { HomeJsonLd } from '../landing/json-ld';
 import { Landing } from '../landing/landing';
+import { publicMetadata } from '../lib/page-metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('homePage');
@@ -13,6 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function HomePage() {
-  return <Landing />;
+export default async function HomePage() {
+  const t = await getTranslations('homePage');
+  return (
+    <>
+      <HomeJsonLd description={t('metaDescription')} />
+      <Landing />
+    </>
+  );
 }
