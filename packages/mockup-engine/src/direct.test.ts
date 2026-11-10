@@ -148,4 +148,43 @@ describe('directScene — the art direction of a mockup', () => {
       expect(second?.paint).toBe('#E3C884');
     });
   });
+
+  describe('the logo version that reads (3:1 on the object)', () => {
+    const dark = scene(surface('apron', { paint: ['neutralDark'], finishes: ['embroidery'] }));
+    const onPrimary = scene(surface('screen', { paint: ['primary'], finishes: ['screen'] }));
+    const ALL = ['color', 'black', 'white'] as const;
+
+    it('never picks a version the brand does not have, which would fall back to the colour file', () => {
+      const [onlyColour] = directScene(dark, LA_MEZA, PASTEL_INKS, {}, ['color', 'black']);
+      expect(onlyColour?.logo).not.toBe('white');
+      const [full] = directScene(dark, LA_MEZA, PASTEL_INKS, {}, ALL);
+      expect(full?.logo).toBe('white');
+    });
+
+    it('takes the black version on a light ground when the colour one does not read', () => {
+      const pale = { ...LA_MEZA, primary: '#F2E8D5' };
+      const [light] = directScene(onPrimary, pale, ['#F2E8D5', '#E9DFC8'], {}, ['black', 'white']);
+      expect(light?.logo).toBe('black');
+    });
+
+    it('keeps the best contrast available when nothing reaches 3:1', () => {
+      const mid = { ...LA_MEZA, primary: '#808080' };
+      const [dir] = directScene(onPrimary, mid, ['#808080'], {}, ALL);
+      expect(['black', 'white']).toContain(dir?.logo);
+    });
+
+    it('does not turn a logo the person chose into a shape-only finish on its own', () => {
+      const notebook = scene(
+        surface('cover', {
+          paint: ['neutralDark'],
+          finishes: ['deboss', 'foil', 'print'],
+        }),
+      );
+      const [auto] = directScene(notebook, LA_MEZA, PASTEL_INKS);
+      expect(auto?.finish).toBe('foil');
+      const [chosen] = directScene(notebook, LA_MEZA, PASTEL_INKS, { cover: { logo: 'white' } });
+      expect(chosen?.finish).toBe('print');
+      expect(chosen?.logo).toBe('white');
+    });
+  });
 });

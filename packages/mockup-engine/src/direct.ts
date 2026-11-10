@@ -75,14 +75,35 @@ const toHex = (unit: readonly number[]): string =>
 const PAPER_LUMINANCE = 0.75;
 // Elsewhere the colour logo is kept only if every ink reads on the stock.
 const INK_CONTRAST = 3;
+const SHAPE_ONLY: ReadonlySet<MockupFinish> = new Set(['foil', 'emboss', 'deboss', 'engrave']);
 const FOIL_MAX_LUMINANCE = 0.45;
 const RELIEF_MIN_LUMINANCE = 0.5;
 
-function logoOn(background: string, inks: readonly string[]): LogoVersion {
+const ALL_LOGOS: readonly LogoVersion[] = ['color', 'black', 'white'];
+
+/**
+ * The version of the logo that reads on a background, among the versions the brand has (a missing one would
+ * silently fall back to the colour file). Colour on a near-white stock or when every ink reads (3:1); else
+ * the one-colour version with the best contrast; when none reaches 3:1, the best there is.
+ */
+function logoOn(
+  background: string,
+  inks: readonly string[],
+  available: readonly LogoVersion[],
+): LogoVersion {
+  const has = (version: LogoVersion): boolean => available.includes(version);
   const bright = luminance(background) >= PAPER_LUMINANCE;
-  if (bright || (inks.length > 0 && inks.every((ink) => contrast(ink, background) >= INK_CONTRAST)))
-    return 'color';
-  return contrast('#FFFFFF', background) >= contrast('#000000', background) ? 'white' : 'black';
+  const inkReading =
+    inks.length === 0 ? 0 : Math.min(...inks.map((ink) => contrast(ink, background)));
+  const colourReads = bright || inkReading >= INK_CONTRAST;
+  if (colourReads && has('color')) return 'color';
+  const score: Record<LogoVersion, number> = {
+    color: bright ? INK_CONTRAST : inkReading,
+    black: contrast('#000000', background),
+    white: contrast('#FFFFFF', background),
+  };
+  const ranked = ALL_LOGOS.filter(has).sort((x, y) => score[y] - score[x]);
+  return ranked[0] ?? 'color';
 }
 
 function finishOn(finishes: readonly MockupFinish[], background: string): MockupFinish {
@@ -100,6 +121,7 @@ export function directScene(
   palette: BrandPalette,
   inks: readonly string[],
   decided: SurfaceChoices = {},
+  logos: readonly LogoVersion[] = ALL_LOGOS,
 ): SurfaceDirection[] {
   const seen = new Map<string, number>();
   const cool = hue(palette.primary) >= 170 && hue(palette.primary) <= 300;
@@ -120,16 +142,19 @@ export function directScene(
         : own;
     const paint = role === 'none' ? null : palette[role];
     const background = paint ?? toHex(surface.baseTint);
+    // A logo the person chose is meant to be seen: unless they pick the finish, shape-only ones are skipped.
+    const readable =
+      picked.logo !== undefined ? surface.finishes.filter((entry) => !SHAPE_ONLY.has(entry)) : [];
     const finish =
       picked.finish !== undefined && surface.finishes.includes(picked.finish)
         ? picked.finish
-        : finishOn(surface.finishes, background);
+        : finishOn(readable.length > 0 ? readable : surface.finishes, background);
     return {
       surfaceId: surface.id,
       paint,
       background,
       finish,
-      logo: picked.logo ?? logoOn(background, inks),
+      logo: picked.logo ?? logoOn(background, inks, logos),
       ...(finish === 'foil' ? { foil: cool ? ('silver' as const) : ('gold' as const) } : {}),
     };
   });

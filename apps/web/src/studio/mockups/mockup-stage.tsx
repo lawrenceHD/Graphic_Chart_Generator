@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
+import { availableLogos } from './objects';
 import { registerCanvas } from './scene-export';
 import { SceneOverlay } from './scene-overlay';
 import { maskOf, photoHits, psdHits, rememberObjects, type SceneHits } from './scene-hits';
@@ -33,23 +34,41 @@ export { brandInks, logoSource, renderKey };
 // art direction (which colour, finish and logo version per object) is mockup-engine's directScene. The
 // logo is never redrawn by a model: its pixels are the uploaded file's or its vector variants'.
 export const SCENES = [
+  // The brand-mockup pack (Pinterest-grade photographs generated for hospitality, retail and studios).
+  'blade-sign-street',
+  'brochure-grey',
+  'business-cards-sage',
+  'laptop-desk',
+  'mailer-box-blue',
+  'notebook-flatlay',
+  'poster-frame-console',
+  'stationery-dark',
+  'tote-terracotta',
   // Photoshop mockups by designers (Firmbee, CC0), replayed layer by layer (tools/psd-mockups/bake.py).
   'cards-floating',
   'a4-sheet',
   'cards-stack',
-  'poster-living',
-  'poster-held',
-  'poster-hanging',
   'mug-white',
-  'mug-stripes',
   // Generated photographs of the hospitality pack, where a centred mark is what the object wants.
   'place-cards',
   'menu-table',
   'storefront-sign',
   'gift-box',
   'paper-bag',
+  'apron',
+  'invitation',
+  'napkin-plate',
+  'phone-table',
+  'stationery-flatlay',
 ] as const;
-export type SceneId = (typeof SCENES)[number];
+/** Judged weak: left out of the default order, their files and ids stay for the pages that still name them. */
+export const RETIRED_SCENES = [
+  'poster-living',
+  'poster-held',
+  'poster-hanging',
+  'mug-stripes',
+] as const;
+export type SceneId = (typeof SCENES)[number] | (typeof RETIRED_SCENES)[number];
 
 type AnyScene =
   | { readonly kind: 'photo'; readonly loaded: LoadedScene }
@@ -154,7 +173,13 @@ async function renderScene(
   if (any === null) throw new Error('scene');
   if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive, choices);
   const { scene, homographies } = any.loaded;
-  const directions = directScene(scene, view.colors, brandInks(view), choices);
+  const directions = directScene(
+    scene,
+    view.colors,
+    brandInks(view),
+    choices,
+    availableLogos(view.logo),
+  );
   const base = await loadImage(`/scenes/${id}/base.webp`);
   const layers: CompositorLayer[] = [];
   for (const surface of scene.surfaces) {

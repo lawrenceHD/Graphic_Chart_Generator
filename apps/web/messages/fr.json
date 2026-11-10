@@ -247,6 +247,15 @@
       "tokens": "Tokens"
     },
     "scenes": {
+      "blade-sign-street": "Enseigne en drapeau",
+      "brochure-grey": "Brochure",
+      "business-cards-sage": "Cartes de visite sauge",
+      "laptop-desk": "Bureau et ordinateur",
+      "mailer-box-blue": "Boîte d’expédition",
+      "notebook-flatlay": "Carnet",
+      "poster-frame-console": "Affiche encadrée",
+      "stationery-dark": "Papeterie sombre",
+      "tote-terracotta": "Tote bag",
       "place-cards": "Marque-places",
       "stationery-flatlay": "Papeterie",
       "menu-table": "Menu",

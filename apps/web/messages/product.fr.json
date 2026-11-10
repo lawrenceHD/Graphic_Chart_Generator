@@ -39,12 +39,7 @@
       "before": "une",
       "after": "complète.",
       "line1": "Votre logo devient",
-      "words": [
-        "charte",
-        "palette",
-        "typographie",
-        "identité"
-      ],
+      "words": ["charte", "palette", "typographie", "identité"],
       "wordsLabel": "Ce que devient votre logo",
       "chipFont": "Typographie de la marque",
       "chipFavicon": "favicon.svg"

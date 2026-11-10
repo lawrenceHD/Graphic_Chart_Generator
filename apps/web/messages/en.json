@@ -247,6 +247,15 @@
       "tokens": "Tokens"
     },
     "scenes": {
+      "blade-sign-street": "Blade sign",
+      "brochure-grey": "Brochure",
+      "business-cards-sage": "Sage business cards",
+      "laptop-desk": "Laptop desk",
+      "mailer-box-blue": "Mailer box",
+      "notebook-flatlay": "Notebook",
+      "poster-frame-console": "Framed poster",
+      "stationery-dark": "Dark stationery",
+      "tote-terracotta": "Tote bag",
       "place-cards": "Place cards",
       "stationery-flatlay": "Stationery",
       "menu-table": "Menu",
