@@ -10,7 +10,7 @@ import { createVtracer } from './vectorizer.js';
 import { z } from 'zod';
 import { createLogger, errorSummary } from './logger.js';
 import type { ResearchLogEntry } from './research-step.js';
-import { loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
+import { fromRepoRoot, loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
 import {
   aiResearch,
   defaultResearch,
@@ -59,11 +59,15 @@ if (!researchEnv.success) {
   logger.fatal({ event: 'invalid_research_environment' });
   process.exit(1);
 }
-const {
-  RESEARCH_REPLAY_FILE: replayFile,
-  RESEARCH_CORPUS_DIR: corpusDir,
-  RESEARCH_RECORD_DIR: recordDir,
-} = researchEnv.data;
+const replayFile =
+  researchEnv.data.RESEARCH_REPLAY_FILE === undefined
+    ? undefined
+    : fromRepoRoot(researchEnv.data.RESEARCH_REPLAY_FILE);
+const corpusDir = fromRepoRoot(researchEnv.data.RESEARCH_CORPUS_DIR);
+const recordDir =
+  researchEnv.data.RESEARCH_RECORD_DIR === undefined
+    ? undefined
+    : fromRepoRoot(researchEnv.data.RESEARCH_RECORD_DIR);
 const geminiTransport = aiConfigured
   ? createGeminiTransport({
       apiKey: AI_API_KEY,

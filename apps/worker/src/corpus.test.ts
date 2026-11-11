@@ -1,9 +1,10 @@
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { loadFontCatalogue, runResearch } from '@app/ai';
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
+import { fromRepoRoot, loadRecordings, readCorpusIndex, writeRecording } from './corpus.js';
 import { indexText, okTransport } from './research-fixtures.js';
 
 const dirs: string[] = [];
@@ -81,5 +82,20 @@ describe('recordings on disk', () => {
     await writeFile(join(dir, 'bad.json'), '{"nope":true}');
     expect(await loadRecordings(dir)).toEqual({ recordings: [], rejected: ['bad.json'] });
     expect((await loadRecordings(join(dir, 'missing'))).recordings).toEqual([]);
+  });
+});
+
+describe('fromRepoRoot', () => {
+  it('reads a relative path from the repository root, wherever the worker was started', () => {
+    const corpus = fromRepoRoot('corpus-reel');
+    expect(isAbsolute(corpus)).toBe(true);
+    expect(existsSync(join(fromRepoRoot('.'), 'pnpm-workspace.yaml'))).toBe(true);
+    expect(corpus).toBe(join(fromRepoRoot('.'), 'corpus-reel'));
+    expect(corpus).not.toBe(resolve('corpus-reel'));
+  });
+
+  it('leaves an absolute path as it is', () => {
+    const absolute = resolve('somewhere', 'else');
+    expect(fromRepoRoot(absolute)).toBe(absolute);
   });
 });

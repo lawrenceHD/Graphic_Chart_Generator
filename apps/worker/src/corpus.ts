@@ -1,8 +1,19 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseRecording, serializeRecording, type ResearchRecording } from '@app/ai';
 
 // Disk access of the research, kept here: the worker has the disk, @app/ai does not.
+
+// src/ and dist/ sit at the same depth: three levels up is the repository root in both.
+const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+
+/**
+ * A relative path of the research configuration (corpus, recordings, replay file) is read from the repository
+ * root: the worker starts in apps/worker, where `corpus-reel` does not exist.
+ */
+export const fromRepoRoot = (path: string): string =>
+  isAbsolute(path) ? path : resolve(REPO_ROOT, path);
 
 // Only a missing path means "absent"; EACCES, EIO and the like are relayed so they are not misdiagnosed.
 const isMissing = (cause: unknown): boolean => Reflect.get(Object(cause), 'code') === 'ENOENT';
