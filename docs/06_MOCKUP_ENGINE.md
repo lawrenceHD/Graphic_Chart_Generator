@@ -67,16 +67,16 @@ LICENSE.md         # origine et droits de chaque élément
 ```json
 {
   "kind": "revolution",
-  "top": { "left": [783, 603], "right": [1504, 603], "front": [1144, 654] },
-  "bottom": { "left": [791, 1180], "right": [1501, 1180], "front": [1146, 1242] },
-  "band": { "from": 0.25, "to": 0.92 },
-  "arcDegrees": 120,
+  "top": { "left": [783, 612], "right": [1504, 612], "front": [1144, 655] },
+  "bottom": { "left": [792, 1190], "right": [1501, 1190], "front": [1146, 1243] },
+  "band": { "from": 0.22, "to": 0.86 },
+  "arcDegrees": 240,
   "centreDegrees": 0
 }
 ```
 
 - `top`, `bottom` : chaque ellipse par trois points, silhouette gauche, silhouette droite et point le plus proche de l'observateur (arc avant). Le point avant doit tomber sur l'axe de l'ellipse à 10 % du demi-axe près, sinon la scène est refusée.
-- `band` : hauteur imprimable, 0 = ellipse du haut, 1 = ellipse du bas. `arcDegrees` : angle couvert par la boîte du logo autour de l'axe ; `centreDegrees` : son centre (0 = face à l'observateur).
+- `band` : hauteur imprimable, 0 = ellipse du haut, 1 = ellipse du bas. `arcDegrees` : angle couvert par la boîte du logo autour de l'axe, jusqu'à un tour (au-delà de la moitié visible, l'impression passe derrière l'objet et y est coupée) ; `centreDegrees` : son centre (0 = face à l'observateur).
 - `radiusRatio` (facultatif) : rapport physique rayon du haut / rayon du bas. Absent, l'objet est un cylindre ; un cône doit le déclarer. `profile` (facultatif) : silhouette gauche en polyligne, pour une bouteille.
 - `{ "kind": "mesh", "cols", "rows", "points" }` : grille de Bézier bicubique (3k+1) × (3m+1) points, ligne par ligne, comme le `customEnvelopeWarp` de Photoshop.
 - Le rapport largeur/hauteur de la boîte du logo se **calcule** à partir de la géométrie : `r·Δθ / (H·(to − from))` (§4.5).
@@ -158,9 +158,10 @@ Les constantes ci-dessus sont des **valeurs de départ** ; elles sont ajustées 
 
 Détail et démonstrations : `docs/research/2026-11-11-mockups-objets-courbes.md` §5.
 
-- **Ellipse** depuis trois points : `c = (L+R)/2`, `a = |R−L|/2`, `e = (R−L)/|R−L|`, `n = (−e.y, e.x)`, `b = (F−c)·n`. Un point de l'ellipse à l'angle θ (0 devant, ±90° aux silhouettes) : `p(θ) = c + a·sin θ·e + b·cos θ·n`.
-- **Cylindre** : `P(θ, s) = ((1−s)·w_h·p_h(θ) + s·w_b·p_b(θ)) / ((1−s)·w_h + s·w_b)`, avec `w_h/w_b = (a_h/a_b) / radiusRatio` (interpolation homogène le long de la génératrice).
-- **Logo** : `θ = centre + (u − ½)·arc`, `s = from + v·(to − from)`. La densité du logo à l'écran vaut `cos θ` du centre vers les bords ; rien n'est dessiné pour |θ| > 90°, et la couverture s'adoucit sur environ un pixel avant la silhouette (`smoothstep(0, √(2/a), cos θ)`).
+- **Ellipse** depuis trois points : `c = (L+R)/2`, `a = |R−L|/2`, `e = (R−L)/|R−L|`, `n = (−e.y, e.x)`, `b = (F−c)·n`.
+- **Section en perspective** : un cercle vu par un sténopé est l'image projective du cercle unité, `p(θ) = c + [a·√(1−κ²)·sin θ·e + b·(cos θ − κ)·n] / (1 − κ·cos θ)`, θ mesuré sur l'objet (0 devant). Les silhouettes sont à `cos θ = κ` : on voit un peu moins de la moitié de l'objet. `κ / √(1−κ²) = (a/f)·√(1 − (b/a)²)`, avec la focale `f = ℓ / (asin(b_b/a_b) − asin(b_h/a_h))` (ℓ : distance entre les centres des deux ellipses) ; ellipses également ouvertes : `κ = 0`, vue orthographique.
+- **Génératrice** : `P(θ, s) = ((1−s)·Z_h·p_h(θ) + s·Z_b·p_b(θ)) / ((1−s)·Z_h + s·Z_b)`, chaque point pondéré par sa **profondeur** `Z ∝ r·(1 − κ·cos θ) / (a·√(1−κ²))` (r : rayon physique, `radiusRatio` = r_h/r_b, 1 par défaut). Le poids est la profondeur et non son inverse : l'image d'un milieu 3D est `(x₁Z₁ + x₂Z₂)/(Z₁ + Z₂)`. Sur une projection synthétique exacte (rayon 0,4, distance 2,6, focale 1 800 px), l'écart reste sous 0,74 % du rayon (2,2 px) ; la note de recherche, qui pondérait par `a` en vue orthographique, s'écartait de 11,7 %.
+- **Logo** : `θ = centre + (u − ½)·arc`, `s = from + v·(to − from)`. La densité du logo à l'écran (pixels par unité de logo) vaut `cos θ` du centre vers les bords ; rien n'est dessiné au-delà de la silhouette, et la couverture s'adoucit sur environ un pixel avant elle (`smoothstep(0, √(2/a), (cos θ − κ)/(1 − κ))`).
 - **Maillage** : patchs de Bézier bicubiques sur les polynômes de Bernstein ; une grille régulière redonne l'interpolation bilinéaire.
 - **Carte UV** : la surface est découpée en triangles (64 colonnes sur l'arc visible, 16 rangées), dessinés sur GPU dans deux textures RGBA8 qui suivent exactement le format des `uv-*.png` cuits (u et v sur 16 bits, octet fort en R, faible en G, couverture en B ; cos θ en alpha de la texture `v`). Le shader de slot les lit sans changement. Le même découpage est rastérisé sur CPU dans les tests.
 
