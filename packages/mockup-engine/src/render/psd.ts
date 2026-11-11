@@ -40,6 +40,26 @@ export function decodeUv(red: number, green: number): number {
   return (red * 256 + green) / 65535;
 }
 
+/**
+ * Largest step of the artwork between two neighbouring pixels that is still a footprint. Where the map
+ * ends, a neighbour outside reads (0, 0) and the step jumps: the coarsest mip level, an average of the
+ * whole artwork, would draw a grey line along the box. There the finest level is used.
+ */
+export const MAX_ARTWORK_STEP = 0.05;
+
+type Gradient = readonly [number, number];
+
+/** The derivatives the slot samples its artwork with (mirrors the shader). */
+export function guardGradient(dx: Gradient, dy: Gradient): readonly [Gradient, Gradient] {
+  const step = Math.max(Math.hypot(...dx), Math.hypot(...dy));
+  return step > MAX_ARTWORK_STEP
+    ? [
+        [0, 0],
+        [0, 0],
+      ]
+    : [dx, dy];
+}
+
 export const PSD_LAYER_SHADER = `#version 300 es
 precision highp float;
 precision highp sampler2D;
@@ -80,7 +100,13 @@ void main() {
     vec4 ev = texture(uV, p);
     vec2 uv = vec2((eu.r * 255.0 * 256.0 + eu.g * 255.0) / 65535.0,
                    (ev.r * 255.0 * 256.0 + ev.g * 255.0) / 65535.0);
-    vec4 art = texture(uSource, uv);
+    vec2 dx = dFdx(uv);
+    vec2 dy = dFdy(uv);
+    if (max(length(dx), length(dy)) > ${MAX_ARTWORK_STEP.toFixed(2)}) {
+      dx = vec2(0.0);
+      dy = vec2(0.0);
+    }
+    vec4 art = textureGrad(uSource, uv, dx, dy);
     // Coverage of the smart object (antialiased edge stored in blue) times the artwork's own alpha.
     layer = vec4(art.rgb, art.a * eu.b);
   }

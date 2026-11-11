@@ -9,3 +9,4 @@ export * from './render/psd-compositor.js';
 export * from './geometry/revolution.js';
 export * from './geometry/mesh.js';
 export * from './geometry/uv-map.js';
+export * from './render/uv-pass.js';

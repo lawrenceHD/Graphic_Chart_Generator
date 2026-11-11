@@ -1,5 +1,7 @@
+import type { UvMesh } from '../geometry/uv-map.js';
 import { PSD_LAYER_SHADER } from './psd.js';
 import { VERTEX } from './shaders.js';
+import { uvPass } from './uv-pass.js';
 
 // WebGL2 runner of a baked PSD scene: layers drawn bottom to top into a ping-pong composite, then copied
 // onto the canvas. Textures are uploaded without colour conversion so the UV maps keep their exact bytes.
@@ -21,6 +23,14 @@ export type PsdRenderLayer =
       readonly kind: 'slot';
       readonly u: TexImageSource;
       readonly v: TexImageSource;
+      readonly artwork: TexImageSource;
+      readonly mode: number;
+      readonly opacity: number;
+    }
+  | {
+      /** A slot whose map is computed from its geometry (ADR-034), drawn on the GPU once per mesh. */
+      readonly kind: 'mesh-slot';
+      readonly mesh: UvMesh;
       readonly artwork: TexImageSource;
       readonly mode: number;
       readonly opacity: number;
@@ -153,6 +163,18 @@ export function renderPsdScene(
       gl.uniform1i(at('uKind'), 1);
       gl.uniform1i(at('uMode'), 0);
       gl.uniform3fv(at('uColor'), hexColor(layer.color));
+    } else if (layer.kind === 'mesh-slot') {
+      const maps = uvPass(gl, layer.mesh, width, height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+      gl.viewport(0, 0, width, height);
+      gl.useProgram(layerProgram);
+      const art = upload(gl, layer.artwork, 'mipmap');
+      transient.push(art);
+      bind('uSource', 1, art);
+      bind('uU', 2, maps.u);
+      bind('uV', 3, maps.v);
+      gl.uniform1i(at('uKind'), 2);
+      gl.uniform1i(at('uMode'), layer.mode);
     } else {
       // UV maps are data: nearest sampling, never filtered across a 16-bit split.
       const u = upload(gl, layer.u, 'nearest');

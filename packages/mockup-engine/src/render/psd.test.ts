@@ -1,6 +1,13 @@
 import { PsdSceneSchema } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
-import { BLEND_CODES, blendChannel, decodeUv } from './psd.js';
+import {
+  BLEND_CODES,
+  MAX_ARTWORK_STEP,
+  PSD_LAYER_SHADER,
+  blendChannel,
+  decodeUv,
+  guardGradient,
+} from './psd.js';
 
 describe('PSD scenes — Photoshop layers replayed', () => {
   it('blends like Photoshop on gamma-encoded values', () => {
@@ -43,5 +50,20 @@ describe('PSD scenes — Photoshop layers replayed', () => {
     expect(PsdSceneSchema.safeParse(scene).success).toBe(true);
     const escaping = { ...scene, layers: [{ ...scene.layers[0], src: '../secret.png' }] };
     expect(PsdSceneSchema.safeParse(escaping).success).toBe(false);
+  });
+
+  it('samples the artwork at the finest level where the map ends (no grey line at the box edge)', () => {
+    // Inside the map one pixel moves a fraction of the artwork: the derivatives choose the mip level.
+    expect(guardGradient([0.001, 0.0005], [0, 0.002])).toEqual([
+      [0.001, 0.0005],
+      [0, 0.002],
+    ]);
+    // Across the edge of the map the neighbour reads (0, 0): the step is not a footprint.
+    expect(guardGradient([0.6, 0], [0, 0.001])).toEqual([
+      [0, 0],
+      [0, 0],
+    ]);
+    expect(PSD_LAYER_SHADER).toContain('textureGrad(uSource, uv');
+    expect(PSD_LAYER_SHADER).toContain(String(MAX_ARTWORK_STEP));
   });
 });

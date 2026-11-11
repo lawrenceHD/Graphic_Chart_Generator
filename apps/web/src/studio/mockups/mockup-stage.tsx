@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
+import { computedSlots, slotAspect, type ComputedSlot } from './curved-slots';
 import { availableLogos } from './objects';
 import { registerCanvas, unregisterCanvas } from './scene-export';
 import { SceneOverlay } from './scene-overlay';
@@ -72,7 +73,12 @@ export type SceneId = (typeof SCENES)[number] | (typeof RETIRED_SCENES)[number];
 
 type AnyScene =
   | { readonly kind: 'photo'; readonly loaded: LoadedScene }
-  | { readonly kind: 'psd'; readonly scene: PsdScene };
+  | {
+      readonly kind: 'psd';
+      readonly scene: PsdScene;
+      /** Slots whose UV map is computed from their geometry (ADR-034). */
+      readonly slots: ReadonlyMap<string, ComputedSlot>;
+    };
 const cache = new Map<SceneId, Promise<AnyScene | null>>();
 function loadScene(id: SceneId): Promise<AnyScene | null> {
   const known = cache.get(id);
@@ -81,7 +87,10 @@ function loadScene(id: SceneId): Promise<AnyScene | null> {
     .then((response) => (response.ok ? response.json() : null))
     .then((json: unknown): AnyScene | null => {
       const psd = PsdSceneSchema.safeParse(json);
-      if (psd.success) return { kind: 'psd', scene: psd.data };
+      if (psd.success) {
+        const slots = computedSlots(psd.data);
+        return slots.ok ? { kind: 'psd', scene: psd.data, slots: slots.value } : null;
+      }
       const parsed = parseScene(json);
       return parsed.ok ? { kind: 'photo', loaded: parsed.value } : null;
     })
@@ -101,6 +110,7 @@ const PAINT_ORDER = ['primary', 'accent', 'neutralLight', 'neutralDark'] as cons
 async function renderPsd(
   id: SceneId,
   scene: PsdScene,
+  slots: ReadonlyMap<string, ComputedSlot>,
   view: BrandView,
   words: ArtworkWords,
   node: HTMLCanvasElement,
@@ -133,16 +143,25 @@ async function renderPsd(
         opacity: layer.opacity,
       });
     } else {
-      const [u, v, artwork] = await Promise.all([
-        file(layer.uv),
-        file(layer.vv),
-        drawArtwork(layer.role, layer.aspect, view, logos, words),
-      ]);
+      const artwork = drawArtwork(layer.role, slotAspect(layer, slots), view, logos, words);
+      const computed = slots.get(layer.id);
+      if (computed !== undefined) {
+        layers.push({
+          kind: 'mesh-slot',
+          mesh: computed.mesh,
+          artwork: await artwork,
+          mode: BLEND_CODES[layer.blend],
+          opacity: layer.opacity,
+        });
+        continue;
+      }
+      if (layer.uv === undefined || layer.vv === undefined) throw new Error('scene');
+      const [u, v, drawn] = await Promise.all([file(layer.uv), file(layer.vv), artwork]);
       layers.push({
         kind: 'slot',
         u,
         v,
-        artwork,
+        artwork: drawn,
         mode: BLEND_CODES[layer.blend],
         opacity: layer.opacity,
       });
@@ -171,7 +190,8 @@ async function renderScene(
 ): Promise<readonly SurfaceDirection[] | null> {
   const any = await loadScene(id);
   if (any === null) throw new Error('scene');
-  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive, choices);
+  if (any.kind === 'psd')
+    return renderPsd(id, any.scene, any.slots, view, words, node, alive, choices);
   const { scene, homographies } = any.loaded;
   const directions = directScene(
     scene,
