@@ -7,3 +7,5 @@ export * from './render/compositor.js';
 export * from './render/psd.js';
 export * from './render/psd-compositor.js';
 export * from './geometry/revolution.js';
+export * from './geometry/mesh.js';
+export * from './geometry/uv-map.js';

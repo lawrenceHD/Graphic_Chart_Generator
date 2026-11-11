@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseScene } from './scene.js';
+import { mappingAspect, parseScene, surfaceMapping } from './scene.js';
 
 const scene = (quad: readonly (readonly [number, number])[]) => ({
   id: 'poster-01',
@@ -55,5 +55,83 @@ describe('parseScene — validation at load time (06_MOCKUP_ENGINE §3, §5)', (
       ok: false,
       error: { code: 'SCENE_INVALID', issues: ['surfaces.0.quad: mirrored'] },
     });
+  });
+});
+
+describe('parseScene — computed surfaces (ADR-034)', () => {
+  const quad: readonly (readonly [number, number])[] = [
+    [100, 100],
+    [500, 100],
+    [500, 500],
+    [100, 500],
+  ];
+  const withGeometry = (front: readonly [number, number]) => {
+    const base = scene(quad);
+    const [surface] = base.surfaces;
+    return {
+      ...base,
+      schemaVersion: 2,
+      surfaces: [
+        {
+          ...surface,
+          geometry: {
+            kind: 'revolution',
+            top: { left: [100, 100], right: [500, 100], front },
+            bottom: { left: [100, 500], right: [500, 500], front: [300, 540] },
+            band: { from: 0.1, to: 0.9 },
+            arcDegrees: 120,
+          },
+        },
+      ],
+    };
+  };
+
+  it('maps a flat surface by its homography and a revolution by its frame', () => {
+    const flat = parseScene(scene(quad));
+    expect(flat.ok && flat.value.mappings.get('front')?.kind).toBe('homography');
+    const curved = parseScene(withGeometry([300, 140]));
+    expect(curved.ok).toBe(true);
+    if (!curved.ok) return;
+    const mapping = curved.value.mappings.get('front');
+    expect(mapping?.kind).toBe('revolution');
+    expect(curved.value.homographies.has('front')).toBe(true);
+  });
+
+  it('refuses a revolution whose front point is off its axis, with the path', () => {
+    const result = parseScene(withGeometry([380, 140]));
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.issues).toEqual([
+      'surfaces.0.geometry: top: the front point is not on the axis of the ellipse',
+    ]);
+  });
+});
+
+describe('surfaceMapping', () => {
+  it('gives the logo box aspect of a revolution and none for a flat quad', () => {
+    const curved = surfaceMapping({
+      kind: 'revolution',
+      top: { left: [100, 100], right: [500, 100], front: [300, 140] },
+      bottom: { left: [100, 500], right: [500, 500], front: [300, 540] },
+      band: { from: 0, to: 1 },
+      arcDegrees: 90,
+      centreDegrees: 0,
+    });
+    expect(curved.ok).toBe(true);
+    if (!curved.ok) return;
+    expect(mappingAspect(curved.value)).toBeCloseTo(
+      (200 * (Math.PI / 2)) / (400 / Math.sqrt(1 - 0.04)),
+      6,
+    );
+    const flat = surfaceMapping({
+      kind: 'quad',
+      quad: [
+        [0, 0],
+        [10, 0],
+        [10, 10],
+        [0, 10],
+      ],
+    });
+    expect(flat.ok && mappingAspect(flat.value)).toBeNull();
   });
 });
