@@ -73,6 +73,9 @@ export function SceneOverlay({
       aria-label={groupLabel}
       className="absolute inset-0 cursor-pointer"
       onPointerDown={(event) => {
+        // The scene around the overlay selects itself on pointer down: left to run, it would replace the
+        // object picked here by the scene alone.
+        event.stopPropagation();
         const box = layer.current?.getBoundingClientRect();
         if (box === undefined || box.width === 0 || box.height === 0) return;
         const x = ((event.clientX - box.left) / box.width) * size.width;

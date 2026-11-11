@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
 import { availableLogos } from './objects';
-import { registerCanvas } from './scene-export';
+import { registerCanvas, unregisterCanvas } from './scene-export';
 import { SceneOverlay } from './scene-overlay';
 import { maskOf, photoHits, psdHits, rememberObjects, type SceneHits } from './scene-hits';
 import { brandInks, loadImage, logoSource, logoTexture, renderKey } from './stage-assets';
@@ -319,11 +319,14 @@ export function MockupStage({
   const latestChoices = useRef(choices);
   const told = useRef(onDirected);
   const interactive = pick !== undefined;
+  // Only the stage the person directs is exported; a plain copy of the scene on a charter page is not.
+  const exported = useRef(interactive);
 
   useEffect(() => {
     latest.current = view;
     latestChoices.current = choices;
     told.current = onDirected;
+    exported.current = interactive;
   });
 
   useEffect(() => {
@@ -341,7 +344,7 @@ export function MockupStage({
     renderScene(id, latest.current, words, node, () => alive, latestChoices.current)
       .then((done) => {
         if (alive && done !== null) {
-          registerCanvas(id, node);
+          if (exported.current) registerCanvas(id, node);
           told.current?.(id, done);
           setSize({ width: node.width, height: node.height });
           setDirections(done);
@@ -353,7 +356,7 @@ export function MockupStage({
       });
     return () => {
       alive = false;
-      registerCanvas(id, null);
+      unregisterCanvas(id, node);
     };
   }, [id, attempt, key, a]);
 

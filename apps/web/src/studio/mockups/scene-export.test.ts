@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { registerCanvas, renderedScenes, zipScenes } from './scene-export';
+import { registerCanvas, renderedScenes, unregisterCanvas, zipScenes } from './scene-export';
 
 describe('exporting the scenes', () => {
   it('puts every picture in one zip under its own name, bytes untouched', () => {
@@ -31,7 +31,17 @@ describe('exporting the scenes', () => {
     const canvas = document.createElement('canvas');
     registerCanvas('mug-white', canvas);
     expect(renderedScenes()).toEqual(['mug-white']);
-    registerCanvas('mug-white', null);
+    unregisterCanvas('mug-white', canvas);
+    expect(renderedScenes()).toEqual([]);
+  });
+
+  it('is not emptied by another stage of the same scene that unmounts', () => {
+    const edited = document.createElement('canvas');
+    const other = document.createElement('canvas');
+    registerCanvas('mug-white', edited);
+    unregisterCanvas('mug-white', other);
+    expect(renderedScenes()).toEqual(['mug-white']);
+    unregisterCanvas('mug-white', edited);
     expect(renderedScenes()).toEqual([]);
   });
 });

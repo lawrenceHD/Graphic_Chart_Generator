@@ -131,6 +131,24 @@ describe('MockupObjectPanel', () => {
     expect(d.onRedo).toHaveBeenCalledTimes(2);
   });
 
+  it('leaves Ctrl+Z to a text field: typed text is undone there, not a mockup choice', () => {
+    const d = directing({ canUndo: true, canRedo: true });
+    show(d);
+    for (const tag of ['textarea', 'input'] as const) {
+      const field = document.body.appendChild(document.createElement(tag));
+      const event = new KeyboardEvent('keydown', {
+        key: 'z',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      field.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+      field.remove();
+    }
+    expect(d.onUndo).not.toHaveBeenCalled();
+  });
+
   it('disables what cannot be done', () => {
     show(directing());
     expect(screen.getByRole('button', { name: 'Annuler le choix' })).toHaveProperty(

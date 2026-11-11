@@ -27,7 +27,12 @@ export function useDirecting(): {
     Readonly<Record<string, readonly SurfaceDirection[]>>
   >({});
   const onDirected = useCallback((scene: SceneId, applied: readonly SurfaceDirection[]) => {
-    setDirections((current) => ({ ...current, [scene]: applied }));
+    // A stage reports after every draw: the same directions again must not redraw the whole canvas.
+    setDirections((current) =>
+      JSON.stringify(current[scene]) === JSON.stringify(applied)
+        ? current
+        : { ...current, [scene]: applied },
+    );
   }, []);
   const onChoose = useCallback((scene: string, object: string, patch: unknown) => {
     setHistory((current) => choose(current, scene, object, patch));

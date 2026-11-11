@@ -52,6 +52,28 @@ function mount(selected: string | null, onSelect = vi.fn()) {
 afterEach(cleanup);
 
 describe('SceneOverlay', () => {
+  it('keeps a pointer selection to itself: a handler around the overlay does not run after it', () => {
+    const around = vi.fn();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <div onPointerDown={around}>
+        <SceneOverlay
+          sceneHits={hits}
+          size={{ width: 100, height: 100 }}
+          selected={null}
+          onSelect={onSelect}
+          labelOf={(_kind, index) => `Objet ${String(index + 1)}`}
+        />
+      </div>,
+    );
+    const layer = container.querySelector('[role="group"]');
+    if (layer === null) throw new Error('overlay not rendered');
+    layer.getBoundingClientRect = () => new DOMRect(0, 0, 100, 100);
+    fireEvent.pointerDown(layer, { clientX: 75, clientY: 50 });
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(around).not.toHaveBeenCalled();
+  });
+
   it('gives every object an accessible button, pressed when selected', () => {
     mount('right');
     expect(screen.getByRole('button', { name: 'Objet 1' }).getAttribute('aria-pressed')).toBe(

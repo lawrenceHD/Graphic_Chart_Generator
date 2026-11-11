@@ -3,12 +3,17 @@ import { download } from '../workspace/export-files';
 import { exportFileName } from './objects';
 
 // Export of the mockup pictures: the PNG the compositor drew, one at a time or all at once in a zip.
-// The stages register their canvas when a picture is finished, so what is exported is what is on screen.
+// The editable stages register their canvas when a picture is finished, so what is exported is what the
+// person directed. A scene may be drawn twice (the charter's applications page shows it too, without the
+// choices): only the editable stage registers, and a stage only ever removes its own canvas.
 const canvases = new Map<string, HTMLCanvasElement>();
 
-export function registerCanvas(scene: string, canvas: HTMLCanvasElement | null): void {
-  if (canvas === null) canvases.delete(scene);
-  else canvases.set(scene, canvas);
+export function registerCanvas(scene: string, canvas: HTMLCanvasElement): void {
+  canvases.set(scene, canvas);
+}
+
+export function unregisterCanvas(scene: string, canvas: HTMLCanvasElement): void {
+  if (canvases.get(scene) === canvas) canvases.delete(scene);
 }
 
 /** Scenes whose picture is finished, in the order the stages finished. */

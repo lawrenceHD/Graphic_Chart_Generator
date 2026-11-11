@@ -113,6 +113,13 @@ export function MockupObjectPanel({
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
       if (!event.ctrlKey && !event.metaKey) return;
+      // In a text field the shortcut belongs to the text being typed.
+      const { target } = event;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      )
+        return;
       const key = event.key.toLowerCase();
       if (key === 'z' && !event.shiftKey) {
         event.preventDefault();
