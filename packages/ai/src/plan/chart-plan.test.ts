@@ -1,4 +1,11 @@
-import { ChartPlanSchema, GUIDELINE_SECTIONS, PAGE_TYPES, type PageType } from '@app/contracts';
+import {
+  ChartPlanSchema,
+  DENSE_PAGES,
+  GUIDELINE_SECTIONS,
+  PAGE_TYPES,
+  SECTOR_SECTIONS,
+  type PageType,
+} from '@app/contracts';
 import { describe, expect, it } from 'vitest';
 import { buildArtDirection, type ArtDirection } from '../references/direction.js';
 import { direction as axis, reference } from '../references/fixtures.js';
@@ -43,7 +50,33 @@ describe('directionToChartPlan', () => {
       type: 'mockup',
       title: 'Menu and cards',
       evidence: ['menu-1', 'menu-2'],
+      section: 'menu',
     });
+  });
+
+  it('holds the 14 dense pages, then the sector pages, then the tokens', () => {
+    const plan = directionToChartPlan(art);
+    expect(plan.sections.map((section) => section.section)).toEqual([
+      ...DENSE_PAGES.map((page) => page.section),
+      'signage',
+      'menu',
+      undefined,
+    ]);
+    expect(plan.sections.at(-1)?.type).toBe('tokens');
+  });
+
+  it('gathers the evidence of a grouped section on its dense page', () => {
+    const plan = directionToChartPlan({
+      sections: [
+        { section: 'palette', core: true, support: 1, evidence: ['p'] },
+        { section: 'minimum-size', core: true, support: 1, evidence: ['m'] },
+        { section: 'clear-space', core: true, support: 1, evidence: ['c'] },
+      ],
+    });
+    const page = (section: string) => plan.sections.find((entry) => entry.section === section);
+    expect(page('clear-space')?.evidence).toEqual(['m', 'c']);
+    expect(page('palette')?.evidence).toEqual(['p']);
+    expect(page('minimum-size')).toBeUndefined();
   });
 
   it('allows several pages of the same type', () => {
@@ -69,8 +102,9 @@ describe('directionToChartPlan', () => {
     };
     const plan = directionToChartPlan(noisy);
     expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
-    expect(plan.sections[0]?.evidence).toHaveLength(20);
-    expect(plan.sections[0]?.evidence[0]).toBe('x'.repeat(64));
+    const menu = plan.sections.find((section) => section.section === 'menu');
+    expect(menu?.evidence).toHaveLength(20);
+    expect(menu?.evidence[0]).toBe('x'.repeat(64));
   });
 });
 
@@ -156,7 +190,7 @@ describe('defaultChartPlan', () => {
   it('is the common core of professional guidelines, valid, without evidence', () => {
     const plan = defaultChartPlan();
     expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
-    expect(plan.sections.map((section) => section.title)).toContain('Typography');
+    expect(plan.sections.map((section) => section.title)).toContain('Typography: families');
     for (const section of plan.sections) expect(section.evidence).toEqual([]);
   });
 });
@@ -174,14 +208,14 @@ describe('never throws', () => {
     expect(planFromDirection({ sections: [] }).degraded).toBe(true);
   });
 
-  it('keeps a plan made of duplicated sections only, once', () => {
+  it('keeps a section given twice once, with the evidence of both', () => {
     const duplicated = { sections: [planned('menu', ['a']), planned('menu', ['b'])] };
     const { plan, degraded } = planFromDirection(duplicated);
     expect(degraded).toBe(false);
-    expect(plan.sections).toEqual([
-      { type: 'mockup', title: 'Menu and cards', evidence: ['a'] },
-      { type: 'tokens', title: 'Design tokens', evidence: [] },
+    expect(plan.sections.filter((section) => section.section === 'menu')).toEqual([
+      { type: 'mockup', title: 'Menu and cards', evidence: ['a', 'b'], section: 'menu' },
     ]);
+    expect(plan.sections.at(-1)).toEqual({ type: 'tokens', title: 'Design tokens', evidence: [] });
   });
 
   it('survives evidence that is entirely invalid', () => {
@@ -189,7 +223,7 @@ describe('never throws', () => {
       sections: [planned('menu', ['', '<b>x', '<script'])],
     });
     expect(degraded).toBe(false);
-    expect(plan.sections[0]?.evidence).toEqual([]);
+    expect(plan.sections.every((section) => section.evidence.length === 0)).toBe(true);
     expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
   });
 
@@ -237,7 +271,9 @@ describe('SECTION_PAGE_TYPE table', () => {
 
 describe('titles in the language of the project', () => {
   it('keeps English titles by default', () => {
-    expect(defaultChartPlan().sections.map((section) => section.title)).toContain('Colour palette');
+    expect(defaultChartPlan().sections.map((section) => section.title)).toContain(
+      'Colours: values and roles',
+    );
   });
 
   it('writes every title in French for a French project, the tokens page and the last resort included', () => {
@@ -250,8 +286,8 @@ describe('titles in the language of the project', () => {
     expect(defaultChartPlan('fr').sections.map((section) => section.title)).toEqual(
       expect.arrayContaining([
         'Couverture',
-        'Palette de couleurs',
-        'Typographie',
+        'Couleurs : valeurs et rôles',
+        'Typographie : familles',
         'Tokens de design',
       ]),
     );
@@ -259,25 +295,20 @@ describe('titles in the language of the project', () => {
     expect(ChartPlanSchema.safeParse(french).success).toBe(true);
   });
 
-  it('has a French title for each of the guideline sections', () => {
-    for (const section of GUIDELINE_SECTIONS) {
-      const plan = directionToChartPlan(
-        { sections: [{ section, core: false, support: 1, evidence: [] }] },
-        'fr',
-      );
-      expect(plan.sections[0]?.title.length).toBeGreaterThan(0);
-      expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
-    }
+  it('has a French title for each sector section and each dense page', () => {
     const titles = (language: 'fr' | 'en') =>
-      GUIDELINE_SECTIONS.map(
+      SECTOR_SECTIONS.map(
         (section) =>
           directionToChartPlan(
             { sections: [{ section, core: false, support: 1, evidence: [] }] },
             language,
-          ).sections[0]?.title,
+          ).sections.find((entry) => entry.section === section)?.title,
       );
-    // Same word in both languages: Typography/Typographie differ, Illustration and Menu… do not all.
+    expect(titles('fr')).not.toContain(undefined);
+    expect(titles('fr')).toContain('Menu et cartes');
     const same = titles('fr').filter((title, index) => title === titles('en')[index]);
-    expect(same).toEqual(['Illustration']);
+    expect(same).toEqual([]);
+    const dense = defaultChartPlan('fr').sections.map((section) => section.title);
+    expect(dense).toEqual(expect.arrayContaining(DENSE_PAGES.map((page) => page.title.fr)));
   });
 });

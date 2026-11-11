@@ -42,7 +42,7 @@ const codes = (warnings: readonly ResearchWarning[] | undefined): string[] =>
   (warnings ?? []).map((warning) => warning.code);
 
 describe('research port', () => {
-  it('defaultResearch returns the 16-page standard plan in the project language', async () => {
+  it('defaultResearch returns the standard plan in the project language', async () => {
     const fr = await defaultResearch.plan(input);
     expect(fr).toEqual({ ok: true, value: result(standardChartPlan('fr')) });
     const en = await defaultResearch.plan({ ...input, language: 'en' });

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PAGE_CAPACITY, PageTypeSchema, type PageType } from './document-types.js';
+import { GuidelineSectionSchema } from './reference.js';
 
 export const MAX_CHART_SECTIONS = 40;
 export const MAX_SECTION_EVIDENCE = 20;
@@ -18,6 +19,8 @@ export const ChartSectionSchema = z
     type: PageTypeSchema,
     title: planText.min(1).max(80),
     evidence: z.array(EvidenceRefSchema).max(MAX_SECTION_EVIDENCE),
+    // The guideline section the page shows (ADR-035): the studio draws a page by its section, not its rank.
+    section: GuidelineSectionSchema.optional(),
   })
   .strict();
 export type ChartSection = z.infer<typeof ChartSectionSchema>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChartPlanSchema, type ChartPlan, type PageType } from '@app/contracts';
+import { ChartPlanSchema, DENSE_PAGES, type ChartPlan, type PageType } from '@app/contracts';
 import { composeInitialDocument, type ComposeInput } from './compose.js';
 import { standardChartPlan } from './plans.js';
 import { BrandDocumentSchema } from './schema.js';
@@ -225,6 +225,29 @@ describe('composeInitialDocument with a ChartPlan', () => {
       sections: [{ type: 'cover', title: '<i>x', evidence: [] }],
     });
     expect(!unsafe.ok && unsafe.error.code).toBe('INVALID_DOCUMENT');
+  });
+
+  it('writes the section of a planned page into its data, beside the evidence', () => {
+    const result = composeInitialDocument(input, {
+      sections: [
+        { type: 'manifesto', title: 'Sommaire', evidence: [], section: 'contents' },
+        { type: 'manifesto', title: 'Plateforme', evidence: ['r'], section: 'brand-story' },
+      ],
+    });
+    if (!result.ok) throw new Error(result.error.code);
+    expect(result.value.pages.map((page) => page.data)).toEqual([
+      { evidence: [], section: 'contents' },
+      { evidence: ['r'], section: 'brand-story' },
+    ]);
+  });
+
+  it('makes the standard plan the 14 dense pages of the content study, then the tokens', () => {
+    const standard = standardChartPlan('fr');
+    expect(standard.sections.map((section) => section.section)).toEqual([
+      ...DENSE_PAGES.map((page) => page.section),
+      undefined,
+    ]);
+    expect(standard.sections.at(-1)?.type).toBe('tokens');
   });
 
   it('builds a valid charter with one page per section of the standard plan, in both languages', () => {

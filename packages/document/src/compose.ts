@@ -2,6 +2,7 @@ import {
   ChartPlanSchema,
   TONE_AXIS_IDS,
   type Archetype,
+  type GuidelineSection,
   type BrandValue,
   type ChartPlan,
   type PageType,
@@ -123,6 +124,7 @@ interface PageBlueprint {
   readonly type: PageType;
   readonly title: string;
   readonly evidence: readonly string[] | null;
+  readonly section?: GuidelineSection;
 }
 
 // Without a plan: the fixed MVP pages. With one: its sections, in order, each carrying its evidence.
@@ -133,7 +135,12 @@ function blueprints(
   if (plan === undefined) {
     return PAGES.map((type) => ({ type, title: titles[type], evidence: null }));
   }
-  return plan.sections.map(({ type, title, evidence }) => ({ type, title, evidence }));
+  return plan.sections.map(({ type, title, evidence, section }) => ({
+    type,
+    title,
+    evidence,
+    ...(section === undefined ? {} : { section }),
+  }));
 }
 
 // The first page of a type keeps the historical id `page-<type>`; the next ones are numbered from 2.
@@ -152,19 +159,22 @@ export function composeInitialDocument(
   const value = (index: number) => ({ label: `${words.value} ${String(index)}`, description: '' });
   let position: string | null = null;
   const seen = new Map<PageType, number>();
-  const pages = blueprints(checkedPlan?.data, words.titles).map(({ type, title, evidence }) => {
-    position = generateKeyBetween(position, null);
-    const occurrence = (seen.get(type) ?? 0) + 1;
-    seen.set(type, occurrence);
-    return {
-      id: pageId(type, occurrence),
-      type,
-      position,
-      title,
-      data: evidence === null ? {} : { evidence },
-      overrides: {},
-    };
-  });
+  const pages = blueprints(checkedPlan?.data, words.titles).map(
+    ({ type, title, evidence, section }) => {
+      position = generateKeyBetween(position, null);
+      const occurrence = (seen.get(type) ?? 0) + 1;
+      seen.set(type, occurrence);
+      return {
+        id: pageId(type, occurrence),
+        type,
+        position,
+        title,
+        // The section tells the studio what the page shows (ADR-035); older pages read their rank instead.
+        data: evidence === null ? {} : { evidence, ...(section === undefined ? {} : { section }) },
+        overrides: {},
+      };
+    },
+  );
   const candidate = {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     brand: {

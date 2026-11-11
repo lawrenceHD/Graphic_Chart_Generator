@@ -222,6 +222,15 @@
 **Conséquences** : `mug-white` passe en vrai cylindre (ses cartes `uv`/`vv` cuites sont retirées, ses calques gardés) ; le studio affiche les objets courbes avec compression aux bords et disparition derrière la silhouette. Restent à faire : éclairage courbe (reflets par-dessus l'encre, Fresnel), outil de saisie avec aimantation et mire, proposition des points par vision et Gemini, photos maison d'objets vierges, branche « carte UV » des scènes photo (`SURFACE`).
 **Alternatives rejetées** : rendu 3D de modèles (aspect moins photographique, modèles à produire) ; PSD courbes du commerce (licences interdisant l'offre à des tiers : Pixeden, ls.graphics, GraphicBurger) ; photocraft comme moteur de production (rendu perspective + déformation non fusionné au 2026-11-11, gardé comme oracle possible) ; déplacement par pente de luminance seul (ne fait pas tourner l'image autour de l'objet).
 
+## ADR-035 — Pages denses rendues par section, règles du logo et des couleurs mesurées
+**Contexte** : `docs/research/2026-11-11-contenu-des-chartes.md` (14 chartes réelles) montre qu'une charte courte empile ses spécifications sur la page. Charta rendait une page selon son rang parmi les pages de son type (`variant.ts`), d'où un « Sommaire » qui n'en est pas un et treize sections montrant trois mockups tournants ; tailles minimales, zone de protection et parts de couleur étaient fixes ou uniques. Le propriétaire demande le moins de pages possible et un contenu exact, sans chiffre inventé.
+**Décision** :
+1. **Jeu minimum** (`DENSE_PAGES`, `@app/contracts`) : 14 pages denses (couverture, sommaire et mode d'emploi, plateforme, ton, logo anatomie, versions et fonds, protection et tailles, interdits, couleurs, contrastes, familles, hiérarchie, langage visuel, applications), puis les pages de secteur que les références montrent (`SECTOR_SECTIONS`), puis les tokens. `homeOf` range chaque section de la recherche sur sa page dense ; les preuves sont réunies.
+2. **Section portée par la page** : `ChartSection.section` (facultatif) devient `page.data.section` ; le studio dessine une page selon sa section, et selon son rang seulement pour les documents antérieurs.
+3. **Mesures** : tailles minimales par version (logo complet, symbole) en px et en mm déduites du plus petit élément lisible (`measureLogo`), origine de la zone de protection (élément du logo ou convention, dite), parts de couleur mesurées sur le logo (`ColorToken.share`, facultatif). Une valeur non mesurée est dite comme telle, jamais remplacée par un chiffre fixe présenté comme une mesure.
+4. **Pantone** : aucune correspondance sans table sous licence ; la page écrit « à faire vérifier par l'imprimeur ».
+**Conséquences** : la charte standard passe de 16 à 15 pages ; `SECTION_PAGE_TYPE` reste la table des types. À trancher : R19 (les tableaux de valeurs hors des 60 mots), échelle typographique proposée (rapport 1,25), tableau des tailles par format.
+
 ---
 
 ## Décisions ouvertes

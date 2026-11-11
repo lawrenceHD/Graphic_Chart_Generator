@@ -327,14 +327,14 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     });
   });
 
-  it('step 4 composes the 16-page standard plan by default, without warning', async () => {
+  it('step 4 composes the standard plan (14 dense pages and the tokens) by default, without warning', async () => {
     projectId = id();
     await test.database.orm
       .insert(projects)
       .values({ id: projectId, guestSessionId: guestId, title: 'Standard' });
     await run(await start(LOGO, 'image/svg+xml'));
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
-    expect(document.pages).toHaveLength(16);
+    expect(document.pages).toHaveLength(15);
   });
 
   it('degrades to the standard plan and reports RESEARCH_FAILED when research fails', async () => {
@@ -353,7 +353,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
       data: { step: 4, state: 'done', code: 'RESEARCH_FAILED' },
     });
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
-    expect(document.pages).toHaveLength(16);
+    expect(document.pages).toHaveLength(15);
   });
 
   describe('research warnings are never lost', () => {

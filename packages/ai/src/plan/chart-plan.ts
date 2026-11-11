@@ -1,5 +1,7 @@
 import {
   ChartPlanSchema,
+  DENSE_PAGES,
+  homeOf,
   MAX_SECTION_EVIDENCE,
   PAGE_CAPACITY,
   type ChartPlan,
@@ -173,22 +175,37 @@ export function planFromSections(
   return { plan: { sections: [...capped.sections, tokens] }, capped: capped.dropped };
 }
 
+// The 14 dense pages of the content study always (ADR-035), each gathering the evidence of the sections
+// it shows (packages/contracts charter-sections.ts); then a page per sector section of the direction.
 function buildPlan(
   direction: Pick<ArtDirection, 'sections'>,
   language: PlanLanguage,
 ): { plan: ChartPlan; capped: number } | undefined {
-  const seen = new Set<GuidelineSection>();
-  const sections: PlanSection[] = [];
+  if (direction.sections.length === 0) return undefined;
+  const evidence = new Map<GuidelineSection, string[]>();
+  const sector: GuidelineSection[] = [];
   for (const planned of direction.sections) {
-    if (seen.has(planned.section)) continue;
-    seen.add(planned.section);
-    sections.push({
-      type: SECTION_PAGE_TYPE[planned.section],
-      title: titleOf(planned.section, language).slice(0, TITLE_MAX),
-      evidence: cleanEvidence(planned.evidence),
-    });
+    const home = homeOf(planned.section);
+    const gathered = evidence.get(home);
+    if (gathered === undefined) {
+      evidence.set(home, [...planned.evidence]);
+      if (!DENSE_PAGES.some((page) => page.section === home)) sector.push(home);
+    } else gathered.push(...planned.evidence.filter((id) => !gathered.includes(id)));
   }
-  if (sections.length === 0) return undefined;
+  const sections: PlanSection[] = [
+    ...DENSE_PAGES.map(({ section, type, title }) => ({
+      type,
+      title: title[language].slice(0, TITLE_MAX),
+      evidence: cleanEvidence(evidence.get(section) ?? []),
+      section,
+    })),
+    ...sector.map((section) => ({
+      type: SECTION_PAGE_TYPE[section],
+      title: titleOf(section, language).slice(0, TITLE_MAX),
+      evidence: cleanEvidence(evidence.get(section) ?? []),
+      section,
+    })),
+  ];
   const built = planFromSections(sections, language);
   const parsed = ChartPlanSchema.safeParse(built.plan);
   return parsed.success ? { plan: parsed.data, capped: built.capped } : undefined;
@@ -201,6 +218,7 @@ const lastResort = (language: PlanLanguage): ChartPlan => ({
       type: SECTION_PAGE_TYPE[section],
       title: titleOf(section, language),
       evidence: [],
+      section,
     })),
     tokensSection(language),
   ],
