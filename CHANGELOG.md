@@ -14,7 +14,10 @@ Modifications notables du projet, par ticket. Format inspiré de
 
 - **Docs** (2026-11-11) : essai de `vectorcraft-cli` 0.23.0 (`.ai`, PDF, EPS, SVG avec texte vers SVG) consigné dans `docs/proposals/P-004_ESSAI_VECTORCRAFT.md` ; rien n'est branché, ADR à décider.
 
+- **Logos .ai, EPS, PDF et SVG avec texte** (2026-11-11, ADR-033) : lus par `vectorcraft-cli` dans le worker (processus isolé, sortie nettoyée comme un dépôt, logo recadré sur son dessin) ; refus `ASSET_FONT_MISSING` quand une police manque au serveur ; brief PDF lu par le même programme (`unpdf` abandonné) ; dans le navigateur, `.ai`, `.eps`, `.pdf` acceptés et option « Garder en vectoriel » pour un SVG avec texte. Sans `VECTORCRAFT_CLI`, comportement inchangé.
+
 ### Corrigé
+- **Studio, navigation** (2026-11-11, QA au navigateur) : le compteur ne passe plus sur deux lignes ; un saut fait défiler la seule toile, plus la page entière ; l'entrée du sommaire porte le titre de la section (« En situation »).
 - **Studio, mockups** (2026-11-11) : l'inspecteur suit les objets mesurés par la scène (plus de liste en retard) ; un objet garde son numéro quand le masque d'un objet précédent ne se charge pas.
 - **Dépôt** (2026-11-11) : l'analyse échouait pour tout logo (`RASTER_FAILED`), les liens de `node_modules` passant par une copie de travail d'agent ; copies de travail supprimées, liens refaits. `pnpm verify` de nouveau vert : `robots.ts` et `sitemap.ts` rendus à la requête (plus de lecture d'`APP_URL` au build), balise bornée par `[^<>]` dans `sanitizeManifestText`, 19 fichiers reformatés. Analyse et détail : `docs/team/audit/2026-11-11-analyse-et-nettoyage.md`.
 

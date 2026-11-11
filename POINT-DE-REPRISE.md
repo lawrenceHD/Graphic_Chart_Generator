@@ -9,7 +9,7 @@
 - `pnpm verify` vert : 1 295 tests, build, 0 violation de dépendances.
 - Plus aucune copie de travail d'agent (`.claude/worktrees/` supprimé). Dossier projet : environ 2,5 Go.
 - Non commités, laissés tels quels : `.gemini/settings.json` (modifié avant la session), `.claude/skills/impeccable/`.
-- Une seule branche non fusionnée : `comp/pdf-manifest` (voir §4).
+- Une seule branche non fusionnée : `comp/pdf-manifest`, remplacée par ADR-033 (à supprimer).
 
 ### Lancer le produit
 ```sh
@@ -55,7 +55,7 @@ Ouvrir `http://localhost:3000` (pas `127.0.0.1` : la page ne s'hydrate pas en mo
 
 | Sujet | État | Qui décide |
 |---|---|---|
-| `comp/pdf-manifest` (lire le texte d'un PDF déposé) | Module non branché, ajoute la dépendance `unpdf` | Vous : ADR, ou abandon |
+| `comp/pdf-manifest` (lire le texte d'un PDF déposé) | Remplacée : le brief PDF est lu par `vectorcraft-cli` (ADR-033) | Branche à supprimer |
 | SVG avec texte non vectorisé, logos `.ai` / `.eps` / `.pdf` | Refusés ou convertis en image | Voir §5, essai `vectorcraft-cli` |
 | Navigation entre les pages d'une charte de 30 pages | Absente | À construire |
 | Deux défauts mineurs des mockups | Liste d'objets parfois en retard ; numéros décalés si un masque ne charge pas | À corriger |
@@ -98,7 +98,7 @@ Le reste (voix, Unreal, capture de mouvement, outils internes) ne concerne pas C
 
 **Essai fait le 2026-11-11 avec votre accord** : concluant, voir `docs/proposals/P-004_ESSAI_VECTORCRAFT.md`
 (somme et signature vérifiées, six conversions fidèles, sorties acceptées par l'import de Charta ; une police
-absente est remplacée sans erreur, à refuser côté Charta). Reste votre décision sur l'ADR.
+absente est refusée côté Charta). Branché le 2026-11-11 : ADR-033.
 
 Protocole suivi :
 1. Télécharger `vectorcraft-0.23.0-windows-x64-portable.zip` (159 Mo, version du 2026-11-09) dans un dossier isolé,
@@ -109,7 +109,7 @@ Protocole suivi :
 
 ## 6. Ordre de la suite
 
-1. **Votre réponse** sur l'essai `vectorcraft-cli` (§5) et sur `comp/pdf-manifest` (§4).
+1. Fait le 2026-11-11 : `vectorcraft-cli` branché (ADR-033), `comp/pdf-manifest` remplacée.
 2. **Sept essais réels** : cinq indépendants, deux designers, chacun avec son logo. Protocole et grille :
    `docs/proposals/P-003_ESSAIS_PRODUIT.md`. C'est à vous de les mener.
 3. Selon les essais : plugin Figma (si les designers demandent la reprise dans leur outil) ou PDF serveur.

@@ -18,6 +18,14 @@ describe('detectType (magic bytes, SEC-12)', () => {
     ['unknown', text('<?xml version="1.0"?><html/>')],
     ['unknown', text('GIF89a')],
     ['unknown', new Uint8Array(0)],
+    // A PDF, and an Illustrator file saved with PDF compatibility (the default since CS).
+    ['pdf', text('%PDF-1.6\n%âã\n1 0 obj')],
+    // EPS and legacy .ai are PostScript; a DOS EPS starts with its own binary header.
+    ['postscript', text('%!PS-Adobe-3.1 EPSF-3.0\n%%Creator: Adobe Illustrator')],
+    ['postscript', bytes(0xc5, 0xd0, 0xd3, 0xc6, 0x20, 0, 0, 0)],
+    // A plain PostScript program without the Adobe header is not a document we read.
+    ['unknown', text('%!\n/foo { } def')],
+    ['unknown', text('%PDF')],
   ])('detects %s', (expected, input) => {
     expect(detectType(input)).toBe(expected);
   });

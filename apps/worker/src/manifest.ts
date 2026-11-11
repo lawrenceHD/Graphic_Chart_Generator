@@ -10,7 +10,8 @@ import { err, ok, type Result } from '@app/kernel';
 // Manifest document → clean text. No dependency: plain text, and DOCX read with node:zlib (a DOCX is a ZIP
 // holding word/document.xml). Only that one entry is ever inflated, never written to disk (no zip slip),
 // capped while inflating (zip bomb), and XML entities are decoded from a fixed list (no XXE, no expansion).
-// PDF is recognised and refused with its own code: reading it properly needs a dependency (ADR to come).
+// PDF is recognised and refused with its own code here; the scan reads it with the vector converter when
+// one is configured (ADR-033), then cleans its text with manifestOfText.
 
 export interface Manifest {
   readonly format: ManifestFormat;
@@ -151,7 +152,17 @@ export function extractManifest(bytes: Uint8Array): Result<Manifest, AssetErrorC
     raw = words.text;
     cut = words.cut;
   }
-  const cleaned = sanitizeManifestText(raw);
+  return manifestOfText(format, raw, cut);
+}
+
+/** Text read elsewhere (a PDF, by the vector converter of ADR-033) → the same cleaned, capped manifest. */
+export function manifestOfText(
+  format: ManifestFormat,
+  raw: string,
+  cut = false,
+): Result<Manifest, AssetErrorCode> {
+  const capped = raw.length > MAX_RAW_TEXT;
+  const cleaned = sanitizeManifestText(capped ? raw.slice(0, MAX_RAW_TEXT) : raw);
   if (cleaned.text.length === 0) return err('ASSET_DOCUMENT_EMPTY');
-  return ok({ format, ...cleaned, truncated: cleaned.truncated || cut });
+  return ok({ format, ...cleaned, truncated: cleaned.truncated || cut || capped });
 }

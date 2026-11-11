@@ -12,8 +12,15 @@ import {
 } from '@app/contracts';
 import { and, appendProjectEvent, assets, eq, isNull, sql, type createDatabase } from '@app/db';
 import { err, ok, uuidV7, type Result } from '@app/kernel';
-import { detectType, ensureViewBox, sanitizeSvg, type DetectedType } from '@app/svg-engine';
-import { extractManifest } from './manifest.js';
+import {
+  detectType,
+  ensureViewBox,
+  sanitizeSvg,
+  type DetectedType,
+  type SanitizedSvg,
+} from '@app/svg-engine';
+import { extractManifest, manifestOfText, type Manifest } from './manifest.js';
+import { withoutPageBox, type VectorConverter, type VectorSource } from './vector-converter.js';
 
 // Job asset.scan (02_ARCHITECTURE.md §5.1): magic bytes (SEC-12), limits (SEC-13), allowlist sanitizing
 // (SEC-14) or raster normalisation, isolated rendering (SEC-15). The sanitized copy is what the product uses;
@@ -25,6 +32,8 @@ export interface ScanDeps {
   readonly storage: ObjectStorage;
   readonly rasterizer: Rasterizer;
   readonly normalizeRaster: (bytes: Uint8Array) => Promise<Result<RasterImage, RasterError>>;
+  /** .ai, EPS, PDF and SVG with live text (ADR-033). Absent: those are refused, as before. */
+  readonly vectors?: VectorConverter;
 }
 
 const MAX_RASTER_BYTES = 10 * 1024 * 1024; // 01_PRODUCT_MVP.md §3
@@ -34,7 +43,10 @@ const MIME: Record<Exclude<DetectedType, 'unknown'>, string> = {
   png: 'image/png',
   jpeg: 'image/jpeg',
   webp: 'image/webp',
+  pdf: 'application/pdf',
+  postscript: 'application/postscript',
 };
+const encoder = new TextEncoder();
 
 interface Derived {
   readonly bytes: Uint8Array;
@@ -49,24 +61,59 @@ const assetCode = (code: string): AssetErrorCode => {
   return parsed.success ? parsed.data : 'ASSET_DECODE_FAILED';
 };
 
+/** The SVG with its text elements taken out; a stray tspan or textPath stays, and is refused again. */
+function withoutLiveText(svg: string): string {
+  return svg.replace(/<text\b[^>]*\/>|<text\b[\s\S]*?<\/text\s*>/giu, '');
+}
+
+async function framed(
+  deps: ScanDeps,
+  sanitized: SanitizedSvg,
+): Promise<Result<Derived, AssetErrorCode>> {
+  const svg = await ensureViewBox(sanitized, deps.rasterizer);
+  if (!svg.ok) return err(assetCode(svg.error.code));
+  return ok({ bytes: encoder.encode(svg.value), mime: MIME.svg, width: null, height: null });
+}
+
+// The converter's SVG is untrusted like an upload: same size limit, same sanitizer. A PDF or EPS page is
+// dropped so the logo is framed on its drawing; an SVG keeps the frame its designer gave it.
+async function converted(
+  deps: ScanDeps,
+  vectors: VectorConverter,
+  bytes: Uint8Array,
+  source: VectorSource,
+): Promise<Result<Derived, AssetErrorCode>> {
+  const written = await vectors.toSvg(bytes, source);
+  if (!written.ok) return err(written.error);
+  const svg = encoder.encode(source === 'svg' ? written.value : withoutPageBox(written.value));
+  if (svg.length > MAX_SVG_BYTES) return err('ASSET_TOO_LARGE');
+  const sanitized = sanitizeSvg(svg);
+  if (!sanitized.ok) return err(sanitized.error.code);
+  return framed(deps, sanitized.value);
+}
+
 async function derive(
   deps: ScanDeps,
   bytes: Uint8Array,
   type: DetectedType,
 ): Promise<Result<Derived, AssetErrorCode>> {
   if (type === 'unknown') return err('ASSET_TYPE_UNSUPPORTED');
+  if (type === 'pdf' || type === 'postscript') {
+    return deps.vectors === undefined
+      ? err('ASSET_TYPE_UNSUPPORTED')
+      : converted(deps, deps.vectors, bytes, type);
+  }
   if (type === 'svg') {
     if (bytes.length > MAX_SVG_BYTES) return err('ASSET_TOO_LARGE');
     const sanitized = sanitizeSvg(bytes);
-    if (!sanitized.ok) return err(sanitized.error.code);
-    const svg = await ensureViewBox(sanitized.value, deps.rasterizer);
-    if (!svg.ok) return err(assetCode(svg.error.code));
-    return ok({
-      bytes: new TextEncoder().encode(svg.value),
-      mime: MIME.svg,
-      width: null,
-      height: null,
-    });
+    if (sanitized.ok) return framed(deps, sanitized.value);
+    // Live text is the one refusal a conversion fixes. The sanitizer stops at the first fault, so the SVG
+    // without its text must pass every other rule on its own before the converter sees a single byte.
+    const liveText = sanitized.error.hint === 'convert-text-to-outlines';
+    if (!liveText || deps.vectors === undefined) return err(sanitized.error.code);
+    const rest = sanitizeSvg(encoder.encode(withoutLiveText(new TextDecoder().decode(bytes))));
+    if (!rest.ok) return err(rest.error.code);
+    return converted(deps, deps.vectors, bytes, 'svg');
   }
   const raster = await deps.normalizeRaster(bytes);
   if (!raster.ok) return err(assetCode(raster.error.code));
@@ -150,6 +197,18 @@ const DOCUMENT_MIME: Record<ManifestFormat, string> = {
 
 type Asset = typeof assets.$inferSelect;
 
+// A PDF brief is read by the vector converter when there is one; refused with its own code otherwise.
+async function readManifest(
+  deps: ScanDeps,
+  bytes: Uint8Array,
+): Promise<Result<Manifest, AssetErrorCode>> {
+  const manifest = extractManifest(bytes);
+  if (manifest.ok || manifest.error !== 'ASSET_PDF_UNSUPPORTED' || deps.vectors === undefined)
+    return manifest;
+  const read = await deps.vectors.toText(bytes);
+  return read.ok ? manifestOfText('pdf', read.value) : read;
+}
+
 // A manifest: text extracted, cleaned and capped (untrusted data, 07_AI_COPILOT.md); the cleaned text is kept
 // in the asset's meta, the original stays private like a logo original.
 async function scanDocument(
@@ -161,7 +220,7 @@ async function scanDocument(
   const read = await deps.storage.get(asset.storageKey, MAX_BRIEF_DOC_BYTES);
   if (!read.ok)
     return reject(read.error === 'TOO_LARGE' ? 'ASSET_TOO_LARGE' : 'ASSET_DECODE_FAILED');
-  const manifest = extractManifest(read.value);
+  const manifest = await readManifest(deps, read.value);
   if (!manifest.ok) return reject(manifest.error);
   const { format, text, filteredLines, truncated } = manifest.value;
   const declared = LogoAssetMetaSchema.safeParse(asset.meta);

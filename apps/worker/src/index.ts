@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createGeminiTransport, loadFontCatalogue, runResearch } from '@app/ai';
 import { loadEnv } from '@app/contracts';
@@ -19,10 +21,23 @@ import {
 } from './research.js';
 import { purge } from './purge.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
+import { createVectorConverter, createVectorcraftRunner } from './vector-converter.js';
 
 // Composition root of the worker process (02_ARCHITECTURE.md §2): real clock, network and child processes are
 // wired here only; job logic receives them.
 const logger = createLogger();
+
+function sha256File(file: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = createHash('sha256');
+    createReadStream(file)
+      .on('data', (chunk: Buffer | string) => hash.update(chunk))
+      .on('error', reject)
+      .on('end', () => {
+        resolve(hash.digest('hex'));
+      });
+  });
+}
 const env = loadEnv(process.env);
 if (!env.ok) {
   // Names only: values may be secrets.
@@ -121,6 +136,48 @@ if (replayFile !== undefined) {
 }
 logger.info({ event: 'research_configuration', mode: researchMode });
 
+// ADR-033: VECTORCRAFT_CLI, absolute path of vectorcraft-cli, and VECTORCRAFT_CLI_SHA256, the digest of that
+// very executable, checked at every start: a binary replaced behind our back never runs. Unset or empty,
+// .ai, EPS, PDF and SVG with live text are refused as before. A missing or mismatched binary stops the start.
+const unsetIfEmpty = (value: unknown): unknown => (value === '' ? undefined : value);
+const VectorEnv = z
+  .object({
+    VECTORCRAFT_CLI: z.preprocess(unsetIfEmpty, z.string().min(1).optional()),
+    VECTORCRAFT_CLI_SHA256: z.preprocess(
+      unsetIfEmpty,
+      z
+        .string()
+        .regex(/^[0-9a-f]{64}$/iu)
+        .optional(),
+    ),
+  })
+  .refine(
+    (vars) => vars.VECTORCRAFT_CLI === undefined || vars.VECTORCRAFT_CLI_SHA256 !== undefined,
+  );
+const vectorEnv = VectorEnv.safeParse(process.env);
+if (!vectorEnv.success) {
+  logger.fatal({ event: 'invalid_vector_environment' });
+  process.exit(1);
+}
+const { VECTORCRAFT_CLI: vectorBinary, VECTORCRAFT_CLI_SHA256: vectorDigest } = vectorEnv.data;
+if (vectorBinary !== undefined) {
+  const digest = await sha256File(vectorBinary).catch(() => null);
+  if (digest === null || digest !== vectorDigest?.toLowerCase()) {
+    logger.fatal({ event: 'vector_converter_rejected', found: digest !== null });
+    process.exit(1);
+  }
+}
+const vectors =
+  vectorBinary === undefined
+    ? undefined
+    : createVectorConverter({
+        run: createVectorcraftRunner(vectorBinary),
+        onFailure: ({ code, reason }) => {
+          logger.warn({ event: 'vector_conversion_failed', code, reason });
+        },
+      });
+logger.info({ event: 'vector_configuration', configured: vectors !== undefined });
+
 const database = createDatabase(env.value, (error) => {
   logger.error({ event: 'database_pool_error', error: errorSummary(error) });
 });
@@ -141,6 +198,7 @@ const scanDeps = {
   ),
   rasterizer: createNodeRasterizer(),
   normalizeRaster,
+  ...(vectors === undefined ? {} : { vectors }),
   vectorizer: createVtracer(),
   research,
   onResearchWarning: (entry: ResearchLogEntry) => {

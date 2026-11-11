@@ -1,12 +1,13 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { assets, eq, guestSessions, projects, readProjectEvents } from '@app/db';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
-import { uuidV7 } from '@app/kernel';
+import { uuidV7, type Result } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
 import { createNodeRasterizer, normalizeRaster } from '@app/svg-engine/raster';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { memoryStorage } from './memory-storage.js';
 import { rejectTimedOut, scanAsset } from './scan.js';
+import type { ConvertFailure, VectorConverter } from './vector-converter.js';
 
 const adminUrl = integrationDatabaseUrl();
 const id = (): string => uuidV7(Date.now(), randomBytes(10));
@@ -194,6 +195,141 @@ describe.runIf(adminUrl !== '')('asset.scan (02_ARCHITECTURE.md §5.1, SEC-11 to
       await scan(assetId);
       expect((await rowsOf(assetId))[0]).toMatchObject({ status: 'rejected', rejectReason: code });
     }
+  });
+
+  describe('vector files through the converter (ADR-033)', () => {
+    // What vectorcraft-cli writes: the whole A4 artboard around a small drawing.
+    const PAGE =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="842" height="595" viewBox="0 0 842 595"><path d="M10 10 L90 10 L50 90 Z" fill="#1F4BFF"/></svg>';
+    const LIVE_TEXT =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><text x="0" y="30">Brand</text></svg>';
+    const calls: string[] = [];
+    const converter = (
+      answer: Result<string, ConvertFailure> = { ok: true, value: PAGE },
+    ): VectorConverter => ({
+      toSvg: (_bytes, source) => {
+        calls.push(`svg:${source}`);
+        return Promise.resolve(answer);
+      },
+      toText: () => {
+        calls.push('text');
+        return Promise.resolve({ ok: true, value: 'La Mèza\nCuisine de quartier\n' });
+      },
+    });
+    const scanWith = (assetId: string, vectors?: VectorConverter) =>
+      scanAsset(
+        {
+          orm: test.database.orm,
+          storage: memoryStorage(objects),
+          rasterizer,
+          normalizeRaster,
+          ...(vectors === undefined ? {} : { vectors }),
+        },
+        assetId,
+      );
+    const storedSvg = async (assetId: string): Promise<string> => {
+      const [derived] = await derivedOf(assetId);
+      return new TextDecoder().decode(objects.get(derived?.storageKey ?? '') ?? new Uint8Array());
+    };
+
+    it('reads an Illustrator or PDF logo, framed on the drawing rather than on the page', async () => {
+      const assetId = await upload(encode('%PDF-1.6\n%âã\n1 0 obj'));
+      await scanWith(assetId, converter());
+      expect((await rowsOf(assetId))[0]).toMatchObject({
+        status: 'clean',
+        mime: 'application/pdf',
+      });
+      const svg = await storedSvg(assetId);
+      expect(sanitizeSvg(encode(svg)).ok).toBe(true);
+      expect(svg).not.toContain('0 0 842 595');
+      expect(svg).toMatch(/viewBox="(?:9|10)(?:\.\d+)? (?:9|10)(?:\.\d+)? (?:80|81|82)/u);
+      expect(calls.at(-1)).toBe('svg:pdf');
+    });
+
+    it('reads an EPS logo', async () => {
+      const assetId = await upload(encode('%!PS-Adobe-3.0 EPSF-3.0\n'));
+      await scanWith(assetId, converter());
+      expect((await rowsOf(assetId))[0]).toMatchObject({
+        status: 'clean',
+        mime: 'application/postscript',
+      });
+      expect(calls.at(-1)).toBe('svg:postscript');
+    });
+
+    it('outlines the live text of an SVG instead of refusing it', async () => {
+      const assetId = await upload(encode(LIVE_TEXT));
+      await scanWith(assetId, converter());
+      expect((await rowsOf(assetId))[0]).toMatchObject({ status: 'clean', mime: 'image/svg+xml' });
+      expect(await storedSvg(assetId)).not.toContain('<text');
+      expect(calls.at(-1)).toBe('svg:svg');
+    });
+
+    it('never hands a hostile SVG to the converter, even when its first fault is live text', async () => {
+      const hostile = [
+        LIVE_TEXT.replace('</svg>', '<script>alert(1)</script></svg>'),
+        LIVE_TEXT.replace(
+          '</svg>',
+          '<image href="file:///etc/passwd" width="9" height="9"/></svg>',
+        ),
+        `<!DOCTYPE svg [<!ENTITY x SYSTEM "file:///etc/passwd">]>${LIVE_TEXT}`,
+      ];
+      for (const svg of hostile) {
+        const before = calls.length;
+        const assetId = await upload(encode(svg));
+        await scanWith(assetId, converter());
+        expect((await rowsOf(assetId))[0]).toMatchObject({ status: 'rejected' });
+        expect((await rowsOf(assetId))[0]?.rejectReason).not.toBe('ASSET_SVG_UNSUPPORTED_FEATURE');
+        expect(calls.length).toBe(before);
+      }
+    });
+
+    it('keeps the previous answers without a converter', async () => {
+      const text = await upload(encode(LIVE_TEXT));
+      await scanWith(text);
+      expect((await rowsOf(text))[0]).toMatchObject({
+        status: 'rejected',
+        rejectReason: 'ASSET_SVG_UNSUPPORTED_FEATURE',
+      });
+      const pdf = await upload(encode('%PDF-1.6\n'));
+      await scanWith(pdf);
+      expect((await rowsOf(pdf))[0]).toMatchObject({
+        status: 'rejected',
+        rejectReason: 'ASSET_TYPE_UNSUPPORTED',
+      });
+    });
+
+    it('refuses a file whose font the server lacks, and a converter failure, with their codes', async () => {
+      const missing = await upload(encode('%PDF-1.6\n'));
+      await scanWith(missing, converter({ ok: false, error: 'ASSET_FONT_MISSING' }));
+      expect((await rowsOf(missing))[0]).toMatchObject({
+        status: 'rejected',
+        rejectReason: 'ASSET_FONT_MISSING',
+      });
+      const broken = await upload(encode('%PDF-1.6\n'));
+      await scanWith(broken, converter({ ok: false, error: 'ASSET_DECODE_FAILED' }));
+      expect((await rowsOf(broken))[0]).toMatchObject({
+        status: 'rejected',
+        rejectReason: 'ASSET_DECODE_FAILED',
+      });
+      expect(await derivedOf(broken)).toEqual([]);
+    });
+
+    it('trusts nothing the converter writes: its output is sanitized like an upload', async () => {
+      const hostile = PAGE.replace('<path', '<script>alert(1)</script><path');
+      const assetId = await upload(encode('%PDF-1.6\n'));
+      await scanWith(assetId, converter({ ok: true, value: hostile }));
+      const [row] = await rowsOf(assetId);
+      if (row?.status === 'clean') expect(await storedSvg(assetId)).not.toContain('script');
+      else expect(row?.rejectReason).toBe('ASSET_SVG_FORBIDDEN_CONTENT');
+    });
+
+    it('reads the text of a PDF brief', async () => {
+      const assetId = await upload(encode('%PDF-1.7\n'), 'quarantined', { kind: 'brief_doc' });
+      await scanWith(assetId, converter());
+      const [row] = await rowsOf(assetId);
+      expect(row).toMatchObject({ status: 'clean', mime: 'application/pdf' });
+      expect(row?.meta).toMatchObject({ format: 'pdf', text: 'La Mèza\nCuisine de quartier' });
+    });
   });
 
   it('normalizes a raster to a PNG with its dimensions', async () => {

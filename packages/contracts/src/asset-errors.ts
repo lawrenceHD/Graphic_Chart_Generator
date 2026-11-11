@@ -12,6 +12,8 @@ export const ASSET_ERROR_CODES = [
   'ASSET_DOCUMENT_EMPTY',
   'ASSET_DOCUMENT_TOO_COMPLEX',
   'ASSET_PDF_UNSUPPORTED',
+  // A vector file names a font the server does not have: converting it would redraw the text (ADR-033).
+  'ASSET_FONT_MISSING',
 ] as const;
 
 export const AssetErrorCodeSchema = z.enum(ASSET_ERROR_CODES);

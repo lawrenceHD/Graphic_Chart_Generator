@@ -14,30 +14,56 @@ describe('checkBrandFile (a logo or a manifest document, by signature)', () => {
   const MD = text('# Ma marque\n\nNous faisons du pain.');
   const DOCX = bytes(0x50, 0x4b, 0x03, 0x04, 0x14, 0);
   it('tells logos from documents from the bytes', () => {
-    expect(checkBrandFile(PNG.length, PNG)).toEqual({
+    expect(checkBrandFile(PNG.length, PNG, 'logo.png')).toEqual({
       ok: true,
       value: { kind: 'logo', type: 'png' },
     });
-    expect(checkBrandFile(MD.length, MD)).toEqual({
+    expect(checkBrandFile(MD.length, MD, 'brief.md')).toEqual({
       ok: true,
       value: { kind: 'document', format: 'text' },
     });
-    expect(checkBrandFile(900, DOCX)).toEqual({
+    expect(checkBrandFile(900, DOCX, 'brief.docx')).toEqual({
       ok: true,
       value: { kind: 'document', format: 'docx' },
     });
   });
-  it('says PDF is not supported yet, and refuses binaries and oversized documents', () => {
-    expect(checkBrandFile(4, text('%PDF-1.7'))).toEqual({
-      ok: false,
-      error: 'ASSET_PDF_UNSUPPORTED',
+  it('takes a PDF as a brief, unless it is an Illustrator file or named as a logo (ADR-033)', () => {
+    const PDF = text('%PDF-1.7\n');
+    expect(checkBrandFile(9, PDF, 'Brief La Mèza.pdf')).toEqual({
+      ok: true,
+      value: { kind: 'document', format: 'pdf' },
     });
-    expect(checkBrandFile(4, bytes(0x4d, 0x5a, 0, 1))).toEqual({
+    expect(checkBrandFile(9, PDF, 'la maza.ai')).toEqual({
+      ok: true,
+      value: { kind: 'logo', type: 'pdf' },
+    });
+    expect(checkBrandFile(9, PDF, 'Logo-Horizontal.PDF')).toEqual({
+      ok: true,
+      value: { kind: 'logo', type: 'pdf' },
+    });
+    expect(checkBrandFile(2 * MiB + 1, PDF, 'brief.pdf')).toEqual({
+      ok: false,
+      error: 'ASSET_TOO_LARGE',
+    });
+  });
+  it('takes an EPS as a logo, and refuses binaries and oversized documents', () => {
+    const EPS = text('%!PS-Adobe-3.0 EPSF-3.0\n');
+    expect(checkBrandFile(EPS.length, EPS, 'brief.eps')).toEqual({
+      ok: true,
+      value: { kind: 'logo', type: 'eps' },
+    });
+    expect(checkBrandFile(4, bytes(0x4d, 0x5a, 0, 1), 'a.exe')).toEqual({
       ok: false,
       error: 'ASSET_TYPE_UNSUPPORTED',
     });
-    expect(checkBrandFile(2 * MiB + 1, MD)).toEqual({ ok: false, error: 'ASSET_TOO_LARGE' });
-    expect(checkBrandFile(10 * MiB + 1, PNG)).toEqual({ ok: false, error: 'ASSET_TOO_LARGE' });
+    expect(checkBrandFile(2 * MiB + 1, MD, 'a.md')).toEqual({
+      ok: false,
+      error: 'ASSET_TOO_LARGE',
+    });
+    expect(checkBrandFile(10 * MiB + 1, PNG, 'a.png')).toEqual({
+      ok: false,
+      error: 'ASSET_TOO_LARGE',
+    });
   });
 });
 
@@ -47,6 +73,16 @@ describe('checkLogoFile (AC-02.1 to AC-02.3, client pre-check only: the server s
     expect(checkLogoFile(JPEG.length, JPEG)).toEqual({ ok: true, value: 'jpeg' });
     expect(checkLogoFile(WEBP.length, WEBP)).toEqual({ ok: true, value: 'webp' });
     expect(checkLogoFile(SVG.length, SVG)).toEqual({ ok: true, value: 'svg' });
+  });
+
+  it('takes the files a designer or a printer sends: Illustrator and PDF, EPS (ADR-033)', () => {
+    const PDF = text('%PDF-1.6\n');
+    const EPS = text('%!PS-Adobe-3.1 EPSF-3.0\n');
+    const DOS_EPS = bytes(0xc5, 0xd0, 0xd3, 0xc6, 0x20, 0);
+    expect(checkLogoFile(PDF.length, PDF)).toEqual({ ok: true, value: 'pdf' });
+    expect(checkLogoFile(EPS.length, EPS)).toEqual({ ok: true, value: 'eps' });
+    expect(checkLogoFile(DOS_EPS.length, DOS_EPS)).toEqual({ ok: true, value: 'eps' });
+    expect(checkLogoFile(10 * MiB + 1, PDF)).toEqual({ ok: false, error: 'ASSET_TOO_LARGE' });
   });
 
   it('accepts an SVG after a byte order mark, whitespace or a comment', () => {

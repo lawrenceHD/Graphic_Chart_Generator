@@ -196,6 +196,19 @@
 **Conséquences** : l'interface traduit `QUOTA_PROJECTS` (message et appel à l'action vers les tarifs statiques) ; les paliers payants et leurs limites restent à définir.
 **Alternatives rejetées** : table `plans`/`subscriptions` maintenant (migration interdite) ; quota côté client seulement (contournable) ; `402` (suppose un paiement qui n'existe pas).
 
+## ADR-033 — Convertisseur vectoriel externe `vectorcraft-cli` (.ai, EPS, PDF, SVG avec texte)
+**Contexte** : un designer ou un imprimeur envoie un `.ai`, un EPS ou un PDF ; Charta les refusait. Un SVG dont le texte n'est pas vectorisé était refusé côté serveur, ou converti en image dans le navigateur (perte du vectoriel). La lecture des PDF de brief attendait une dépendance (`unpdf`, branche `comp/pdf-manifest`). Essai du 2026-11-11 avec l'accord du propriétaire : `docs/proposals/P-004_ESSAI_VECTORCRAFT.md` (six conversions fidèles, sorties acceptées par `sanitizeSvg`, texte d'un PDF extrait). Le propriétaire a donné le 2026-11-11 son accord général pour agir.
+**Décision** :
+1. **Programme** : `vectorcraft-cli` 0.23.0 (dépôt GitHub `storytold/vectorcraft`, Apache-2.0 ou MIT), archive `vectorcraft-0.23.0-windows-x64-portable.zip`, SHA-256 `a3995376d0871afa3002a55f83b4c5666d17fe223fe72e57b4a2b8cc56657a7a`, signature de `SHA256SUMS.txt` vérifiée (empreinte `2B76 741B 414A AD6C D33E 6312 13A0 05C0 B9D7 C3ED`). Pas un paquet npm : `pnpm-lock.yaml` ne change pas. Le serveur Linux prendra l'archive `linux-x86_64` de la même version, vérifiée de la même façon, installée dans l'image du worker.
+2. **Optionnel** : `VECTORCRAFT_CLI` (chemin absolu, validé par Zod, binaire exécutable vérifié au démarrage). Absent, tout se comporte comme avant (refus avec les codes existants).
+3. **Isolation** (`apps/worker/src/vector-converter.ts`) : dossier temporaire privé par conversion, supprimé ensuite ; `--safe-mode` (aucun plug-in), `VECTORCRAFT_NO_PREFS=1`, environnement vidé (aucun secret transmis), pas de shell, 30 s au plus, sortie limitée à 5 Mo, réponses JSON validées par Zod.
+4. **Rien de ce qu'il écrit n'est cru** : le SVG produit passe par `sanitizeSvg` et `ensureViewBox` comme un dépôt. Pour un PDF ou un EPS, la page (plan de travail A4) est retirée et le logo recadré sur son dessin ; un SVG garde le cadre de son auteur. Premier plan de travail seulement.
+5. **Police absente** : le programme remplace une police manquante sans erreur. Charta lit `info` avant la conversion et refuse avec `ASSET_FONT_MISSING` ; second contrôle sur l'avertissement « fallback font ».
+6. **Brief PDF** : texte extrait par le même programme, puis nettoyé et plafonné comme un DOCX (`manifestOfText`). `unpdf` n'est pas ajouté ; la branche `comp/pdf-manifest` est remplacée.
+7. **Navigateur** : `.ai`, `.eps`, `.pdf` acceptés. Les octets disent le type ; le nom ne choisit que le rôle d'un PDF déposé avec les logos (`.ai` ou « logo » dans le nom : logo ; sinon : brief). Un SVG avec texte peut être envoyé « en vectoriel » pour que le serveur vectorise le texte ; la conversion en image reste proposée.
+**Conséquences** : 150 Mo de plus dans l'image du worker ; mises à jour du programme décidées version par version (nouvelle somme dans cet ADR) ; l'éditeur se dit à environ 65 % prêt, d'où le repli conservé. EPS venant d'un autre logiciel que vectorcraft non encore essayé.
+**Alternatives rejetées** : `unpdf` pour les PDF seulement (ne couvre ni `.ai` ni EPS ni le texte des SVG) ; Inkscape en ligne de commande (plus lourd, rendu du texte selon les polices système sans contrôle) ; conversion en image dans le navigateur seule (perd le vectoriel, déjà en place comme repli).
+
 ---
 
 ## Décisions ouvertes

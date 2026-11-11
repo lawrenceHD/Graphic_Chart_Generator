@@ -1,5 +1,8 @@
 # P-004 — Essai de `vectorcraft-cli` 0.23.0 (2026-11-11)
 
+> Suite : décidé et branché le même jour, ADR-033 (`docs/14_ADR_LOG.md`). Le texte d'un PDF s'extrait aussi
+> (`convert in.pdf out.txt`), ce qui remplace `unpdf` pour les briefs.
+
 Essai accordé par le propriétaire le 2026-11-11. Rien n'est branché dans Charta : ce document dit ce que le
 programme fait sur de vrais fichiers, pour décider d'un ADR.
 

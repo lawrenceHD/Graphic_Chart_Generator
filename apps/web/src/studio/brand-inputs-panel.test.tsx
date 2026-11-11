@@ -74,15 +74,13 @@ describe('BrandInputsPanel (several logos and a document)', () => {
     expect(seen.document).toBeNull();
   });
 
-  it('says PDF is not supported yet', async () => {
+  it('takes a PDF brief as the document, read by the server (ADR-033)', async () => {
     renderFr(<Harness />);
-    const user = userEvent.setup({ applyAccept: false });
-    await user.upload(
+    await userEvent.upload(
       screen.getByLabelText(frMessages.dropzone.choose),
       new File(['%PDF-1.7 x'], 'manifeste.pdf'),
     );
-    expect((await screen.findByRole('alert')).textContent).toContain(
-      frMessages.dropzone.errors.ASSET_PDF_UNSUPPORTED,
-    );
+    expect(await screen.findByText(/manifeste\.pdf/u)).toBeDefined();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

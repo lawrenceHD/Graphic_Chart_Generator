@@ -17,7 +17,9 @@ import {
 
 // Dropzone of the studio mock-up (prototypes/studio, Start.tsx `Drop`): drag and drop, or a real button
 // for keyboard and touch (09 §7). The pre-check spares a round trip; the server scan stays the authority.
-const ACCEPT = '.svg,.png,.webp,.jpg,.jpeg,image/svg+xml,image/png,image/webp,image/jpeg';
+// Illustrator, EPS and PDF are read by the worker's vector converter (ADR-033).
+const ACCEPT =
+  '.svg,.png,.webp,.jpg,.jpeg,.ai,.eps,.pdf,image/svg+xml,image/png,image/webp,image/jpeg,application/pdf,application/postscript,application/illustrator';
 const ACCEPT_WITH_DOCUMENT = `${ACCEPT},.txt,.md,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document`;
 
 async function readHead(file: File): Promise<Uint8Array | null> {
@@ -88,7 +90,7 @@ export function LogoDropzone({
       return false;
     }
     const checked = multiple
-      ? checkBrandFile(file.size, head)
+      ? checkBrandFile(file.size, head, file.name)
       : asBrandFile(checkLogoFile(file.size, head));
     if (!checked.ok) {
       refuse(file.name, checked.error);
@@ -153,6 +155,12 @@ export function LogoDropzone({
       setConverting(false);
       resume();
     }
+  };
+  // Sent as it is: the server outlines the text with its own fonts and keeps the logo vector (ADR-033).
+  const keepVector = (): void => {
+    if (liveText === null) return;
+    onAccept(liveText.file);
+    resume();
   };
   const errors: readonly Refusal[] =
     rejection === undefined ? refusals : [...refusals, { name: '', code: rejection }];
@@ -241,8 +249,11 @@ export function LogoDropzone({
             >
               {t('liveText.other')}
             </Button>
+            <Button variant="primary" disabled={converting} onClick={keepVector}>
+              {t('liveText.keepVector')}
+            </Button>
             <Button
-              variant={liveText.missing.length > 0 ? 'secondary' : 'primary'}
+              variant="secondary"
               disabled={converting}
               onClick={() => void convertLiveText()}
             >

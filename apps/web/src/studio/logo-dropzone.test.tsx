@@ -9,7 +9,7 @@ const PNG = new File(
   [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0])],
   'logo.png',
 );
-const PDF = new File([new TextEncoder().encode('%PDF-1.7')], 'logo.png');
+const GIF = new File([new TextEncoder().encode('GIF89a')], 'logo.png');
 const errors = frMessages.dropzone.errors;
 
 afterEach(cleanup);
@@ -36,7 +36,7 @@ describe('LogoDropzone (AC-02.1, AC-02.3, 09 §7 keyboard alternative)', () => {
     const onAccept = vi.fn();
     renderFr(<LogoDropzone onAccept={onAccept} />);
     const user = userEvent.setup({ applyAccept: false });
-    await user.upload(screen.getByLabelText(frMessages.dropzone.choose), PDF);
+    await user.upload(screen.getByLabelText(frMessages.dropzone.choose), GIF);
     expect((await screen.findByRole('alert')).textContent).toContain(errors.ASSET_TYPE_UNSUPPORTED);
     expect(onAccept).not.toHaveBeenCalled();
   });
@@ -85,6 +85,35 @@ describe('LogoDropzone (AC-02.1, AC-02.3, 09 §7 keyboard alternative)', () => {
       expect(onAccept).toHaveBeenCalledWith(png);
     });
     expect(convert).toHaveBeenCalledWith(svg, expect.stringContaining('<text'));
+  });
+
+  it('can send the SVG as it is, kept vector, for the server to outline its text (ADR-033)', async () => {
+    const svg = new File(
+      ['<svg xmlns="http://www.w3.org/2000/svg"><text font-family="Georgia">La Mèza</text></svg>'],
+      'la-meza.svg',
+    );
+    const onAccept = vi.fn();
+    const convert = vi.fn();
+    renderFr(<LogoDropzone onAccept={onAccept} convert={convert} findMissingFonts={() => []} />);
+    await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), svg);
+    await userEvent.click(
+      await screen.findByRole('button', { name: frMessages.dropzone.liveText.keepVector }),
+    );
+    await waitFor(() => {
+      expect(onAccept).toHaveBeenCalledWith(svg);
+    });
+    expect(convert).not.toHaveBeenCalled();
+    expect(screen.queryByText(frMessages.dropzone.liveText.advice)).toBeNull();
+  });
+
+  it('passes an Illustrator file without asking anything', async () => {
+    const ai = new File([new TextEncoder().encode('%PDF-1.6\n%')], 'la maza.ai');
+    const onAccept = vi.fn();
+    renderFr(<LogoDropzone onAccept={onAccept} />);
+    await userEvent.upload(screen.getByLabelText(frMessages.dropzone.choose), ai);
+    await waitFor(() => {
+      expect(onAccept).toHaveBeenCalledWith(ai);
+    });
   });
 
   it('warns that a missing font would be replaced, and keeps the conversion secondary', async () => {
