@@ -76,7 +76,7 @@
   },
   "dropzone": {
     "label": "Glissez votre logo ici",
-    "hint": "SVG, PNG, WebP ou JPEG. 5 Mo maximum pour un SVG, 10 Mo pour une image.",
+    "hint": "SVG, AI, EPS, PDF, PNG, WebP ou JPEG. 5 Mo maximum pour un SVG, 10 Mo pour les autres fichiers.",
     "choose": "Choisir un fichier",
     "errors": {
       "ASSET_TOO_LARGE": "Ce fichier dépasse la limite : logo de 5 Mo (SVG) ou 10 Mo et 8 192 px de côté (image), document de 2 Mo. Réduisez-le, puis réessayez.",
@@ -88,20 +88,22 @@
       "ASSET_SCAN_TIMEOUT": "La vérification a pris trop de temps. Réessayez dans un instant.",
       "ASSET_DOCUMENT_EMPTY": "Ce document ne contient aucun texte exploitable.",
       "ASSET_DOCUMENT_TOO_COMPLEX": "Ce document est trop volumineux une fois ouvert. Exportez-le en texte simple ou en Markdown.",
-      "ASSET_PDF_UNSUPPORTED": "Les PDF ne sont pas encore lus. Exportez votre document en DOCX, Markdown ou texte, ou collez-le dans le champ ci-dessous."
+      "ASSET_PDF_UNSUPPORTED": "Les PDF ne sont pas encore lus. Exportez votre document en DOCX, Markdown ou texte, ou collez-le dans le champ ci-dessous.",
+      "ASSET_FONT_MISSING": "Ce fichier utilise une police absente de notre serveur : le convertir changerait le dessin du texte. Exportez-le avec le texte vectorisé (Illustrator : Texte › Vectoriser), puis réessayez."
     },
     "liveText": {
       "title": "Ce SVG contient du texte non vectorisé.",
       "titleFonts": "Ce SVG contient du texte non vectorisé (polices : {fonts}).",
-      "advice": "Charta ne garde que des tracés, pour que votre logo s'affiche à l'identique partout. Le mieux : exportez-le à nouveau avec le texte vectorisé (Illustrator : Texte › Vectoriser). Sinon, convertissez-le ici en image haute définition avec les polices installées sur cet ordinateur.",
+      "advice": "Charta ne garde que des tracés, pour que votre logo s'affiche à l'identique partout. Le mieux : gardez-le en vectoriel, notre serveur vectorise le texte avec ses propres polices (il refuse le fichier si une police lui manque). Sinon, exportez-le à nouveau avec le texte vectorisé (Illustrator : Texte › Vectoriser), ou convertissez-le ici en image HD avec les polices de cet ordinateur.",
       "convert": "Convertir en image HD",
       "converting": "Conversion…",
       "other": "Choisir un autre fichier",
       "missing": "Polices absentes de cet ordinateur : {fonts}. Une conversion ici dessinerait une police de remplacement : exportez plutôt le SVG avec le texte vectorisé.",
-      "convertAnyway": "Convertir quand même"
+      "convertAnyway": "Convertir quand même",
+      "keepVector": "Garder en vectoriel"
     },
     "labelMany": "Glissez vos logos et votre document de marque ici",
-    "hintMany": "Logos : SVG, PNG, WebP ou JPEG (5 Mo pour un SVG, 10 Mo pour une image), six au maximum. Document facultatif : TXT, Markdown ou DOCX, 2 Mo maximum."
+    "hintMany": "Logos : SVG, AI, EPS, PDF, PNG, WebP ou JPEG (5 Mo pour un SVG, 10 Mo sinon), six au maximum. Document facultatif : TXT, Markdown, DOCX ou PDF, 2 Mo maximum. Un PDF est lu comme document, sauf si son nom contient « logo »."
   },
   "start": {
     "metaTitle": "Démarrer",
@@ -367,7 +369,7 @@
       "contents": "Sommaire",
       "contentsLabel": "Sommaire de la charte",
       "position": "Page {n} sur {total}",
-      "mockups": "Mises en situation"
+      "mockups": "En situation"
     },
     "working": "J’applique…",
     "mockupFailed": "Cette mise en situation n’a pas pu être chargée.",

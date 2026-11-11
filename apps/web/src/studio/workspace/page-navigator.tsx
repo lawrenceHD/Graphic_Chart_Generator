@@ -126,7 +126,7 @@ export function PageNavigator({
         className="flex h-10 items-center gap-1.5 rounded-full px-3 text-ink-2 transition-colors hover:bg-elevated hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-expanded:bg-elevated aria-expanded:text-ink"
       >
         <List aria-hidden="true" className="size-4" />
-        <span className="tabular font-mono text-xs">
+        <span className="tabular font-mono text-xs whitespace-nowrap">
           {position === null ? '--' : two(position)} / {two(total)}
         </span>
       </button>

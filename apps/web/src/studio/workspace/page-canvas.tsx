@@ -247,10 +247,18 @@ export function PageCanvas({
 
   // A jump from the navigator brings the sheet to the top of the table; a page is selected only once it
   // is really on the table (while the analysis runs, the sheets shown are placeholders).
+  // Only the table scrolls (scrollIntoView would also move the page and push the top bar out of view).
   const bring = (node: Element | null | undefined): boolean => {
-    if (node === null || node === undefined) return false;
+    const table = area.current;
+    if (node === null || node === undefined || table === null) return false;
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    node.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+    // Under the table's CSS zoom the box is measured in screen pixels, the margin in CSS pixels: scaled.
+    const box = node.getBoundingClientRect();
+    const scale =
+      node instanceof HTMLElement && node.offsetHeight > 0 ? box.height / node.offsetHeight : 1;
+    const margin = (Number.parseFloat(getComputedStyle(node).scrollMarginTop) || 0) * scale;
+    const top = table.scrollTop + box.top - table.getBoundingClientRect().top - margin;
+    table.scrollTo({ top, behavior: still ? 'auto' : 'smooth' });
     return true;
   };
   const goTo = (id: string): void => {
@@ -436,7 +444,7 @@ export function PageCanvas({
         )}
       </div>
       {empty ? null : (
-        <div className="glass absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-line bg-surface/85 p-1 shadow-[0_8px_24px_-8px_oklch(0.2_0.01_60/0.2)] backdrop-blur-md">
+        <div className="glass absolute bottom-4 left-1/2 flex w-max max-w-[calc(100%-16px)] -translate-x-1/2 items-center gap-0.5 rounded-full border border-line bg-surface/85 p-1 shadow-[0_8px_24px_-8px_oklch(0.2_0.01_60/0.2)] backdrop-blur-md">
           {view === null || pages.length === 0 ? null : (
             <>
               <PageNavigator

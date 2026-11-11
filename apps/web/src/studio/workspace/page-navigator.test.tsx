@@ -114,7 +114,7 @@ describe('PageNavigator', () => {
     const onMockups = vi.fn();
     renderFr(<PageNavigator entries={entries} current="p3" onGo={onGo} onMockups={onMockups} />);
     fireEvent.click(screen.getByRole('button', { name: /Sommaire/u }));
-    fireEvent.click(screen.getByRole('button', { name: /Mises en situation/u }));
+    fireEvent.click(screen.getByRole('button', { name: /En situation/u }));
     expect(onMockups).toHaveBeenCalledTimes(1);
     expect(onGo).not.toHaveBeenCalled();
   });

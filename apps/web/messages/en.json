@@ -76,7 +76,7 @@
   },
   "dropzone": {
     "label": "Drag your logo here",
-    "hint": "SVG, PNG, WebP or JPEG. Up to 5 MB for an SVG, 10 MB for an image.",
+    "hint": "SVG, AI, EPS, PDF, PNG, WebP or JPEG. Up to 5 MB for an SVG, 10 MB for other files.",
     "choose": "Choose a file",
     "errors": {
       "ASSET_TOO_LARGE": "This file is over the limit: logo up to 5 MB (SVG) or 10 MB and 8,192 px per side (image), document up to 2 MB. Make it smaller, then try again.",
@@ -88,20 +88,22 @@
       "ASSET_SCAN_TIMEOUT": "Checking took too long. Try again in a moment.",
       "ASSET_DOCUMENT_EMPTY": "This document has no usable text.",
       "ASSET_DOCUMENT_TOO_COMPLEX": "This document is too large once opened. Export it as plain text or Markdown.",
-      "ASSET_PDF_UNSUPPORTED": "PDFs are not read yet. Export your document as DOCX, Markdown or text, or paste it in the field below."
+      "ASSET_PDF_UNSUPPORTED": "PDFs are not read yet. Export your document as DOCX, Markdown or text, or paste it in the field below.",
+      "ASSET_FONT_MISSING": "This file uses a font our server does not have: converting it would change how the text is drawn. Export it with text converted to outlines (Illustrator: Type › Create Outlines), then try again."
     },
     "liveText": {
       "title": "This SVG contains live text.",
       "titleFonts": "This SVG contains live text (fonts: {fonts}).",
-      "advice": "Charta keeps outlines only, so your logo looks the same everywhere. Best: export it again with text converted to outlines (Illustrator: Type › Create Outlines). Otherwise, convert it here into a high-definition image drawn with the fonts installed on this computer.",
+      "advice": "Charta keeps outlines only, so your logo looks the same everywhere. Best: keep it vector, our server converts the text to outlines with its own fonts (it refuses the file if a font is missing). Otherwise, export it again with text converted to outlines (Illustrator: Type › Create Outlines), or convert it here into an HD image drawn with the fonts of this computer.",
       "convert": "Convert to an HD image",
       "converting": "Converting…",
       "other": "Choose another file",
       "missing": "Fonts missing on this computer: {fonts}. Converting here would draw a substitute font: export the SVG with text converted to outlines instead.",
-      "convertAnyway": "Convert anyway"
+      "convertAnyway": "Convert anyway",
+      "keepVector": "Keep it vector"
     },
     "labelMany": "Drag your logos and brand document here",
-    "hintMany": "Logos: SVG, PNG, WebP or JPEG (5 MB for an SVG, 10 MB for an image), six at most. Optional document: TXT, Markdown or DOCX, 2 MB at most."
+    "hintMany": "Logos: SVG, AI, EPS, PDF, PNG, WebP or JPEG (5 MB for an SVG, 10 MB otherwise), six at most. Optional document: TXT, Markdown, DOCX or PDF, 2 MB at most. A PDF is read as a document unless its name contains “logo”."
   },
   "start": {
     "metaTitle": "Start",
@@ -367,7 +369,7 @@
       "contents": "Contents",
       "contentsLabel": "Guideline contents",
       "position": "Page {n} of {total}",
-      "mockups": "Mockups"
+      "mockups": "In context"
     },
     "working": "Applying…",
     "mockupFailed": "This mockup could not be loaded.",
