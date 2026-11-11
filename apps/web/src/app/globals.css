@@ -22,6 +22,9 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  /* Pure white and black, the same in both themes: the backgrounds of the mono logos and the modal veil. */
+  --color-white: #fff;
+  --color-black: #000;
 
   --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
