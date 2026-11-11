@@ -17,6 +17,7 @@ import type { Timeline } from '../timeline';
 import type { Notice } from '../upload-batch';
 import { PAGE_STEP, brandView, orderedPages, type BrandView } from './brand-view';
 import type { ProjectSummary } from './document-client';
+import { InspirationsPanel } from './inspirations-panel';
 import { PageNavigator } from './page-navigator';
 import { IconButton } from './top-bar';
 import type { Phase } from './use-studio';
@@ -439,6 +440,11 @@ export function PageCanvas({
                   })}
                 </div>
               </section>
+            ) : null}
+            {view !== null && project !== null ? (
+              <div style={{ width: gridWidth }}>
+                <InspirationsPanel projectId={project.id} />
+              </div>
             ) : null}
           </div>
         )}

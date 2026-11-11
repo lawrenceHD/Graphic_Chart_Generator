@@ -363,6 +363,20 @@
     },
     "oneColumn": "Une page par ligne",
     "twoColumns": "Deux pages par ligne",
+    "inspirations": {
+      "title": "Inspirations",
+      "lead": "Des mises en situation et des pages d'usage du logo choisies par des designers, d'après le secteur et l'esprit de votre marque.",
+      "notice": "Travaux d'autres créateurs, montrés depuis leur source avec leur auteur. Ils ne font pas partie de votre charte et n'en sont jamais exportés.",
+      "search": "Chercher des inspirations",
+      "searching": "Recherche…",
+      "unavailable": "La source d'inspirations ne répond pas pour le moment.",
+      "retry": "Réessayer",
+      "empty": "Aucune inspiration trouvée pour cette marque.",
+      "mockups": "Mises en situation",
+      "usage": "Usages du logo",
+      "untitled": "Sans titre",
+      "via": "via Are.na"
+    },
     "pageNav": {
       "previous": "Page précédente",
       "next": "Page suivante",

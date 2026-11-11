@@ -20,6 +20,9 @@ import { parseTrustedProxyHops } from './client-ip';
 import { signupVerifier, type SignupGuardDeps } from './signup-guard';
 import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
+import { searchArena } from './inspiration/arena';
+import { inspirationHandlers } from './inspiration-routes';
+import { createInspirationCollector } from './inspiration-service';
 import { createRateLimiter, type RateLimiter } from './rate-limiter';
 
 // Built on first use, never at import time: `next build` must not need the runtime environment.
@@ -208,4 +211,22 @@ export function getEventHandlers(): ReturnType<typeof eventHandlers> {
     onError: logError('project_events_stream_error'),
   });
   return eventRoutes;
+}
+
+let inspirationRoutes: ReturnType<typeof inspirationHandlers> | undefined;
+
+/** Inspirations from Are.na (public API, no key), one hour of memory per search (inspiration-service.ts). */
+export function getInspirationHandlers(): ReturnType<typeof inspirationHandlers> {
+  inspirationRoutes ??= inspirationHandlers({
+    orm: getDatabase().orm,
+    appUrl: getRuntimeEnv().APP_URL,
+    resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
+    limiter: getRateLimiter(),
+    collect: createInspirationCollector({
+      search: (query) => searchArena({ fetch: (url, init) => fetch(url, init) }, query),
+      now: () => Date.now(),
+    }),
+  });
+  return inspirationRoutes;
 }

@@ -363,6 +363,20 @@
     },
     "oneColumn": "One page per row",
     "twoColumns": "Two pages per row",
+    "inspirations": {
+      "title": "Inspirations",
+      "lead": "Mockups and logo usage pages picked by designers, chosen from your brand's sector and spirit.",
+      "notice": "Other creators' work, shown from its source with its author. It is not part of your guideline and is never exported with it.",
+      "search": "Find inspirations",
+      "searching": "Searching…",
+      "unavailable": "The inspiration source is not answering right now.",
+      "retry": "Try again",
+      "empty": "No inspiration found for this brand.",
+      "mockups": "Mockups",
+      "usage": "Logo usage",
+      "untitled": "Untitled",
+      "via": "via Are.na"
+    },
     "pageNav": {
       "previous": "Previous page",
       "next": "Next page",

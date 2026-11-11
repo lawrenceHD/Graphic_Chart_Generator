@@ -21,6 +21,7 @@ export const ROUTES: readonly RouteEntry[] = [
   { method: 'DELETE', path: '/projects/[id]', action: 'project:delete' },
   { method: 'GET', path: '/projects/[id]/revisions', action: 'project:read' },
   { method: 'GET', path: '/projects/[id]/events', action: 'project:read' },
+  { method: 'GET', path: '/projects/[id]/inspirations', action: 'project:read' },
   { method: 'POST', path: '/projects/[id]/analyze', action: 'project:write' },
   { method: 'POST', path: '/projects/[id]/commands', action: 'document:command' },
   { method: 'POST', path: '/projects/[id]/undo', action: 'document:command' },

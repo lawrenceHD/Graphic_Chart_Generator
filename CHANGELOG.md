@@ -22,6 +22,7 @@ Modifications notables du projet, par ticket. Format inspiré de
 - **Dépôt** (2026-11-11) : l'analyse échouait pour tout logo (`RASTER_FAILED`), les liens de `node_modules` passant par une copie de travail d'agent ; copies de travail supprimées, liens refaits. `pnpm verify` de nouveau vert : `robots.ts` et `sitemap.ts` rendus à la requête (plus de lecture d'`APP_URL` au build), balise bornée par `[^<>]` dans `sanitizeManifestText`, 19 fichiers reformatés. Analyse et détail : `docs/team/audit/2026-11-11-analyse-et-nettoyage.md`.
 
 ### Ajouté
+- **Studio, inspirations** (2026-11-11) : bouton « Chercher des inspirations » sous les mises en situation ; canaux publics Are.na choisis d’après le secteur et l’archétype de la marque (mises en situation, pages d’usage du logo), vignettes servies par la source avec auteur et lien d’origine, jamais stockées ni exportées ; limite de 10 recherches par minute et par personne, une heure de cache. Pinterest et Freepik écartés (conditions d’usage, coût).
 - **Équipe et méthode** (2026-11-09) : agents persistants `design-director`, `seo-specialist`, `marketing-strategist`, `uiux-lead` (`.claude/agents/`) ; `docs/team/WORK-RULES.md` (jamais sans skills ni agents, concertation par rôle), `RESUME.md` (reprise après arrêt), `NIGHT-PLAN.md`.
 - **Accueil** (2026-11-09) : briefs `docs/team/landing/01-04` (direction artistique, copy FR/EN, SEO, UI/UX) ; base du portage = `prototypes/studio`.
 - **SEO** (2026-11-09) : `lib/seo.ts`, `sitemap.ts`, `robots.ts` (+ tests).

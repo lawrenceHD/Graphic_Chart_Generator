@@ -17,7 +17,7 @@ describe('buildContentSecurityPolicy', () => {
       "script-src 'self' 'nonce-abc123' 'strict-dynamic' https://challenges.cloudflare.com",
       "style-src-elem 'self' 'nonce-abc123'",
       "style-src-attr 'unsafe-inline'",
-      "img-src 'self' data: blob: https://acme.r2.cloudflarestorage.com",
+      "img-src 'self' data: blob: https://acme.r2.cloudflarestorage.com https://images.are.na",
       "font-src 'self'",
       "connect-src 'self' https://acme.r2.cloudflarestorage.com",
       'frame-src https://challenges.cloudflare.com',
@@ -34,7 +34,9 @@ describe('buildContentSecurityPolicy', () => {
       storageEndpoint: 'http://localhost:9000',
     });
     expect(policy).toContain("connect-src 'self' http://localhost:9000");
-    expect(policy).toContain("img-src 'self' data: blob: http://localhost:9000");
+    expect(policy).toContain(
+      "img-src 'self' data: blob: http://localhost:9000 https://images.are.na",
+    );
     expect(policy).not.toContain('r2.cloudflarestorage.com');
   });
 
