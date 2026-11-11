@@ -63,21 +63,9 @@ describe.each(EXAMPLES)('example $id', (example) => {
     expect(svg).not.toMatch(/<script|href=|on\w+=/iu);
   });
 
-  it('draws its black and white versions, when it has them, in a single flat colour', () => {
+  it('hands its one-colour files, when it has them, to the studio view', () => {
     const { monoLogos } = example;
     if (monoLogos === undefined) return;
-    for (const [uri, ink] of [
-      [monoLogos.black, '#000000'],
-      [monoLogos.white, '#FFFFFF'],
-    ] as const) {
-      const svg = decodeURIComponent(uri.slice(uri.indexOf(',') + 1));
-      const fills = [...svg.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6}|none)"/gu)].map(
-        (m) => m[1],
-      );
-      expect(fills.length).toBeGreaterThan(0);
-      for (const fill of fills)
-        expect(['none', ink]).toContain(fill?.toUpperCase().replace('NONE', 'none'));
-    }
     expect(buildExample(example).view.logo['mono-black']).toBe(monoLogos.black);
     expect(buildExample(example).view.logo['mono-white']).toBe(monoLogos.white);
   });

@@ -22,11 +22,12 @@ describe('one-colour variants of the example logos (logo-kit engine)', () => {
     expect(black).not.toMatch(/#(?!000000)[0-9A-F]{6}/iu);
   });
 
-  it('invents nothing for a logo served as a file: no one-colour file exists for it', () => {
+  it('invents nothing for a raster logo, and hands the derived files of a vector file to the view', () => {
     expect(monoVariantsOf('/demo/la-meza/logo.png')).toEqual({ black: null, white: null });
-    expect(monoVariantsOf('/demo/logos/dreamhost.svg')).toEqual({ black: null, white: null });
     for (const example of EXAMPLES) {
-      expect(builtExample(example.id).view.logo['mono-white'], example.id).toBeNull();
+      const { logo } = builtExample(example.id).view;
+      expect(logo['mono-white'], example.id).toBe(example.monoLogos?.white ?? null);
+      expect(logo['mono-black'], example.id).toBe(example.monoLogos?.black ?? null);
     }
   });
 

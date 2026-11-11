@@ -1,3 +1,4 @@
+import { monoLogosOf } from './logo-selection';
 import type { DemoExample } from '../schema';
 
 // Travel experiences. Real logo taken from the project's reference library (public/demo/logos/getyourguide.svg),
@@ -12,6 +13,7 @@ export const GETYOURGUIDE: DemoExample = {
   briefText:
     'Une place de marché pour réserver des visites, des billets et des activités sur place, partout dans le monde : des guides locaux, des annulations simples et des avis de voyageurs vérifiés.',
   logo: '/demo/logos/getyourguide.svg',
+  monoLogos: monoLogosOf('getyourguide'),
   logoProvenance: 'Logo réel de la bibliothèque de référence du projet, affiché en démonstration',
   colors: {
     primary: { hex: '#FF5533', source: 'extracted' },

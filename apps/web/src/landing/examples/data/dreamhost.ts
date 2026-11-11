@@ -1,3 +1,4 @@
+import { monoLogosOf } from './logo-selection';
 import type { DemoExample } from '../schema';
 
 // Web hosting. Real logo taken from the project's reference library (public/demo/logos/dreamhost.svg), shown as
@@ -12,6 +13,7 @@ export const DREAMHOST: DemoExample = {
   briefText:
     'Web hosting for independent sites and small businesses: reliable servers, plain pricing and support that answers like a person. A calm, trustworthy service for people who would rather build than administer.',
   logo: '/demo/logos/dreamhost.svg',
+  monoLogos: monoLogosOf('dreamhost'),
   logoProvenance: "Real logo from the project's reference library, shown as a demonstration",
   colors: {
     primary: { hex: '#1F3244', source: 'extracted' },

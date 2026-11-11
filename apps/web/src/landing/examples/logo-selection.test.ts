@@ -34,6 +34,41 @@ describe('logo selection', () => {
     });
   });
 
+  describe.each(LOGO_SELECTION)('$id one-colour files', (pick) => {
+    it('ships a white and a black file that use only that colour', () => {
+      for (const [tone, hex] of [
+        ['white', 'FFFFFF'],
+        ['black', '000000'],
+      ] as const) {
+        const url = pick.monoLogos[tone];
+        expect(url).toBe(`/demo/logos/mono/${pick.id}-${tone}.svg`);
+        const svg = readFileSync(join(PUBLIC, url), 'utf8');
+        expect(svg).toMatch(/^<svg\b/u);
+        // Knockout masks (inside <defs>) legitimately use black and white: only the painted drawing counts.
+        const painted = svg.replace(/<defs>[\s\S]*?<\/defs>/gu, '');
+        const colours = [...painted.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6})"/gu)].map((m) =>
+          m[1]?.toUpperCase(),
+        );
+        expect(colours.length).toBeGreaterThan(0);
+        for (const colour of colours) expect(colour).toBe(`#${hex}`);
+      }
+    });
+  });
+
+  it('exposes the one-colour files of the logo through each example', () => {
+    for (const example of EXAMPLES) {
+      if (example.logo.endsWith('.png')) {
+        expect(example.monoLogos, example.id).toBeUndefined();
+        continue;
+      }
+      const id = example.logo.replace('/demo/logos/', '').replace('.svg', '');
+      expect(example.monoLogos, example.id).toEqual({
+        white: `/demo/logos/mono/${id}-white.svg`,
+        black: `/demo/logos/mono/${id}-black.svg`,
+      });
+    }
+  });
+
   it('draws every example logo from a real file, never from an inline drawing', () => {
     for (const example of EXAMPLES) {
       expect(example.logo.startsWith('data:'), example.id).toBe(false);

@@ -1,3 +1,4 @@
+import { monoLogosOf } from './logo-selection';
 import type { DemoExample } from '../schema';
 
 // Online education. Real logo taken from the project's reference library (public/demo/logos/khan-academy.svg),
@@ -12,6 +13,7 @@ export const KHAN_ACADEMY: DemoExample = {
   briefText:
     "Une plateforme d'apprentissage gratuite, en ligne, pour que chaque élève avance à son rythme, des bases aux notions avancées, avec des exercices corrigés et des explications courtes.",
   logo: '/demo/logos/khan-academy.svg',
+  monoLogos: monoLogosOf('khan-academy'),
   logoProvenance: 'Logo réel de la bibliothèque de référence du projet, affiché en démonstration',
   colors: {
     primary: { hex: '#14BF96', source: 'extracted' },

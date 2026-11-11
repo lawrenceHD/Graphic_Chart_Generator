@@ -1,5 +1,11 @@
 import type { LogoPick } from '../schema';
 
+/** The white and black files derived from /demo/logos/<id>.svg, shipped under /demo/logos/mono. */
+export const monoLogosOf = (id: string): { readonly black: string; readonly white: string } => ({
+  black: `/demo/logos/mono/${id}-black.svg`,
+  white: `/demo/logos/mono/${id}-white.svg`,
+});
+
 const pick = (
   id: string,
   name: string,
@@ -12,6 +18,7 @@ const pick = (
   name,
   sourceFile,
   logo: `/demo/logos/${id}.svg`,
+  monoLogos: monoLogosOf(id),
   sector,
   markType,
   palette: [...palette],

@@ -62,6 +62,8 @@ export const LogoPickSchema = z
     logo: LogoSchema,
     sector: z.string().min(1).max(80),
     markType: z.enum(['wordmark', 'lettermark', 'letterform', 'emblem', 'pictorial', 'abstract']),
+    /** One-colour files derived from the SVG by logo-kit (tools/logo-library/derive-mono.mjs): never redrawn. */
+    monoLogos: z.object({ black: LogoSchema, white: LogoSchema }).strict(),
     /** Colours read from the SVG, one to three. */
     palette: z.array(HexSchema).min(1).max(3),
   })
