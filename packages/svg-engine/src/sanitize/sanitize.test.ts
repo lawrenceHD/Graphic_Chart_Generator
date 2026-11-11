@@ -136,8 +136,13 @@ describe('sanitizeSvg — properties', () => {
         (input, pattern, where) => {
           const at = Math.floor(where * input.length);
           const result = sanitizeSvg(encode(input.slice(0, at) + pattern + input.slice(at)));
-          if (result.ok)
-            expect(result.value.svg.toLowerCase()).not.toContain(pattern.toLowerCase());
+          if (!result.ok) return;
+          // The word "onload" inside a kept value (d="onloadM10…", fill="#1Fonload…") is inert text: a handler
+          // is an attribute NAME. So values are emptied before looking for it; the other patterns are
+          // dangerous wherever they stand and are searched in the whole output.
+          const output = result.value.svg.toLowerCase();
+          const searched = pattern === 'onload' ? output.replace(/"[^"]*"/gu, '""') : output;
+          expect(searched).not.toContain(pattern.toLowerCase());
         },
       ),
       { numRuns: 300 },
