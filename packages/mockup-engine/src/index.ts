@@ -6,3 +6,4 @@ export * from './render/uniforms.js';
 export * from './render/compositor.js';
 export * from './render/psd.js';
 export * from './render/psd-compositor.js';
+export * from './geometry/revolution.js';
