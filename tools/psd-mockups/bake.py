@@ -3,7 +3,14 @@
     python tools/psd-mockups/bake.py <mockup.psd> <out dir> <spec.json>
 
 spec.json: {"id", "width": 2400, "slots": {"<smart object name>": "<artwork role>"}, "hide": [names],
-            "paint": {"<layer name>": ["neutralLight", ...]}, "licence": "...", "source": "url"}
+            "paint": {"<layer name>": ["neutralLight", ...]}, "licence": "...", "source": "url",
+            "geometry": {"<smart object name>": {"aspect": 3.4, "geometry": {...}}},
+            "blend": {"<smart object name>": "multiply"}}
+
+A slot named in `geometry` (ADR-034) gets no baked map: scene.json carries the object's computed surface
+(a revolution for a mug, in output pixels) and the studio draws the map. A warp preset (Arc, Bulge...) or a
+split grid is refused rather than baked flat; the custom warp follows Photoshop's order (control points
+through the perspective, then the Bezier patches).
 
 The PSD's layers are replayed bottom to top. Runs of normal layers are flattened into images; a layer in
 another blend mode stays a layer of its own; a smart object named in `slots` becomes a slot: a UV map
@@ -55,32 +62,59 @@ def bernstein(t):
     return np.stack([(1 - t) ** 3, 3 * t * (1 - t) ** 2, 3 * t ** 2 * (1 - t), t ** 3], axis=-1)
 
 
-def warp_points(data, u, v):
-    """Smart-object pixel coordinates of artwork points (u, v in [0, 1]) after the custom warp."""
-    size = data[b"Sz  "]
-    w, h = float(size[b"Wdth"]), float(size[b"Hght"])
+def warp_grid(data):
+    """The custom warp grid (xs, ys as n x n arrays) of a smart object, or None when it is not warped.
+
+    A warp preset (Arc, Bulge, Flag...) or a split / non-square grid is refused: baking it as a plain
+    perspective would show the artwork undeformed without anyone noticing.
+    """
     warp = data.get(b"warp")
     style = getattr(warp.get(b"warpStyle"), "enum", None) if warp is not None else None
-    if warp is None or style != b"warpCustom":
-        return u * w, v * h, (w, h)
+    if warp is None or style in (None, b"warpNone"):
+        return None
+    if style != b"warpCustom":
+        raise SystemExit(f"warp preset {style.decode(errors='replace')} is not supported: "
+                         "convert it to a custom warp in Photoshop")
+    rows, cols = warp.get(b"deformNumRows"), warp.get(b"deformNumCols")
+    if rows is not None and cols is not None and int(rows) != int(cols):
+        raise SystemExit(f"split warp grid {int(rows)} x {int(cols)} is not supported")
     mesh = warp[b"customEnvelopeWarp"][b"meshPoints"]
     xs = np.array([float(x) for x in mesh[b"Hrzn"].values])
     ys = np.array([float(y) for y in mesh[b"Vrtc"].values])
     n = int(round(np.sqrt(len(xs))))
-    xs = xs.reshape(n, n); ys = ys.reshape(n, n)
+    if n * n != len(xs) or (n - 1) % 3 != 0:
+        raise SystemExit(f"warp grid of {len(xs)} points is not a square (3k+1) x (3k+1) grid")
+    return xs.reshape(n, n), ys.reshape(n, n)
+
+
+def document_points(data, H, u, v):
+    """Document coordinates of artwork points (u, v in [0, 1]), Photoshop's order.
+
+    Photoshop sends the warp's control points through the perspective (nonAffineTransform) and then
+    evaluates the Bezier patches in the document; evaluating first and projecting after drifts by a
+    few pixels on an object seen at an angle (photocraft PR #12428).
+    """
+    size = data[b"Sz  "]
+    w, h = float(size[b"Wdth"]), float(size[b"Hght"])
+    grid = warp_grid(data)
+    if grid is None:
+        Q = H @ np.stack([np.ravel(u) * w, np.ravel(v) * h, np.ones(np.size(u))])
+        return (Q[0] / Q[2]).reshape(np.shape(u)), (Q[1] / Q[2]).reshape(np.shape(u))
+    xs, ys = grid
+    n = xs.shape[0]
+    Q = H @ np.stack([xs.ravel(), ys.ravel(), np.ones(xs.size)])
+    cx = (Q[0] / Q[2]).reshape(n, n); cy = (Q[1] / Q[2]).reshape(n, n)
     patches = (n - 1) // 3
     pu = np.minimum((u * patches).astype(int), patches - 1)
     pv = np.minimum((v * patches).astype(int), patches - 1)
-    lu = u * patches - pu
-    lv = v * patches - pv
-    bu = bernstein(lu); bv = bernstein(lv)
-    X = np.zeros_like(u); Y = np.zeros_like(u)
+    bu = bernstein(u * patches - pu); bv = bernstein(v * patches - pv)
+    X = np.zeros_like(u, dtype=float); Y = np.zeros_like(u, dtype=float)
     for j in range(4):
         for i in range(4):
             weight = bv[..., j] * bu[..., i]
-            X += weight * xs[pv * 3 + j, pu * 3 + i]
-            Y += weight * ys[pv * 3 + j, pu * 3 + i]
-    return X, Y, (w, h)
+            X += weight * cx[pv * 3 + j, pu * 3 + i]
+            Y += weight * cy[pv * 3 + j, pu * 3 + i]
+    return X, Y
 
 
 def uv_map(layer, scale, out_w, out_h, samples=160):
@@ -90,8 +124,7 @@ def uv_map(layer, scale, out_w, out_h, samples=160):
     size = data[b"Sz  "]
     w, h = float(size[b"Wdth"]), float(size[b"Hght"])
     H = homography(quad, w, h)
-    warp = data.get(b"warp")
-    if warp is None or getattr(warp.get(b"warpStyle"), "enum", None) != b"warpCustom":
+    if warp_grid(data) is None:
         # Perspective only: invert the homography for every output pixel, exactly.
         Hi = np.linalg.inv(H)
         gx, gy = np.meshgrid(np.arange(out_w) + 0.5, np.arange(out_h) + 0.5)
@@ -103,10 +136,8 @@ def uv_map(layer, scale, out_w, out_h, samples=160):
         U[outside] = np.nan; V[outside] = np.nan
         return U, V, w / h
     u, v = np.meshgrid(np.linspace(0, 1, samples), np.linspace(0, 1, samples))
-    X, Y, _ = warp_points(data, u, v)
-    P = np.stack([X.ravel(), Y.ravel(), np.ones(X.size)])
-    Q = H @ P
-    cx = Q[0] / Q[2] * scale; cy = Q[1] / Q[2] * scale
+    X, Y = document_points(data, H, u, v)
+    cx = X.ravel() * scale; cy = Y.ravel() * scale
     x0, x1 = int(max(0, np.floor(cx.min()))), int(min(out_w, np.ceil(cx.max()) + 1))
     y0, y1 = int(max(0, np.floor(cy.min()))), int(min(out_h, np.ceil(cy.max()) + 1))
     interp = LinearNDInterpolator(np.stack([cx, cy], 1), np.stack([u.ravel(), v.ravel()], 1))
@@ -115,6 +146,17 @@ def uv_map(layer, scale, out_w, out_h, samples=160):
     U = np.full((out_h, out_w), np.nan); V = np.full((out_h, out_w), np.nan)
     U[y0:y1, x0:x1] = uv[..., 0]; V[y0:y1, x0:x1] = uv[..., 1]
     return U, V, w / h
+
+
+def slot_entry(slot_id, role, aspect, blend, opacity, geometry):
+    """The scene.json entry of a slot: its baked maps, or the geometry the studio computes them from."""
+    entry = {"type": "slot", "id": slot_id, "role": role, "aspect": round(aspect, 4), "blend": blend,
+             "opacity": round(opacity, 3)}
+    if geometry is not None:
+        entry["geometry"] = geometry
+    else:
+        entry["uv"] = f"uv-{slot_id}.png"; entry["vv"] = f"vv-{slot_id}.png"
+    return entry
 
 
 def encode(values, coverage):
@@ -170,6 +212,7 @@ def main():
     scale = width / psd.width
     size = (width, int(round(psd.height * scale)))
     slots = spec["slots"]; paints = spec.get("paint", {}); hidden = set(spec.get("hide", []))
+    geometries = spec.get("geometry", {}); blends = spec.get("blend", {})
     layers = []
     run = None
     seen = set()
@@ -212,6 +255,15 @@ def main():
             key = layer.name if layer.name not in seen else f"{layer.name}-{len(layers)}"
             seen.add(layer.name)
             flush()
+            if layer.name in geometries:
+                # ADR-034: the object's true shape (a cylinder for a mug) replaces the PSD's warp; the
+                # studio computes the map. The aspect is the one the geometry implies.
+                slot_id = f"slot-{len(layers)}"
+                spec_slot = geometries[layer.name]
+                layers.append(slot_entry(slot_id, slots[layer.name], spec_slot["aspect"],
+                                         blends.get(layer.name, blend), alpha, spec_slot["geometry"]))
+                print(f"slot {layer.name!r} -> {slots[layer.name]}: geometry {spec_slot['geometry']['kind']}")
+                continue
             U, V, aspect = uv_map(layer, scale, *size)
             valid = ~np.isnan(U)
             slot_id = f"slot-{len(layers)}"
@@ -238,9 +290,7 @@ def main():
                 U = np.where(valid, U, 0.0); V = np.where(valid, V, 0.0)
             encode(U, coverage).save(out / f"uv-{slot_id}.png", optimize=True)
             encode(V, coverage).save(out / f"vv-{slot_id}.png", optimize=True)
-            layers.append({"type": "slot", "id": slot_id, "role": slots[layer.name], "aspect": round(aspect, 4),
-                           "blend": blend, "opacity": round(alpha, 3),
-                           "uv": f"uv-{slot_id}.png", "vv": f"vv-{slot_id}.png"})
+            layers.append(slot_entry(slot_id, slots[layer.name], aspect, blend, alpha, None))
             print(f"slot {layer.name!r} -> {slots[layer.name]} ({blend}), IoU {iou if iou is None else round(iou, 4)}")
             continue
         if layer.name in paints:

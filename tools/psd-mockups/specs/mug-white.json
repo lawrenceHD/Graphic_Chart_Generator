@@ -5,7 +5,54 @@
     "logo": "mug-logo"
   },
   "paint": {},
-  "hide": ["firmbee-poziom"],
+  "hide": [
+    "firmbee-poziom"
+  ],
   "source": "https://firmbee.com/white-coffee-mug-free-psd-mockup",
-  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation."
+  "licence": "CC0 (Firmbee) : copie, modification et distribution libres, même commerciales, sans autorisation.",
+  "geometry": {
+    "logo": {
+      "aspect": 4.01,
+      "geometry": {
+        "kind": "revolution",
+        "top": {
+          "left": [
+            783,
+            612
+          ],
+          "right": [
+            1504,
+            612
+          ],
+          "front": [
+            1144,
+            655
+          ]
+        },
+        "bottom": {
+          "left": [
+            792,
+            1190
+          ],
+          "right": [
+            1501,
+            1190
+          ],
+          "front": [
+            1146,
+            1243
+          ]
+        },
+        "band": {
+          "from": 0.22,
+          "to": 0.86
+        },
+        "arcDegrees": 240,
+        "centreDegrees": 0
+      }
+    }
+  },
+  "blend": {
+    "logo": "multiply"
+  }
 }
