@@ -71,7 +71,13 @@ function MockupCard({
     <div className={`absolute z-20 ${className}`}>
       <Float rotate={rotate} delay={delay} duration={9}>
         <div className="overflow-hidden rounded-[22px] shadow-[0_40px_70px_-36px_rgb(0_0_0/0.65)] ring-1 ring-line">
-          <MockupStage scene={scene} view={view} label={example.name} failedLabel="" retryLabel="" />
+          <MockupStage
+            scene={scene}
+            view={view}
+            label={example.name}
+            failedLabel=""
+            retryLabel=""
+          />
         </div>
       </Float>
     </div>

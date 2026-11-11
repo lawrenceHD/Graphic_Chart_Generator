@@ -10,49 +10,24 @@
     {
       "id": "poster",
       "quad": [
-        [
-          652,
-          78
-        ],
-        [
-          1241,
-          80
-        ],
-        [
-          1241,
-          883
-        ],
-        [
-          652,
-          887
-        ]
+        [652, 78],
+        [1241, 80],
+        [1241, 883],
+        [652, 887]
       ],
       "logoBox": {
         "aspect": 0.731,
         "fit": "contain",
         "paddingRatio": 0.2
       },
-      "baseTint": [
-        0.878,
-        0.859,
-        0.839
-      ],
+      "baseTint": [0.878, 0.859, 0.839],
       "light": {
-        "direction": [
-          -0.501,
-          -0.3006,
-          0.8116
-        ]
+        "direction": [-0.501, -0.3006, 0.8116]
       },
-      "finishes": [
-        "print"
-      ],
+      "finishes": ["print"],
       "mask": "mask-poster.png",
       "material": "paper",
-      "paint": [
-        "neutralLight",
-        "primary"
-      ]
+      "paint": ["neutralLight", "primary"]
     }
   ]
 }

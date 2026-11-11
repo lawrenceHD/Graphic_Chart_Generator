@@ -130,8 +130,9 @@ const INVISIBLE =
   /[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\uE000-\uF8FF]/gu;
 const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/gu;
 const DELIMITER = /<{3,}[A-Z_]*>{0,3}|>{3,}/gu;
-// Bounded: an unclosed "<a<a<a…" must not make the scan quadratic.
-const TAG = /<\/?[A-Za-z!][^>]{0,200}>/gu;
+// Bounded, and a tag never holds another "<": an unclosed "<a<a<a…" stops at the next "<" instead of scanning
+// 200 characters from every one of them.
+const TAG = /<\/?[A-Za-z!][^<>]{0,200}>/gu;
 const MAX_SANITIZE_INPUT = 400_000;
 
 // Lines that talk to the model rather than describe a brand. Dropped whole, never "defused" in place.

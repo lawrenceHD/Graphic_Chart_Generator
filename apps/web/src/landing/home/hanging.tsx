@@ -72,10 +72,7 @@ export function Hanging() {
                   : { type: 'spring', stiffness: 90, damping: 12, delay: index * 0.14 }
               }
             >
-              <div
-                className="swing"
-                style={swingStyle(index)}
-              >
+              <div className="swing" style={swingStyle(index)}>
                 <motion.div
                   drag
                   dragSnapToOrigin

@@ -10,52 +10,24 @@
     {
       "id": "cover",
       "quad": [
-        [
-          462,
-          128
-        ],
-        [
-          1287,
-          66
-        ],
-        [
-          1405,
-          957
-        ],
-        [
-          484,
-          1003
-        ]
+        [462, 128],
+        [1287, 66],
+        [1405, 957],
+        [484, 1003]
       ],
       "logoBox": {
         "aspect": 0.986,
         "fit": "contain",
         "paddingRatio": 0.26
       },
-      "baseTint": [
-        0.91,
-        0.906,
-        0.91
-      ],
+      "baseTint": [0.91, 0.906, 0.91],
       "light": {
-        "direction": [
-          -0.5025,
-          -0.5025,
-          0.7035
-        ]
+        "direction": [-0.5025, -0.5025, 0.7035]
       },
-      "finishes": [
-        "deboss",
-        "foil",
-        "print"
-      ],
+      "finishes": ["deboss", "foil", "print"],
       "mask": "mask-cover.png",
       "material": "paper",
-      "paint": [
-        "primary",
-        "neutralDark",
-        "accent"
-      ]
+      "paint": ["primary", "neutralDark", "accent"]
     }
   ]
 }

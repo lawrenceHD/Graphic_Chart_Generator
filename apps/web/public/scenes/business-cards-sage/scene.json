@@ -10,100 +10,46 @@
     {
       "id": "flat",
       "quad": [
-        [
-          314,
-          544
-        ],
-        [
-          770,
-          286
-        ],
-        [
-          988,
-          474
-        ],
-        [
-          530,
-          750
-        ]
+        [314, 544],
+        [770, 286],
+        [988, 474],
+        [530, 750]
       ],
       "logoBox": {
         "aspect": 1.806,
         "fit": "contain",
         "paddingRatio": 0.24
       },
-      "baseTint": [
-        0.941,
-        0.941,
-        0.957
-      ],
+      "baseTint": [0.941, 0.941, 0.957],
       "light": {
-        "direction": [
-          -0.4993,
-          -0.3994,
-          0.7689
-        ]
+        "direction": [-0.4993, -0.3994, 0.7689]
       },
-      "finishes": [
-        "print",
-        "foil",
-        "emboss"
-      ],
+      "finishes": ["print", "foil", "emboss"],
       "mask": "mask-flat.png",
       "material": "card",
-      "paint": [
-        "neutralLight",
-        "primary"
-      ]
+      "paint": ["neutralLight", "primary"]
     },
     {
       "id": "lean",
       "quad": [
-        [
-          1100,
-          256
-        ],
-        [
-          1540,
-          500
-        ],
-        [
-          1390,
-          816
-        ],
-        [
-          896,
-          664
-        ]
+        [1100, 256],
+        [1540, 500],
+        [1390, 816],
+        [896, 664]
       ],
       "logoBox": {
         "aspect": 1.266,
         "fit": "contain",
         "paddingRatio": 0.24
       },
-      "baseTint": [
-        0.91,
-        0.906,
-        0.925
-      ],
+      "baseTint": [0.91, 0.906, 0.925],
       "light": {
-        "direction": [
-          -0.4993,
-          -0.3994,
-          0.7689
-        ]
+        "direction": [-0.4993, -0.3994, 0.7689]
       },
-      "finishes": [
-        "print",
-        "foil",
-        "deboss"
-      ],
+      "finishes": ["print", "foil", "deboss"],
       "mask": "mask-lean.png",
       "material": "card",
-      "paint": [
-        "primary",
-        "neutralDark"
-      ]
+      "paint": ["primary", "neutralDark"]
     }
   ]
 }

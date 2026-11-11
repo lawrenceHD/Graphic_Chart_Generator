@@ -41,12 +41,7 @@
       "before": "a complete",
       "after": ".",
       "line1": "Your logo becomes",
-      "words": [
-        "guideline",
-        "palette",
-        "typography",
-        "identity"
-      ],
+      "words": ["guideline", "palette", "typography", "identity"],
       "wordsLabel": "What your logo becomes",
       "chipFont": "Brand typography",
       "chipFavicon": "favicon.svg"

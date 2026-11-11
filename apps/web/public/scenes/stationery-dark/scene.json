@@ -10,145 +10,68 @@
     {
       "id": "letter",
       "quad": [
-        [
-          332,
-          128
-        ],
-        [
-          931,
-          128
-        ],
-        [
-          933,
-          953
-        ],
-        [
-          332,
-          953
-        ]
+        [332, 128],
+        [931, 128],
+        [933, 953],
+        [332, 953]
       ],
       "logoBox": {
         "aspect": 0.727,
         "fit": "contain",
         "paddingRatio": 0.3
       },
-      "baseTint": [
-        0.925,
-        0.925,
-        0.925
-      ],
+      "baseTint": [0.925, 0.925, 0.925],
       "light": {
-        "direction": [
-          -0.6007,
-          -0.3004,
-          0.7409
-        ]
+        "direction": [-0.6007, -0.3004, 0.7409]
       },
-      "finishes": [
-        "print"
-      ],
+      "finishes": ["print"],
       "mask": "mask-letter.png",
       "material": "paper",
-      "paint": [
-        "neutralLight"
-      ]
+      "paint": ["neutralLight"]
     },
     {
       "id": "envelope",
       "quad": [
-        [
-          1016,
-          264
-        ],
-        [
-          1651,
-          264
-        ],
-        [
-          1653,
-          589
-        ],
-        [
-          1014,
-          589
-        ]
+        [1016, 264],
+        [1651, 264],
+        [1653, 589],
+        [1014, 589]
       ],
       "logoBox": {
         "aspect": 1.96,
         "fit": "contain",
         "paddingRatio": 0.3
       },
-      "baseTint": [
-        0.91,
-        0.91,
-        0.91
-      ],
+      "baseTint": [0.91, 0.91, 0.91],
       "light": {
-        "direction": [
-          -0.6007,
-          -0.3004,
-          0.7409
-        ]
+        "direction": [-0.6007, -0.3004, 0.7409]
       },
-      "finishes": [
-        "print",
-        "foil"
-      ],
+      "finishes": ["print", "foil"],
       "mask": "mask-envelope.png",
       "material": "paper",
-      "paint": [
-        "neutralLight",
-        "primary"
-      ]
+      "paint": ["neutralLight", "primary"]
     },
     {
       "id": "card",
       "quad": [
-        [
-          1068,
-          716
-        ],
-        [
-          1487,
-          718
-        ],
-        [
-          1487,
-          887
-        ],
-        [
-          1068,
-          887
-        ]
+        [1068, 716],
+        [1487, 718],
+        [1487, 887],
+        [1068, 887]
       ],
       "logoBox": {
         "aspect": 2.465,
         "fit": "contain",
         "paddingRatio": 0.2
       },
-      "baseTint": [
-        0.902,
-        0.902,
-        0.902
-      ],
+      "baseTint": [0.902, 0.902, 0.902],
       "light": {
-        "direction": [
-          -0.6007,
-          -0.3004,
-          0.7409
-        ]
+        "direction": [-0.6007, -0.3004, 0.7409]
       },
-      "finishes": [
-        "foil",
-        "print",
-        "emboss"
-      ],
+      "finishes": ["foil", "print", "emboss"],
       "mask": "mask-card.png",
       "material": "card",
-      "paint": [
-        "primary",
-        "neutralLight"
-      ]
+      "paint": ["primary", "neutralLight"]
     }
   ]
 }

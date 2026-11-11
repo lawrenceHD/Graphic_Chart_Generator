@@ -10,48 +10,24 @@
     {
       "id": "napkin",
       "quad": [
-        [
-          732,
-          293
-        ],
-        [
-          1121,
-          282
-        ],
-        [
-          1124,
-          846
-        ],
-        [
-          728,
-          835
-        ]
+        [732, 293],
+        [1121, 282],
+        [1124, 846],
+        [728, 835]
       ],
       "logoBox": {
         "aspect": 0.71,
         "fit": "contain",
         "paddingRatio": 0.2
       },
-      "baseTint": [
-        0.894,
-        0.894,
-        0.902
-      ],
+      "baseTint": [0.894, 0.894, 0.902],
       "light": {
-        "direction": [
-          -0.3994,
-          -0.4993,
-          0.7689
-        ]
+        "direction": [-0.3994, -0.4993, 0.7689]
       },
-      "finishes": [
-        "embroidery"
-      ],
+      "finishes": ["embroidery"],
       "mask": "mask-napkin.png",
       "material": "fabric",
-      "paint": [
-        "neutralLight"
-      ]
+      "paint": ["neutralLight"]
     }
   ]
 }

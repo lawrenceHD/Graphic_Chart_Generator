@@ -10,48 +10,24 @@
     {
       "id": "screen",
       "quad": [
-        [
-          414,
-          144
-        ],
-        [
-          1080,
-          96
-        ],
-        [
-          1180,
-          610
-        ],
-        [
-          506,
-          746
-        ]
+        [414, 144],
+        [1080, 96],
+        [1180, 610],
+        [506, 746]
       ],
       "logoBox": {
         "aspect": 1.197,
         "fit": "contain",
         "paddingRatio": 0.2
       },
-      "baseTint": [
-        1.0,
-        1.0,
-        0.992
-      ],
+      "baseTint": [1.0, 1.0, 0.992],
       "light": {
-        "direction": [
-          0.0,
-          -0.3011,
-          0.9536
-        ]
+        "direction": [0.0, -0.3011, 0.9536]
       },
-      "finishes": [
-        "screen"
-      ],
+      "finishes": ["screen"],
       "mask": "mask-screen.png",
       "material": "screen",
-      "paint": [
-        "none"
-      ]
+      "paint": ["none"]
     }
   ]
 }
