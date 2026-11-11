@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { FontFamily } from './fonts/catalogue.js';
 import type { ImageInput } from './gemini/logo-reading.js';
 import type { AiError, GeminiTransport } from './gemini/transport.js';
-import { defaultChartPlan, planFromDirection } from './plan/chart-plan.js';
+import { defaultChartPlan, planFromDirection, type PlanLanguage } from './plan/chart-plan.js';
 import { parseReferenceIndex } from './references/library.js';
 import { createRecording, findRecording, type ResearchRecording } from './replay/recording.js';
 import { researchBrand, type BrandResearch } from './research.js';
@@ -69,6 +69,8 @@ export interface RunResearchInput {
   palette: string[];
   // What the references are for; default 'charter'.
   purpose?: SearchPurpose;
+  // Language of the page titles of the plan: the language of the project; default 'en'.
+  language?: PlanLanguage;
 }
 
 const PaletteSchema = z.array(HexColor).max(16);
@@ -96,20 +98,28 @@ function cleanDirection(research: BrandResearch, issues: ResearchIssue[]): Brand
 }
 
 // The plan of a sourced direction; an empty or refused one falls back to the default plan, visibly.
-function sourcedPlan(research: BrandResearch, issues: ResearchIssue[]): ChartPlan {
-  const { plan, degraded, capped } = planFromDirection(research.direction);
+function sourcedPlan(
+  research: BrandResearch,
+  issues: ResearchIssue[],
+  language: PlanLanguage,
+): ChartPlan {
+  const { plan, degraded, capped } = planFromDirection(research.direction, language);
   if (degraded) addIssue(issues, { code: 'plan-invalid' });
   if (capped > 0) addIssue(issues, { code: 'plan-capped', detail: String(capped) });
   return plan;
 }
 
-function replayed(recording: ResearchRecording, issues: ResearchIssue[]): ResearchOutcome {
+function replayed(
+  recording: ResearchRecording,
+  issues: ResearchIssue[],
+  language: PlanLanguage,
+): ResearchOutcome {
   // A wildcard recording was made for another logo: the result is usable but must not pass for this brand's.
   if (recording.key === '*') addIssue(issues, { code: 'replayed-wildcard' });
   const research = cleanDirection(recording.research, issues);
   return {
     source: 'replay',
-    plan: sourcedPlan(research, issues),
+    plan: sourcedPlan(research, issues, language),
     research,
     issues,
     usage: NO_USAGE,
@@ -139,11 +149,12 @@ function makeRecording(
 function degraded(
   issues: ResearchIssue[],
   usage: ResearchOutcome['usage'],
+  language: PlanLanguage,
   research?: BrandResearch,
 ): ResearchOutcome {
   return {
     source: 'default',
-    plan: defaultChartPlan(),
+    plan: defaultChartPlan(language),
     ...(research ? { research } : {}),
     issues,
     usage,
@@ -189,15 +200,16 @@ export async function runResearch(
     return err({ code: 'AI_REQUEST_REJECTED', message: 'palette must be #RRGGBB colours' });
   }
   const issues: ResearchIssue[] = [];
+  const language = input.language ?? 'en';
   const recording = findRecording(deps.recordings ?? [], input.logo);
 
   if (deps.mode === 'replay') {
     if (!recording) {
       addIssue(issues, { code: 'recording-missing' });
-      return ok(degraded(issues, NO_USAGE));
+      return ok(degraded(issues, NO_USAGE, language));
     }
     addIssue(issues, { code: 'replayed', detail: recording.recordedAt });
-    return ok(replayed(recording, issues));
+    return ok(replayed(recording, issues, language));
   }
 
   const library = await loadLibrary(deps, issues);
@@ -231,9 +243,9 @@ export async function runResearch(
     addIssue(issues, { code: 'research-failed', detail: result.error.code });
     if (recording) {
       addIssue(issues, { code: 'replayed-after-failure', detail: recording.recordedAt });
-      return ok(replayed(recording, issues));
+      return ok(replayed(recording, issues, language));
     }
-    return ok(degraded(issues, usage));
+    return ok(degraded(issues, usage, language));
   }
 
   const research = cleanDirection(result.value, issues);
@@ -245,11 +257,11 @@ export async function runResearch(
         : {}),
     });
   }
-  if (library.length === 0) return ok(degraded(issues, usage, research));
+  if (library.length === 0) return ok(degraded(issues, usage, language, research));
   const saved = makeRecording(deps, research, input.logo, issues);
   return ok({
     source: 'live',
-    plan: sourcedPlan(research, issues),
+    plan: sourcedPlan(research, issues, language),
     research,
     issues,
     ...(saved ? { recording: saved } : {}),

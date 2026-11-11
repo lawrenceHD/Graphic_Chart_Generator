@@ -47,6 +47,9 @@ export const SECTION_PAGE_TYPE: Record<GuidelineSection, PageType> = {
   closing: 'manifesto',
 };
 
+/** Language of the page titles: the language of the project, English unless told otherwise. */
+export type PlanLanguage = 'fr' | 'en';
+
 const TITLES: Record<GuidelineSection, string> = {
   cover: 'Cover',
   contents: 'Contents',
@@ -80,6 +83,42 @@ const TITLES: Record<GuidelineSection, string> = {
   closing: 'Closing',
 };
 
+const TITLES_FR: Record<GuidelineSection, string> = {
+  cover: 'Couverture',
+  contents: 'Sommaire',
+  'brand-story': 'Histoire de la marque',
+  values: 'Valeurs',
+  logo: 'Le logo',
+  'logo-construction': 'Construction du logo',
+  'logo-variants': 'Variantes du logo',
+  'clear-space': "Zone d'exclusion",
+  'minimum-size': 'Taille minimale',
+  misuse: 'Usages interdits',
+  palette: 'Palette de couleurs',
+  'color-ratio': 'Proportions des couleurs',
+  typography: 'Typographie',
+  'type-hierarchy': 'Hiérarchie typographique',
+  iconography: 'Iconographie',
+  pattern: 'Motifs',
+  photography: 'Photographie',
+  illustration: 'Illustration',
+  'grid-layout': 'Grille et mise en page',
+  stationery: 'Papeterie',
+  packaging: 'Emballage',
+  signage: 'Signalétique',
+  'social-media': 'Réseaux sociaux',
+  website: 'Site web',
+  merchandise: 'Produits dérivés',
+  uniform: 'Tenues',
+  vehicle: 'Véhicules',
+  menu: 'Menu et cartes',
+  'tone-of-voice': 'Ton de voix',
+  closing: 'Clôture',
+};
+
+const titleOf = (section: GuidelineSection, language: PlanLanguage): string =>
+  (language === 'fr' ? TITLES_FR : TITLES)[section];
+
 const TITLE_MAX = 80;
 const EVIDENCE_MAX = 64;
 
@@ -91,9 +130,9 @@ function cleanEvidence(evidence: readonly string[]): string[] {
     .slice(0, MAX_SECTION_EVIDENCE);
 }
 
-const tokensSection = (): ChartPlan['sections'][number] => ({
+const tokensSection = (language: PlanLanguage = 'en'): ChartPlan['sections'][number] => ({
   type: 'tokens',
-  title: 'Design tokens',
+  title: language === 'fr' ? 'Tokens de design' : 'Design tokens',
   evidence: [],
 });
 
@@ -122,17 +161,21 @@ export function capSections(sections: readonly PlanSection[]): {
 }
 
 /** Caps the sections, then ends the plan with the tokens page. */
-export function planFromSections(sections: readonly PlanSection[]): {
+export function planFromSections(
+  sections: readonly PlanSection[],
+  language: PlanLanguage = 'en',
+): {
   plan: ChartPlan;
   capped: number;
 } {
   const capped = capSections(sections.filter((section) => section.type !== 'tokens'));
-  const tokens = sections.find((section) => section.type === 'tokens') ?? tokensSection();
+  const tokens = sections.find((section) => section.type === 'tokens') ?? tokensSection(language);
   return { plan: { sections: [...capped.sections, tokens] }, capped: capped.dropped };
 }
 
 function buildPlan(
   direction: Pick<ArtDirection, 'sections'>,
+  language: PlanLanguage,
 ): { plan: ChartPlan; capped: number } | undefined {
   const seen = new Set<GuidelineSection>();
   const sections: PlanSection[] = [];
@@ -141,46 +184,54 @@ function buildPlan(
     seen.add(planned.section);
     sections.push({
       type: SECTION_PAGE_TYPE[planned.section],
-      title: TITLES[planned.section].slice(0, TITLE_MAX),
+      title: titleOf(planned.section, language).slice(0, TITLE_MAX),
       evidence: cleanEvidence(planned.evidence),
     });
   }
   if (sections.length === 0) return undefined;
-  const built = planFromSections(sections);
+  const built = planFromSections(sections, language);
   const parsed = ChartPlanSchema.safeParse(built.plan);
   return parsed.success ? { plan: parsed.data, capped: built.capped } : undefined;
 }
 
 // Last resort, fixed and tested against the contract: reached only if the common core itself is refused.
-export const FALLBACK_CHART_PLAN: ChartPlan = {
+const lastResort = (language: PlanLanguage): ChartPlan => ({
   sections: [
-    { type: 'cover', title: 'Cover', evidence: [] },
-    { type: 'logo', title: 'The logo', evidence: [] },
-    { type: 'palette', title: 'Colour palette', evidence: [] },
-    { type: 'typography', title: 'Typography', evidence: [] },
-    tokensSection(),
+    ...(['cover', 'logo', 'palette', 'typography'] as const).map((section) => ({
+      type: SECTION_PAGE_TYPE[section],
+      title: titleOf(section, language),
+      evidence: [],
+    })),
+    tokensSection(language),
   ],
-};
+});
+export const FALLBACK_CHART_PLAN: ChartPlan = lastResort('en');
 
 /** The sections every professional guideline contains: used when no sourced direction is available. */
-export function defaultChartPlan(): ChartPlan {
-  return buildPlan(buildArtDirection([]))?.plan ?? FALLBACK_CHART_PLAN;
+export function defaultChartPlan(language: PlanLanguage = 'en'): ChartPlan {
+  return buildPlan(buildArtDirection([]), language)?.plan ?? lastResort(language);
 }
 
 /** Never throws: an empty or refused plan becomes the default plan, flagged as degraded. */
-export function planFromDirection(direction: Pick<ArtDirection, 'sections'>): {
+export function planFromDirection(
+  direction: Pick<ArtDirection, 'sections'>,
+  language: PlanLanguage = 'en',
+): {
   plan: ChartPlan;
   degraded: boolean;
   // Sections left out because their page type was full (PAGE_CAPACITY).
   capped: number;
 } {
-  const built = buildPlan(direction);
+  const built = buildPlan(direction, language);
   return built
     ? { plan: built.plan, degraded: false, capped: built.capped }
-    : { plan: defaultChartPlan(), degraded: true, capped: 0 };
+    : { plan: defaultChartPlan(language), degraded: true, capped: 0 };
 }
 
 /** Converts a sourced art direction into the contract's page plan, in guideline order, evidence kept. */
-export function directionToChartPlan(direction: Pick<ArtDirection, 'sections'>): ChartPlan {
-  return planFromDirection(direction).plan;
+export function directionToChartPlan(
+  direction: Pick<ArtDirection, 'sections'>,
+  language: PlanLanguage = 'en',
+): ChartPlan {
+  return planFromDirection(direction, language).plan;
 }

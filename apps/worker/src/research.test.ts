@@ -154,6 +154,17 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
     expect(purposes).toEqual(['charter']);
   });
 
+  it('asks for page titles in the language of the project', async () => {
+    const outcome = await port({}).plan({ ...input, language: 'fr' });
+    expect(outcome.ok && outcome.value.plan.sections.map((section) => section.title)).toContain(
+      'Palette de couleurs',
+    );
+    const english = await port({}).plan({ ...input, language: 'en' });
+    expect(english.ok && english.value.plan.sections.map((section) => section.title)).toContain(
+      'Colour palette',
+    );
+  });
+
   it('a failing recording is a warning, never a failure', async () => {
     const outcome = await port({}, () => Promise.reject(new Error('disk full'))).plan(input);
     expect(outcome.ok && outcome.value.warnings).toContainEqual({

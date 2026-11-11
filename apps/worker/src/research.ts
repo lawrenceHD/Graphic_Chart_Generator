@@ -114,6 +114,7 @@ export function aiResearch(options: AiResearchOptions): ResearchPort {
           logo: input.logo,
           palette: [...input.palette],
           purpose: 'charter',
+          language: input.language,
         });
       } catch (cause) {
         return err(failure('RESEARCH_FAILED', `research threw (${causeOf(cause)})`));

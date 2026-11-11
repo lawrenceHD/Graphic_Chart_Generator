@@ -234,3 +234,50 @@ describe('SECTION_PAGE_TYPE table', () => {
     });
   });
 });
+
+describe('titles in the language of the project', () => {
+  it('keeps English titles by default', () => {
+    expect(defaultChartPlan().sections.map((section) => section.title)).toContain('Colour palette');
+  });
+
+  it('writes every title in French for a French project, the tokens page and the last resort included', () => {
+    const english = directionToChartPlan(art, 'en');
+    const french = directionToChartPlan(art, 'fr');
+    expect(french.sections.map((section) => section.type)).toEqual(
+      english.sections.map((section) => section.type),
+    );
+    expect(french.sections.map((section) => section.title)).toContain('Menu et cartes');
+    expect(defaultChartPlan('fr').sections.map((section) => section.title)).toEqual(
+      expect.arrayContaining([
+        'Couverture',
+        'Palette de couleurs',
+        'Typographie',
+        'Tokens de design',
+      ]),
+    );
+    expect(planFromDirection({ sections: [] }, 'fr').plan).toEqual(defaultChartPlan('fr'));
+    expect(ChartPlanSchema.safeParse(french).success).toBe(true);
+  });
+
+  it('has a French title for each of the guideline sections', () => {
+    for (const section of GUIDELINE_SECTIONS) {
+      const plan = directionToChartPlan(
+        { sections: [{ section, core: false, support: 1, evidence: [] }] },
+        'fr',
+      );
+      expect(plan.sections[0]?.title.length).toBeGreaterThan(0);
+      expect(ChartPlanSchema.safeParse(plan).success).toBe(true);
+    }
+    const titles = (language: 'fr' | 'en') =>
+      GUIDELINE_SECTIONS.map(
+        (section) =>
+          directionToChartPlan(
+            { sections: [{ section, core: false, support: 1, evidence: [] }] },
+            language,
+          ).sections[0]?.title,
+      );
+    // Same word in both languages: Typography/Typographie differ, Illustration and Menu… do not all.
+    const same = titles('fr').filter((title, index) => title === titles('en')[index]);
+    expect(same).toEqual(['Illustration']);
+  });
+});
