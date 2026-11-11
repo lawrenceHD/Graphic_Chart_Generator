@@ -253,6 +253,15 @@
       "tokens": "Tokens"
     },
     "scenes": {
+      "blade-sign-street": "Blade sign",
+      "brochure-grey": "Brochure",
+      "business-cards-sage": "Sage business cards",
+      "laptop-desk": "Laptop desk",
+      "mailer-box-blue": "Mailer box",
+      "notebook-flatlay": "Notebook",
+      "poster-frame-console": "Framed poster",
+      "stationery-dark": "Dark stationery",
+      "tote-terracotta": "Tote bag",
       "place-cards": "Place cards",
       "stationery-flatlay": "Stationery",
       "menu-table": "Menu",
@@ -385,6 +394,51 @@
       "email": "hello@yourbrand.com",
       "address": "Brand address",
       "dear": "Dear Sir or Madam,"
+    },
+    "mockup": {
+      "object": {
+        "surface": "Object {n}",
+        "paint": "Colour field {n}"
+      },
+      "inspectorTitle": "Selected object",
+      "pickHint": "Click an object in the picture to see what it lets you adjust.",
+      "available": {
+        "paintFixed": "Colour: fixed on this object",
+        "finishFixed": "Finish: fixed on this object",
+        "logoFixed": "Logo: set by the object"
+      },
+      "groups": {
+        "logo": "Logo",
+        "finish": "Finish",
+        "paint": "Surface colour"
+      },
+      "logoVersion": {
+        "color": "Colour",
+        "black": "Black",
+        "white": "White"
+      },
+      "auto": "Auto",
+      "autoNow": "Auto ({value})",
+      "stock": "Original surface",
+      "undo": "Undo choice",
+      "redo": "Redo choice",
+      "reset": "Reset everything to automatic",
+      "exportPng": "Export this scene (PNG)",
+      "exportZip": "Export all scenes (ZIP)",
+      "exported": {
+        "png": "{file} downloaded.",
+        "zip": "{count, plural, one {# scene} other {# scenes}} downloaded in a ZIP.",
+        "failed": "Export failed: the picture is not ready yet."
+      },
+      "announce": {
+        "set": "{object}: {group} set to {value}.",
+        "auto": "{object}: {group} back to automatic.",
+        "reset": "{object}: every setting back to automatic.",
+        "undone": "Choice undone.",
+        "redone": "Choice redone."
+      },
+      "keys": "Arrows: move between objects. Enter: select. Escape: deselect. Ctrl+Z: undo.",
+      "pickGroup": "Objects of the scene {scene}"
     }
   },
   "brandInputs": {

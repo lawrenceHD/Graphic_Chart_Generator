@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { MAIN_ID } from '../../components/skip-link-id';
+import { useDirecting } from '../mockups/use-directing';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf } from '../pages/variant';
@@ -20,6 +21,14 @@ import { useStudio, type StudioFailure } from './use-studio';
 // The studio (PRODUCT.md "Operating Context"): copilot on the left, the live canvas in the centre, the
 // inspector on the right; below 1024 px the three become tabs over one full-height panel.
 type Tab = 'copilot' | 'pages' | 'inspector';
+
+// Only read while a mockup is selected, which needs a loaded guideline (so a real view).
+const FALLBACK_COLORS = {
+  primary: '#000000',
+  accent: '#000000',
+  neutralLight: '#FFFFFF',
+  neutralDark: '#000000',
+} as const;
 
 function failureKey(failure: StudioFailure): string {
   switch (failure.kind) {
@@ -50,6 +59,7 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
   const [exporting, setExporting] = useState(false);
   const [tab, setTab] = useState<Tab>('pages');
   const [year] = useState(() => new Date().getFullYear());
+  const { directing, onDirected } = useDirecting();
 
   const document = studio.shown;
   const view = useMemo(
@@ -154,6 +164,8 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
               notices={studio.notices}
               partial={studio.partial}
               sending={studio.phase === 'sending' || studio.phase === 'scanning'}
+              directing={directing}
+              onDirected={onDirected}
             />
           </div>
           <aside
@@ -161,6 +173,9 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
             className={`min-h-0 w-full shrink-0 overflow-y-auto border-line bg-surface lg:block lg:w-[312px] lg:border-l ${tab === 'inspector' ? 'block' : 'hidden'}`}
           >
             <Inspector
+              brand={name}
+              colors={view?.colors ?? FALLBACK_COLORS}
+              directing={directing}
               document={document}
               selection={selection}
               onPreview={studio.preview}

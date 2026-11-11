@@ -5,9 +5,11 @@ import type { BrandDocument, Page } from '@app/document';
 import { Columns2, Maximize2, Minus, Plus, RectangleHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import type { SurfaceDirection } from '@app/mockup-engine';
 import { EMPTY_INPUTS, type BrandInputs } from '../brand-inputs-model';
 import { BrandInputsPanel } from '../brand-inputs-panel';
 import { MockupStage, SCENES, type SceneId } from '../mockups/mockup-stage';
+import type { Directing } from './mockup-inspector';
 import { RENDERERS } from '../pages/pages';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf, type Occurrence } from '../pages/variant';
@@ -22,7 +24,7 @@ import type { Phase } from './use-studio';
 // While the analysis runs, each page waits for its step, then is "composed" (sweep) and laid down.
 export type Selection =
   | { readonly kind: 'page'; readonly id: string }
-  | { readonly kind: 'mockup'; readonly id: SceneId };
+  | { readonly kind: 'mockup'; readonly id: SceneId; readonly object?: string };
 
 const INITIAL_PAGES: readonly PageType[] = [
   'cover',
@@ -180,7 +182,11 @@ export function PageCanvas({
   notices,
   partial,
   sending,
+  directing,
+  onDirected,
 }: {
+  readonly directing: Directing;
+  readonly onDirected: (scene: SceneId, directions: readonly SurfaceDirection[]) => void;
   readonly phase: Phase;
   readonly timeline: Timeline;
   readonly document: BrandDocument | null;
@@ -379,6 +385,21 @@ export function PageCanvas({
                         >
                           <MockupStage
                             proof
+                            choices={directing.choices(scene)}
+                            onDirected={onDirected}
+                            pick={{
+                              groupLabel: t('mockup.pickGroup', { scene: t(`scenes.${scene}`) }),
+                              selected: selected ? (selection.object ?? null) : null,
+                              onSelect: (object) => {
+                                onSelect(
+                                  object === null
+                                    ? { kind: 'mockup', id: scene }
+                                    : { kind: 'mockup', id: scene, object },
+                                );
+                              },
+                              labelOf: (kind, position) =>
+                                t(`mockup.object.${kind}`, { n: position + 1 }),
+                            }}
                             failedLabel={t('mockupFailed')}
                             retryLabel={t('retry')}
                             scene={scene}

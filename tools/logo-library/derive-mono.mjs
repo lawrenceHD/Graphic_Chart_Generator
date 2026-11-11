@@ -19,14 +19,19 @@ for (const file of readdirSync(DIR).filter((f) => f.endsWith('.svg'))) {
     report.push(`${id}: sanitize ${clean.error.code}`);
     continue;
   }
-  for (const [tone, target] of [['white', '#FFFFFF'], ['black', '#000000']]) {
+  for (const [tone, target] of [
+    ['white', '#FFFFFF'],
+    ['black', '#000000'],
+  ]) {
     const made = await monochromeVariant(clean.value.svg, target, rasterizer);
     if (!made.ok || made.value.path !== 'structural') {
       report.push(`${id}-${tone}: not derived (${made.ok ? made.value.path : made.error.code})`);
       continue;
     }
     writeFileSync(join(OUT, `${id}-${tone}.svg`), made.value.svg);
-    report.push(`${id}-${tone}: ${made.value.drawing} structure=${made.value.structure} ${made.value.warnings.join(',')}`);
+    report.push(
+      `${id}-${tone}: ${made.value.drawing} structure=${made.value.structure} ${made.value.warnings.join(',')}`,
+    );
   }
 }
 console.log(report.join('\n'));

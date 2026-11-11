@@ -122,19 +122,29 @@ export function doDontView({ index, count }: Occurrence): DoDontView {
 // Every scene once; a page takes three consecutive ones, three further on than the page before, so that
 // no two pages (13 at most) show the same trio.
 const SCENE_ORDER: readonly SceneId[] = [
+  'blade-sign-street',
+  'brochure-grey',
+  'business-cards-sage',
+  'laptop-desk',
+  'mailer-box-blue',
+  'notebook-flatlay',
+  'poster-frame-console',
+  'stationery-dark',
+  'tote-terracotta',
   'cards-floating',
   'a4-sheet',
   'cards-stack',
-  'poster-living',
-  'poster-held',
-  'poster-hanging',
   'mug-white',
-  'mug-stripes',
   'place-cards',
   'menu-table',
   'storefront-sign',
   'gift-box',
   'paper-bag',
+  'apron',
+  'invitation',
+  'napkin-plate',
+  'phone-table',
+  'stationery-flatlay',
 ];
 
 export type MockupView =

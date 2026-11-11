@@ -22,6 +22,9 @@ import {
 } from '../../brand/color';
 import { PAIRINGS } from '../../brand/pairings';
 import { COLOR_ROLES, type ColorRole } from './brand-view';
+import type { BrandPalette } from '@app/mockup-engine';
+import { availableLogos } from '../mockups/objects';
+import { MockupObjectPanel, type Directing } from './mockup-inspector';
 import type { Selection } from './page-canvas';
 
 // Right column (09 §7 PageInspector): it follows the selection. A page shows its own settings first, then
@@ -647,7 +650,13 @@ export function Inspector({
   selection,
   onPreview,
   onRun,
+  brand,
+  colors,
+  directing,
 }: {
+  readonly brand: string;
+  readonly colors: BrandPalette;
+  readonly directing: Directing;
   readonly document: BrandDocument | null;
   readonly selection: Selection | null;
   readonly onPreview: (command: Command | null) => void;
@@ -667,6 +676,8 @@ export function Inspector({
       : undefined;
   const sections: readonly Section[] =
     page !== undefined ? SECTIONS_BY_TYPE[page.type] : ['palette', 'typography', 'logo'];
+  const hasVariant = (kind: 'mono-black' | 'mono-white'): string | null =>
+    document.assets.variants.some((variant) => variant.kind === kind) ? kind : null;
   return (
     <div className="flex flex-col gap-6 p-4">
       {page !== undefined ? (
@@ -677,7 +688,18 @@ export function Inspector({
       ) : selection?.kind === 'mockup' ? (
         <section aria-label={t('mockups')}>
           <Heading>{t(`scenes.${selection.id}`)}</Heading>
-          <p className="m-0 text-sm leading-relaxed text-ink-2">{t('inspector.mockup')}</p>
+          <p className="m-0 mb-3 text-sm leading-relaxed text-ink-2">{t('inspector.mockup')}</p>
+          <MockupObjectPanel
+            scene={selection.id}
+            objectId={selection.object}
+            brand={brand}
+            colors={colors}
+            logos={availableLogos({
+              'mono-black': hasVariant('mono-black'),
+              'mono-white': hasVariant('mono-white'),
+            })}
+            directing={directing}
+          />
         </section>
       ) : null}
       {sections.map((section) => (

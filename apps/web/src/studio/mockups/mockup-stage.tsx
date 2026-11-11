@@ -13,13 +13,20 @@ import {
   type Compositor,
   type CompositorLayer,
   type LoadedScene,
-  type LogoVersion,
+  type SurfaceChoices,
   type SurfaceDirection,
 } from '@app/mockup-engine';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { BrandView } from '../workspace/brand-view';
 import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
+import { availableLogos } from './objects';
+import { registerCanvas } from './scene-export';
+import { SceneOverlay } from './scene-overlay';
+import { maskOf, photoHits, psdHits, rememberObjects, type SceneHits } from './scene-hits';
+import { brandInks, loadImage, logoSource, logoTexture, renderKey } from './stage-assets';
+
+export { brandInks, logoSource, renderKey };
 
 // Computed mockups (ADR-008, 06_MOCKUP_ENGINE v2). Each scene is a photograph whose objects are painted in
 // the brand's colours — their light, folds and grain kept — and on which the real logo file is projected
@@ -27,23 +34,41 @@ import { drawArtwork, loadLogos, type ArtworkWords } from './artwork';
 // art direction (which colour, finish and logo version per object) is mockup-engine's directScene. The
 // logo is never redrawn by a model: its pixels are the uploaded file's or its vector variants'.
 export const SCENES = [
+  // The brand-mockup pack (Pinterest-grade photographs generated for hospitality, retail and studios).
+  'blade-sign-street',
+  'brochure-grey',
+  'business-cards-sage',
+  'laptop-desk',
+  'mailer-box-blue',
+  'notebook-flatlay',
+  'poster-frame-console',
+  'stationery-dark',
+  'tote-terracotta',
   // Photoshop mockups by designers (Firmbee, CC0), replayed layer by layer (tools/psd-mockups/bake.py).
   'cards-floating',
   'a4-sheet',
   'cards-stack',
-  'poster-living',
-  'poster-held',
-  'poster-hanging',
   'mug-white',
-  'mug-stripes',
   // Generated photographs of the hospitality pack, where a centred mark is what the object wants.
   'place-cards',
   'menu-table',
   'storefront-sign',
   'gift-box',
   'paper-bag',
+  'apron',
+  'invitation',
+  'napkin-plate',
+  'phone-table',
+  'stationery-flatlay',
 ] as const;
-export type SceneId = (typeof SCENES)[number];
+/** Judged weak: left out of the default order, their files and ids stay for the pages that still name them. */
+export const RETIRED_SCENES = [
+  'poster-living',
+  'poster-held',
+  'poster-hanging',
+  'mug-stripes',
+] as const;
+export type SceneId = (typeof SCENES)[number] | (typeof RETIRED_SCENES)[number];
 
 type AnyScene =
   | { readonly kind: 'photo'; readonly loaded: LoadedScene }
@@ -70,63 +95,6 @@ function loadScene(id: SceneId): Promise<AnyScene | null> {
   return loading;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  const image = new Image();
-  image.decoding = 'async';
-  // Logo files are redirected to the object storage (another origin, CORS-enabled): without CORS the
-  // image would taint the canvas and WebGL would refuse it.
-  image.crossOrigin = 'anonymous';
-  image.src = src;
-  return image.decode().then(() => image);
-}
-
-/** The logo file for a version: the vector drawing when there is one, the upload otherwise. */
-export function logoSource(view: BrandView, version: LogoVersion): string {
-  if (version === 'white') return view.logo['mono-white'] ?? view.logo.color;
-  if (version === 'black') return view.logo['mono-black'] ?? view.logo.color;
-  return view.logo.vector ?? view.logo.color;
-}
-
-/** Colours of the logo: the palette's main colours, its neutrals when they were read on the logo. */
-export function brandInks(view: BrandView): string[] {
-  const neutrals = (['neutralLight', 'neutralDark'] as const)
-    .filter((role) => view.sources[role] === 'extracted')
-    .map((role) => view.colors[role]);
-  return [view.colors.primary, view.colors.accent, ...view.extra, ...neutrals];
-}
-
-/** What the render depends on: a view with the same colours and files keeps the picture. */
-export function renderKey(view: BrandView): string {
-  const { colors, logo } = view;
-  return [
-    colors.primary,
-    colors.accent,
-    colors.neutralLight,
-    colors.neutralDark,
-    ...view.extra,
-    logo.color,
-    logo.vector,
-    logo['mono-black'],
-    logo['mono-white'],
-  ].join('|');
-}
-
-const LOGO_TEXELS = 2048;
-/** The logo drawn on a canvas LOGO_TEXELS wide (an SVG is rasterised at that size, never upscaled). */
-async function logoTexture(src: string): Promise<{ canvas: HTMLCanvasElement; aspect: number }> {
-  const image = await loadImage(src);
-  const aspect = image.naturalWidth / Math.max(1, image.naturalHeight);
-  const canvas = document.createElement('canvas');
-  canvas.width = LOGO_TEXELS;
-  canvas.height = Math.max(1, Math.round(LOGO_TEXELS / aspect));
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  }
-  return { canvas, aspect };
-}
-
 const PAINT_ORDER = ['primary', 'accent', 'neutralLight', 'neutralDark'] as const;
 
 /** A Photoshop mockup: its layers replayed, the brand's artwork in every slot, its fields painted. */
@@ -137,10 +105,12 @@ async function renderPsd(
   words: ArtworkWords,
   node: HTMLCanvasElement,
   alive: () => boolean,
+  choices: SurfaceChoices,
 ): Promise<readonly SurfaceDirection[] | null> {
   const file = (name: string) => loadImage(`/scenes/${id}/${name}`);
   const logos = await loadLogos(view);
   const layers: PsdRenderLayer[] = [];
+  let field = 0;
   for (const layer of scene.layers) {
     if (layer.type === 'image') {
       layers.push({
@@ -150,7 +120,12 @@ async function renderPsd(
         opacity: layer.opacity,
       });
     } else if (layer.type === 'paint') {
-      const role = PAINT_ORDER.find((entry) => layer.paint.includes(entry)) ?? 'neutralLight';
+      const chosen = choices[`field-${String(field)}`]?.paint;
+      field += 1;
+      const role =
+        chosen !== undefined && chosen !== 'none'
+          ? chosen
+          : (PAINT_ORDER.find((entry) => layer.paint.includes(entry)) ?? 'neutralLight');
       layers.push({
         kind: 'paint',
         mask: await file(layer.mask),
@@ -192,12 +167,19 @@ async function renderScene(
   words: ArtworkWords,
   node: HTMLCanvasElement,
   alive: () => boolean,
+  choices: SurfaceChoices,
 ): Promise<readonly SurfaceDirection[] | null> {
   const any = await loadScene(id);
   if (any === null) throw new Error('scene');
-  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive);
+  if (any.kind === 'psd') return renderPsd(id, any.scene, view, words, node, alive, choices);
   const { scene, homographies } = any.loaded;
-  const directions = directScene(scene, view.colors, brandInks(view));
+  const directions = directScene(
+    scene,
+    view.colors,
+    brandInks(view),
+    choices,
+    availableLogos(view.logo),
+  );
   const base = await loadImage(`/scenes/${id}/base.webp`);
   const layers: CompositorLayer[] = [];
   for (const surface of scene.surfaces) {
@@ -261,6 +243,33 @@ function sharedCompositor(width: number, height: number) {
   return shared;
 }
 
+const hitsCache = new Map<SceneId, Promise<SceneHits | null>>();
+/** The selectable objects of a scene and what lies under a point (masks read once per scene). */
+function hitsOf(id: SceneId): Promise<SceneHits | null> {
+  const known = hitsCache.get(id);
+  if (known !== undefined) return known;
+  const loadMask = (file: string) =>
+    loadImage(`/scenes/${id}/${file}`)
+      .then(maskOf)
+      .catch(() => null);
+  const loading = loadScene(id)
+    .then((any) => {
+      if (any === null) return null;
+      return any.kind === 'psd'
+        ? psdHits(any.scene, loadMask)
+        : photoHits(any.loaded.scene, loadMask);
+    })
+    .catch(() => null)
+    .then((found) => {
+      if (found === null) hitsCache.delete(id);
+      else rememberObjects(id, found.objects);
+      return found;
+    });
+  hitsCache.set(id, loading);
+  return loading;
+}
+
+const NO_CHOICES: SurfaceChoices = {};
 const SHAPE_ONLY = new Set(['foil', 'emboss', 'deboss', 'engrave']);
 
 type Stage = 'loading' | 'ready' | 'failed';
@@ -273,7 +282,13 @@ export function MockupStage({
   retryLabel,
   className = '',
   proof = false,
+  pick,
+  choices = NO_CHOICES,
+  onDirected,
 }: {
+  readonly choices?: SurfaceChoices;
+  /** Told what the art direction applied to each object once the picture is drawn. */
+  readonly onDirected?: (scene: SceneId, directions: readonly SurfaceDirection[]) => void;
   readonly scene: SceneId;
   readonly view: BrandView;
   readonly label: string;
@@ -283,6 +298,13 @@ export function MockupStage({
   readonly className?: string;
   /** Show the art direction applied under the picture (finish, colour, logo version). */
   readonly proof?: boolean;
+  /** Makes the objects of the picture selectable (the studio canvas); absent on guideline pages. */
+  readonly pick?: {
+    readonly selected: string | null;
+    readonly onSelect: (id: string | null) => void;
+    readonly labelOf: (kind: 'surface' | 'paint', index: number) => string;
+    readonly groupLabel: string;
+  };
 }) {
   const t = useTranslations('workspace.proof');
   const a = useTranslations('workspace.artwork');
@@ -291,11 +313,17 @@ export function MockupStage({
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(view);
   const [stage, setStage] = useState<Stage>('loading');
+  const [sceneHits, setSceneHits] = useState<SceneHits | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const key = renderKey(view);
+  const key = `${renderKey(view)}#${JSON.stringify(choices)}`;
+  const latestChoices = useRef(choices);
+  const told = useRef(onDirected);
+  const interactive = pick !== undefined;
 
   useEffect(() => {
     latest.current = view;
+    latestChoices.current = choices;
+    told.current = onDirected;
   });
 
   useEffect(() => {
@@ -310,9 +338,11 @@ export function MockupStage({
       address: a('address'),
       dear: a('dear'),
     };
-    renderScene(id, latest.current, words, node, () => alive)
+    renderScene(id, latest.current, words, node, () => alive, latestChoices.current)
       .then((done) => {
         if (alive && done !== null) {
+          registerCanvas(id, node);
+          told.current?.(id, done);
           setSize({ width: node.width, height: node.height });
           setDirections(done);
           setStage('ready');
@@ -323,21 +353,43 @@ export function MockupStage({
       });
     return () => {
       alive = false;
+      registerCanvas(id, null);
     };
   }, [id, attempt, key, a]);
+
+  useEffect(() => {
+    if (!interactive || stage !== 'ready') return;
+    let alive = true;
+    void hitsOf(id).then((found) => {
+      if (alive) setSceneHits(found);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [id, stage, interactive]);
 
   return (
     <figure className={`m-0 ${className}`}>
       <div
-        role="img"
-        aria-label={label}
         className="relative w-full overflow-hidden bg-preview"
         style={{ aspectRatio: `${String(size.width)} / ${String(size.height)}` }}
       >
         <canvas
           ref={canvas}
+          role="img"
+          aria-label={label}
           className={`absolute inset-0 size-full transition-opacity duration-500 ${stage === 'ready' ? 'opacity-100' : 'opacity-0'}`}
         />
+        {pick !== undefined && sceneHits !== null && stage === 'ready' ? (
+          <SceneOverlay
+            sceneHits={sceneHits}
+            size={size}
+            selected={pick.selected}
+            onSelect={pick.onSelect}
+            labelOf={pick.labelOf}
+            groupLabel={pick.groupLabel}
+          />
+        ) : null}
         {stage === 'failed' ? (
           <div className="absolute inset-0 grid place-items-center p-6 text-center">
             <div className="flex flex-col items-center gap-3">
