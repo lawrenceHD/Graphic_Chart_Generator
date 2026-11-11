@@ -34,13 +34,18 @@ function render(
 const distinct = (type: Rendered, count: number): number =>
   new Set(Array.from({ length: count }, (_, index) => render(type, index, count))).size;
 
-describe('cover placement', () => {
-  it('sets the logo large and on the start side of the field, not centred by default, without a plate', () => {
+describe('cover', () => {
+  it('carries the title, the edition and the logo of the brand, whatever cover its tone selects', () => {
+    const words = SHEET_WORDS[DEMO_VIEW.language];
     const html = render('cover', 0, 1);
-    const img = /<img[^>]*class="([^"]*)"/u.exec(html)?.[1] ?? '';
-    expect(img).toContain('object-left');
-    expect(img).toContain('h-[64%]');
-    expect(html).not.toContain('place-items-center');
+    expect(html).toContain(words.guideline);
+    expect(html).toContain(words.edition(2026));
+    expect(html).toMatch(/<img[^>]*alt="[^"]+"/u);
+    expect(html.match(/<h1/gu)).toHaveLength(1);
+  });
+
+  it('does not repeat itself when a guideline holds two covers', () => {
+    expect(render('cover', 0, 2)).not.toBe(render('cover', 1, 2));
   });
 });
 
