@@ -8,6 +8,7 @@ import { defaultChartPlan, planFromDirection } from './plan/chart-plan.js';
 import { parseReferenceIndex } from './references/library.js';
 import { createRecording, findRecording, type ResearchRecording } from './replay/recording.js';
 import { researchBrand, type BrandResearch } from './research.js';
+import type { SearchPurpose } from './references/rank.js';
 import { DEFAULT_BUDGET, withBudget, type BudgetLimits } from './safety/budget.js';
 import { looksLikeInjection, sanitizeUntrusted } from './safety/untrusted.js';
 
@@ -66,6 +67,8 @@ export interface RunResearchDeps {
 export interface RunResearchInput {
   logo: ImageInput;
   palette: string[];
+  // What the references are for; default 'charter'.
+  purpose?: SearchPurpose;
 }
 
 const PaletteSchema = z.array(HexColor).max(16);
@@ -214,7 +217,7 @@ export async function runResearch(
         library,
         catalogue: deps.catalogue,
       },
-      { logo: input.logo, palette: palette.data },
+      { logo: input.logo, palette: palette.data, purpose: input.purpose ?? 'charter' },
     );
   } catch (error) {
     result = err({

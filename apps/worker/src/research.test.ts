@@ -142,6 +142,18 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
     expect(saved).toHaveLength(1);
   });
 
+  it('asks for the charter research explicitly', async () => {
+    const purposes: (string | undefined)[] = [];
+    const spy = aiResearch({
+      run: (runInput) => {
+        purposes.push(runInput.purpose);
+        return runResearch(deps({}), runInput);
+      },
+    });
+    await spy.plan(input);
+    expect(purposes).toEqual(['charter']);
+  });
+
   it('a failing recording is a warning, never a failure', async () => {
     const outcome = await port({}, () => Promise.reject(new Error('disk full'))).plan(input);
     expect(outcome.ok && outcome.value.warnings).toContainEqual({
