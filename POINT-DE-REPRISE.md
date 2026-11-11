@@ -96,7 +96,11 @@ Le reste (voix, Unreal, capture de mouvement, outils internes) ne concerne pas C
 - La conversion du texte en tracés ne marche que si la police est sur le serveur ; sinon le repli actuel reste nécessaire.
 - Archive Linux de 154 Mo ; pas d'archive séparée de la commande, sauf pour macOS.
 
-**Essai proposé, non lancé** (il faut votre accord : c'est exécuter un programme externe sur votre machine)
+**Essai fait le 2026-11-11 avec votre accord** : concluant, voir `docs/proposals/P-004_ESSAI_VECTORCRAFT.md`
+(somme et signature vérifiées, six conversions fidèles, sorties acceptées par l'import de Charta ; une police
+absente est remplacée sans erreur, à refuser côté Charta). Reste votre décision sur l'ADR.
+
+Protocole suivi :
 1. Télécharger `vectorcraft-0.23.0-windows-x64-portable.zip` (159 Mo, version du 2026-11-09) dans un dossier isolé,
    vérifier `SHA256SUMS.txt`.
 2. Convertir cinq vrais fichiers : le SVG de La Mèza avec son texte vivant, un `.ai`, un EPS, un PDF, un SVG propre.

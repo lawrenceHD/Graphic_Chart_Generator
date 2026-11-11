@@ -12,6 +12,8 @@ Modifications notables du projet, par ticket. Format inspiré de
 - **ai / worker** (2026-11-11) : titres du plan dans la langue du projet ; chemins de la recherche lus depuis la racine du dépôt.
 - **Studio** (2026-11-11) : navigation entre les pages d'une charte dans la barre du canvas (précédent, suivant, « 07 / 25 », sommaire avec saut vers une page ou vers les mises en situation).
 
+- **Docs** (2026-11-11) : essai de `vectorcraft-cli` 0.23.0 (`.ai`, PDF, EPS, SVG avec texte vers SVG) consigné dans `docs/proposals/P-004_ESSAI_VECTORCRAFT.md` ; rien n'est branché, ADR à décider.
+
 ### Corrigé
 - **Studio, mockups** (2026-11-11) : l'inspecteur suit les objets mesurés par la scène (plus de liste en retard) ; un objet garde son numéro quand le masque d'un objet précédent ne se charge pas.
 - **Dépôt** (2026-11-11) : l'analyse échouait pour tout logo (`RASTER_FAILED`), les liens de `node_modules` passant par une copie de travail d'agent ; copies de travail supprimées, liens refaits. `pnpm verify` de nouveau vert : `robots.ts` et `sitemap.ts` rendus à la requête (plus de lecture d'`APP_URL` au build), balise bornée par `[^<>]` dans `sanitizeManifestText`, 19 fichiers reformatés. Analyse et détail : `docs/team/audit/2026-11-11-analyse-et-nettoyage.md`.
