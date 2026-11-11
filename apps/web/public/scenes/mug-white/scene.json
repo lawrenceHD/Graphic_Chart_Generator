@@ -17,11 +17,17 @@
       "type": "slot",
       "id": "slot-1",
       "role": "mug-logo",
-      "aspect": 1.0,
-      "blend": "normal",
+      "aspect": 4.01,
+      "blend": "multiply",
       "opacity": 1.0,
-      "uv": "uv-slot-1.png",
-      "vv": "vv-slot-1.png"
+      "geometry": {
+        "kind": "revolution",
+        "top": { "left": [783, 612], "right": [1504, 612], "front": [1144, 655] },
+        "bottom": { "left": [792, 1190], "right": [1501, 1190], "front": [1146, 1243] },
+        "band": { "from": 0.22, "to": 0.86 },
+        "arcDegrees": 240,
+        "centreDegrees": 0
+      }
     }
   ]
 }
