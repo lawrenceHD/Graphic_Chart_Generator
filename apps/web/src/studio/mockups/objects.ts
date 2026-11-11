@@ -17,6 +17,8 @@ export interface MockupObject {
   readonly id: string;
   /** A surface of a photographed scene, or a colour field of a Photoshop scene. */
   readonly kind: 'surface' | 'paint';
+  /** Its number in the scene, from 1, kept when an earlier object cannot be measured. */
+  readonly number: number;
   /** Palette colours the object can be printed on (empty: its colour is not adjustable). */
   readonly paints: readonly PaintRole[];
   /** The object may also keep the photograph's own stock colour. */
@@ -27,9 +29,10 @@ export interface MockupObject {
 }
 
 export function photoObjects(scene: SceneDefinition): readonly MockupObject[] {
-  return scene.surfaces.map((surface) => ({
+  return scene.surfaces.map((surface, index) => ({
     id: surface.id,
     kind: 'surface',
+    number: index + 1,
     paints: surface.paint?.some((choice) => choice !== 'none') === true ? PAINT_ROLES : [],
     original: surface.paint?.includes('none') ?? true,
     finishes: surface.finishes,
@@ -44,6 +47,7 @@ export function psdObjects(scene: PsdScene): readonly MockupObject[] {
     objects.push({
       id: `field-${String(objects.length)}`,
       kind: 'paint',
+      number: objects.length + 1,
       paints: PAINT_ROLES,
       original: false,
       finishes: [],

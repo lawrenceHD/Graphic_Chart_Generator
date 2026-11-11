@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { SurfaceDirection } from '@app/mockup-engine';
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { frMessages, renderFr } from '../intl-test-utils';
 import type { MockupObject } from '../mockups/objects';
@@ -10,6 +10,7 @@ import { MockupObjectPanel, type Directing } from './mockup-inspector';
 const card: MockupObject = {
   id: 'card',
   kind: 'surface',
+  number: 1,
   paints: ['primary', 'accent', 'neutralLight', 'neutralDark'],
   original: true,
   finishes: ['print', 'foil', 'emboss'],
@@ -175,6 +176,39 @@ describe('MockupObjectPanel', () => {
     );
     expect(screen.queryByRole('radiogroup', { name: 'Finition' })).toBeNull();
     expect(screen.getByText(frMessages.workspace.mockup.available.finishFixed)).toBeTruthy();
+  });
+
+  it('shows the object as soon as the stage has measured it, without waiting for another render', () => {
+    renderFr(
+      <MockupObjectPanel
+        scene="poster-wall"
+        objectId="card"
+        brand="La Meza"
+        colors={colors}
+        logos={['color']}
+        directing={directing()}
+      />,
+    );
+    expect(screen.queryByRole('radiogroup', { name: 'Finition' })).toBeNull();
+    act(() => {
+      rememberObjects('poster-wall', [card]);
+    });
+    expect(screen.getByRole('radiogroup', { name: 'Finition' })).toBeTruthy();
+  });
+
+  it('names an object by its number in the scene, not by its rank among the measured ones', () => {
+    rememberObjects('mug-white', [{ ...card, number: 3 }]);
+    renderFr(
+      <MockupObjectPanel
+        scene="mug-white"
+        objectId="card"
+        brand="La Meza"
+        colors={colors}
+        logos={['color']}
+        directing={directing()}
+      />,
+    );
+    expect(screen.getByText(/Objet 3/u)).toBeTruthy();
   });
 
   it('exports the picture from the panel', () => {

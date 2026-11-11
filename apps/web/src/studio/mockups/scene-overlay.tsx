@@ -20,7 +20,8 @@ export function SceneOverlay({
   readonly size: { readonly width: number; readonly height: number };
   readonly selected: string | null;
   readonly onSelect: (id: string | null) => void;
-  readonly labelOf: (kind: 'surface' | 'paint', index: number) => string;
+  /** Name of an object from its kind and its number in the scene (from 1). */
+  readonly labelOf: (kind: 'surface' | 'paint', number: number) => string;
   readonly groupLabel?: string;
 }) {
   const layer = useRef<HTMLDivElement>(null);
@@ -100,7 +101,7 @@ export function SceneOverlay({
             type="button"
             tabIndex={index === stop ? 0 : -1}
             aria-pressed={isSelected}
-            aria-label={labelOf(object.kind, index)}
+            aria-label={labelOf(object.kind, object.number)}
             onClick={() => {
               onSelect(object.id);
             }}

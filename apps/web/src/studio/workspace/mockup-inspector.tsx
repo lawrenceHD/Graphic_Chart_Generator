@@ -9,8 +9,8 @@ import type {
 } from '@app/mockup-engine';
 import { Download, Redo2, RotateCcw, Undo2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState, type ReactNode } from 'react';
-import { objectsOfScene } from '../mockups/scene-hits';
+import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { objectsOfScene, subscribeObjects } from '../mockups/scene-hits';
 import { exportScenePng, exportScenesZip } from '../mockups/scene-export';
 import { exportFileName, PAINT_ROLES, type PaintRole } from '../mockups/objects';
 
@@ -137,15 +137,15 @@ export function MockupObjectPanel({
     };
   }, [onUndo, onRedo, t]);
 
-  const objects = objectsOfScene(scene);
-  const index = objects.findIndex((entry) => entry.id === objectId);
-  const object = objects[index];
+  const read = useCallback(() => objectsOfScene(scene), [scene]);
+  const objects = useSyncExternalStore(subscribeObjects, read, read);
+  const object = objects.find((entry) => entry.id === objectId);
   const choice = object === undefined ? {} : (directing.choices(scene)[object.id] ?? {});
   const applied =
     object === undefined
       ? undefined
       : directing.directions[scene]?.find((entry) => entry.surfaceId === object.id);
-  const objectName = t(`object.${object?.kind ?? 'surface'}`, { n: index + 1 });
+  const objectName = t(`object.${object?.kind ?? 'surface'}`, { n: object?.number ?? 1 });
 
   const paintName = (role: PaintRole): string => tr(role);
   const paintOf = (hex: string | null): string => {

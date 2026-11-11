@@ -7,6 +7,7 @@ import { SceneOverlay } from './scene-overlay';
 const left: MockupObject = {
   id: 'left',
   kind: 'surface',
+  number: 1,
   paints: [],
   original: true,
   finishes: ['print'],
@@ -20,6 +21,7 @@ const left: MockupObject = {
 const right: MockupObject = {
   ...left,
   id: 'right',
+  number: 2,
   outline: [
     [50, 0],
     [100, 0],
@@ -43,7 +45,7 @@ function mount(selected: string | null, onSelect = vi.fn()) {
       size={{ width: 100, height: 100 }}
       selected={selected}
       onSelect={onSelect}
-      labelOf={(_kind, index) => `Objet ${String(index + 1)}`}
+      labelOf={(_kind, number) => `Objet ${String(number)}`}
     />,
   );
   return onSelect;
@@ -62,7 +64,7 @@ describe('SceneOverlay', () => {
           size={{ width: 100, height: 100 }}
           selected={null}
           onSelect={onSelect}
-          labelOf={(_kind, index) => `Objet ${String(index + 1)}`}
+          labelOf={(_kind, number) => `Objet ${String(number)}`}
         />
       </div>,
     );

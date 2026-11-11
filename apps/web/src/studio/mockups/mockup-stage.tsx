@@ -302,7 +302,7 @@ export function MockupStage({
   readonly pick?: {
     readonly selected: string | null;
     readonly onSelect: (id: string | null) => void;
-    readonly labelOf: (kind: 'surface' | 'paint', index: number) => string;
+    readonly labelOf: (kind: 'surface' | 'paint', number: number) => string;
     readonly groupLabel: string;
   };
 }) {

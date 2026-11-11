@@ -83,9 +83,19 @@ export async function psdHits(
   return { objects, hits };
 }
 
-// The inspector lives beside the canvas, not under it: it reads the objects the stage found from here.
+// The inspector lives beside the canvas, not under it: it reads the objects the stage found from here,
+// and is told when they change (`useSyncExternalStore`), since the masks are measured after it renders.
+const NONE: readonly MockupObject[] = [];
 const known = new Map<string, readonly MockupObject[]>();
+const listeners = new Set<() => void>();
 export const rememberObjects = (scene: string, objects: readonly MockupObject[]): void => {
   known.set(scene, objects);
+  for (const listener of listeners) listener();
 };
-export const objectsOfScene = (scene: string): readonly MockupObject[] => known.get(scene) ?? [];
+export const objectsOfScene = (scene: string): readonly MockupObject[] => known.get(scene) ?? NONE;
+export const subscribeObjects = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
