@@ -6,6 +6,9 @@ Modifications notables du projet, par ticket. Format inspiré de
 
 ## [Unreleased]
 
+### Corrigé
+- **Dépôt** (2026-11-11) : l'analyse échouait pour tout logo (`RASTER_FAILED`), les liens de `node_modules` passant par une copie de travail d'agent ; copies de travail supprimées, liens refaits. `pnpm verify` de nouveau vert : `robots.ts` et `sitemap.ts` rendus à la requête (plus de lecture d'`APP_URL` au build), balise bornée par `[^<>]` dans `sanitizeManifestText`, 19 fichiers reformatés. Analyse et détail : `docs/team/audit/2026-11-11-analyse-et-nettoyage.md`.
+
 ### Ajouté
 - **Équipe et méthode** (2026-11-09) : agents persistants `design-director`, `seo-specialist`, `marketing-strategist`, `uiux-lead` (`.claude/agents/`) ; `docs/team/WORK-RULES.md` (jamais sans skills ni agents, concertation par rôle), `RESUME.md` (reprise après arrêt), `NIGHT-PLAN.md`.
 - **Accueil** (2026-11-09) : briefs `docs/team/landing/01-04` (direction artistique, copy FR/EN, SEO, UI/UX) ; base du portage = `prototypes/studio`.
