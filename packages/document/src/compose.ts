@@ -12,7 +12,12 @@ import {
 } from '@app/contracts';
 import { err, ok, type Result } from '@app/kernel';
 import { generateKeyBetween } from 'fractional-indexing';
-import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION, type BrandDocument } from './schema.js';
+import {
+  BrandDocumentSchema,
+  CURRENT_SCHEMA_VERSION,
+  type BrandDocument,
+  type MinimumSize,
+} from './schema.js';
 
 // Initial document of a project, composed at step 4 of project.analyze (02_ARCHITECTURE.md §5.2) from the
 // palette (step 1), the variants (step 2) and the brand analysis (step 3). Until the AI exists (T-030), the
@@ -22,6 +27,8 @@ import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION, type BrandDocument } from 
 export interface ComposeColor {
   readonly hex: string;
   readonly source: 'extracted' | 'derived' | 'user';
+  /** Share of the logo's surface in this colour (extraction); absent for a derived colour. */
+  readonly share?: number;
 }
 
 export interface ComposeInput {
@@ -51,6 +58,8 @@ export interface ComposeInput {
     readonly clearSpaceRatio: number;
     readonly minSizePx: number;
     readonly minSizeMm: number;
+    readonly clearSpaceSource?: 'element' | 'convention';
+    readonly versions?: { readonly full: MinimumSize; readonly symbol?: MinimumSize };
   };
 }
 
@@ -118,7 +127,11 @@ const WORDING = {
   { brand: string; value: string; titles: Record<PageType, string> }
 >;
 
-const color = ({ hex, source }: ComposeColor): ComposeColor => ({ hex: hex.toUpperCase(), source });
+const color = ({ hex, source, share }: ComposeColor): ComposeColor => ({
+  hex: hex.toUpperCase(),
+  source,
+  ...(share === undefined ? {} : { share }),
+});
 
 interface PageBlueprint {
   readonly type: PageType;
@@ -199,15 +212,22 @@ export function composeInitialDocument(
       },
       // "Modern, versatile" in the closed catalogue (09_DESIGN_SYSTEM.md §8).
       typography: { pairingId: input.brand?.pairingId ?? 'modern-geometric' },
-      // 05_ENGINES.md §5.5: clear space 0.25 × H, minimum height 24 px and 12 mm.
+      // 05_ENGINES.md §5.5: clear space 0.25 × H, minimum height 24 px and 12 mm, said to be defaults.
       // Bounds of LogoRulesSchema: a measure outside them is brought back, never refused.
       logo:
         input.logoRules === undefined
-          ? { clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 12 }
+          ? { clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 12, origin: 'default' }
           : {
               clearSpaceRatio: clamp(input.logoRules.clearSpaceRatio, 0.1, 0.5),
               minSizePx: clamp(Math.ceil(input.logoRules.minSizePx), 8, 512),
               minSizeMm: clamp(input.logoRules.minSizeMm, 2, 100),
+              origin: 'measured',
+              ...(input.logoRules.clearSpaceSource === undefined
+                ? {}
+                : { clearSpaceSource: input.logoRules.clearSpaceSource }),
+              ...(input.logoRules.versions === undefined
+                ? {}
+                : { versions: input.logoRules.versions }),
             },
     },
     assets: { logoSanitizedId: input.logoSanitizedId, variants: [...input.variants] },

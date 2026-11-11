@@ -58,7 +58,12 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
     expect(brand.tone.examples).toEqual(['', '', '']);
     expect(tokens.typography.pairingId).toBe('modern-geometric');
     // 05_ENGINES.md §5.5 defaults
-    expect(tokens.logo).toEqual({ clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 12 });
+    expect(tokens.logo).toEqual({
+      clearSpaceRatio: 0.25,
+      minSizePx: 24,
+      minSizeMm: 12,
+      origin: 'default',
+    });
   });
 
   it('lists the MVP pages in order, with stable ids and sorted positions', () => {
@@ -105,6 +110,7 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
       clearSpaceRatio: 0.375,
       minSizePx: 73,
       minSizeMm: 18.5,
+      origin: 'measured',
     });
     const extreme = composeInitialDocument({
       ...input,
@@ -114,13 +120,56 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
       clearSpaceRatio: 0.5,
       minSizePx: 512,
       minSizeMm: 2,
+      origin: 'measured',
     });
     const defaults = composeInitialDocument(input);
     expect(defaults.ok && defaults.value.tokens.logo).toEqual({
       clearSpaceRatio: 0.25,
       minSizePx: 24,
       minSizeMm: 12,
+      origin: 'default',
     });
+  });
+
+  it('keeps the minimum of each version and the origin of the clear space, when measured', () => {
+    const size = { heightPx: 24, widthPx: 68, heightMm: 5, widthMm: 14 };
+    const symbol = { heightPx: 16, widthPx: 12, heightMm: 3, widthMm: 2.5 };
+    const result = composeInitialDocument({
+      ...input,
+      logoRules: {
+        clearSpaceRatio: 0.3,
+        minSizePx: 68,
+        minSizeMm: 14,
+        clearSpaceSource: 'element',
+        versions: { full: size, symbol },
+      },
+    });
+    expect(result.ok && result.value.tokens.logo).toEqual({
+      clearSpaceRatio: 0.3,
+      minSizePx: 68,
+      minSizeMm: 14,
+      origin: 'measured',
+      clearSpaceSource: 'element',
+      versions: { full: size, symbol },
+    });
+  });
+
+  it('keeps the share of each colour measured on the logo, and none for a derived colour', () => {
+    const result = composeInitialDocument({
+      ...input,
+      colors: {
+        ...input.colors,
+        primary: { hex: '#1f4bff', source: 'extracted', share: 0.62 },
+        accent: { hex: '#FF6B35', source: 'derived' },
+      },
+    });
+    if (!result.ok) throw new Error(result.error.code);
+    expect(result.value.tokens.colors.primary).toEqual({
+      hex: '#1F4BFF',
+      source: 'extracted',
+      share: 0.62,
+    });
+    expect(result.value.tokens.colors.accent).toEqual({ hex: '#FF6B35', source: 'derived' });
   });
 
   it('copies the brand analysis as written: texts, archetype, tone and type pairing (ADR-020)', () => {

@@ -26,6 +26,7 @@ import {
 } from '@app/logo-kit';
 import { z } from 'zod';
 import { loadBrandContext } from './brand-context.js';
+import { rulesOf, withShares } from './compose-inputs.js';
 import { LOGO_FOR_AI, researchStep, type ResearchStepDeps } from './research-step.js';
 import { loadSuppliedVariants } from './supplied-logos.js';
 
@@ -305,6 +306,9 @@ const StoredVariant = z.union([
   }),
   z.object({ variant: z.literal('vector'), fidelity: z.number(), warnings: z.array(z.string()) }),
 ]);
+const StoredShares = z.object({
+  palette: z.object({ clusters: z.array(z.object({ hex: z.string(), share: z.number() })) }),
+});
 const StoredClusters = z.object({
   palette: z.object({
     clusters: z.array(z.object({ hex: z.string() })),
@@ -381,12 +385,7 @@ async function logoRules(deps: AnalyzeDeps, logo: Asset, bytes: Uint8Array) {
   if (svg === null) return undefined;
   const measured = await measureLogo(new TextDecoder().decode(svg), deps.rasterizer);
   if (!measured.ok) return undefined;
-  const { bbox, clearSpace, minimum } = measured.value;
-  return {
-    clearSpaceRatio: clearSpace.x / bbox.height,
-    minSizePx: minimum.widthPx,
-    minSizeMm: minimum.widthMm,
-  };
+  return rulesOf(measured.value);
 }
 
 async function composeDocument(
@@ -456,7 +455,8 @@ async function composeDocument(
       brandName: project.title,
       language: language.data,
       logoSanitizedId: logo.id,
-      colors: roles,
+      // ADR-035: each colour with its share of the logo, so the palette page shows measured proportions.
+      colors: withShares(roles, StoredShares.safeParse(fresh?.meta).data?.palette.clusters ?? []),
       variants: [{ assetId: colorId, kind: 'color', needsReview: false }, ...refs.value],
     },
     researched.plan,

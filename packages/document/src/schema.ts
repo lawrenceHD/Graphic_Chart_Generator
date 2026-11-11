@@ -148,6 +148,9 @@ export const ColorTokenSchema = z
   .object({
     hex: z.string().regex(/^#[0-9A-F]{6}$/u),
     source: z.enum(['extracted', 'derived', 'user']),
+    // Share of the logo's surface in this colour, measured at extraction (ADR-035); absent when the colour
+    // is derived or was edited, never guessed.
+    share: z.number().min(0).max(1).optional(),
   })
   .strict();
 export type ColorToken = z.infer<typeof ColorTokenSchema>;
@@ -164,11 +167,30 @@ export const PageSchema = z
   .strict();
 export type Page = z.infer<typeof PageSchema>;
 
+// Minimum size of one version of the logo (R7), in px for the screen and mm for print.
+export const MinimumSizeSchema = z
+  .object({
+    heightPx: z.number().int().min(1).max(4096),
+    widthPx: z.number().int().min(1).max(4096),
+    heightMm: z.number().min(0.5).max(1000),
+    widthMm: z.number().min(0.5).max(1000),
+  })
+  .strict();
+export type MinimumSize = z.infer<typeof MinimumSizeSchema>;
+
 const LogoRulesSchema = z
   .object({
     clearSpaceRatio: z.number().min(0.1).max(0.5),
     minSizePx: z.number().int().min(8).max(512),
     minSizeMm: z.number().min(2).max(100),
+    // ADR-035, all optional so that older documents still read: whether the values were measured on the
+    // logo or are the defaults of 05_ENGINES.md §5.5, what x is, and a minimum per version.
+    origin: z.enum(['measured', 'default']).optional(),
+    clearSpaceSource: z.enum(['element', 'convention']).optional(),
+    versions: z
+      .object({ full: MinimumSizeSchema, symbol: MinimumSizeSchema.optional() })
+      .strict()
+      .optional(),
   })
   .strict();
 

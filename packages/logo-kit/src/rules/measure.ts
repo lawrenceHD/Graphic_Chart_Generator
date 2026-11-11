@@ -17,6 +17,9 @@ const DETAIL_MM = 1.5;
 /** Floors of 05_ENGINES.md §5.5, lowered for print: a wordmark is legible at 5 mm high. */
 const FLOOR_PX = 24;
 const FLOOR_MM = 5;
+/** The symbol alone goes down to the smallest favicon (16 px) and to 3 mm, Porto's smallest version. */
+const SYMBOL_FLOOR_PX = 16;
+const SYMBOL_FLOOR_MM = 3;
 
 export type MeasureError = 'INVALID_SVG' | 'RENDER_FAILED' | 'EMPTY_LOGO';
 export interface ClearSpaceMeasure {
@@ -39,6 +42,8 @@ export interface LogoMeasure {
   readonly symbol?: Rect;
   readonly clearSpace: ClearSpaceMeasure;
   readonly minimum: MinimumSize;
+  /** Minimum of the symbol alone (a minimum per version, R7): its own smallest part stays legible. */
+  readonly symbolMinimum?: MinimumSize;
 }
 
 interface Component {
@@ -131,6 +136,28 @@ function symbolOf(pieces: readonly Component[], pixelsHigh: number): Component[]
 
 const halfUp = (value: number): number => Math.ceil(value * 2) / 2;
 
+// The typical part of a group (lower median of the parts at least a tenth of its height) must keep
+// DETAIL_PX and DETAIL_MM: the group's minimum height is that many times the part.
+function minimumOf(
+  group: readonly Component[],
+  aspect: number,
+  floors: { readonly px: number; readonly mm: number },
+): MinimumSize {
+  const top = group.reduce((value, piece) => Math.min(value, piece.top), Infinity);
+  const bottom = group.reduce((value, piece) => Math.max(value, piece.bottom), -Infinity);
+  const high = bottom - top;
+  const detail = lowerMedian(group.map(heightOf).filter((pixels) => pixels >= high * MIN_SHARE));
+  const ratio = high / (detail ?? high);
+  const heightPx = Math.max(floors.px, Math.ceil(DETAIL_PX * ratio));
+  const heightMm = Math.max(floors.mm, halfUp(DETAIL_MM * ratio));
+  return {
+    heightPx,
+    widthPx: Math.ceil(heightPx * aspect),
+    heightMm,
+    widthMm: halfUp(heightMm * aspect),
+  };
+}
+
 /**
  * Measures the logo as a designer does for the clear space and minimum size pages: x is the height of the
  * first letter-sized element in reading order (R6), the minimum keeps its smallest element legible (R7).
@@ -188,25 +215,22 @@ export async function measureLogo(
 
   // The typical element (lower median of the letter-sized pieces), so that a dot or a leaf does not
   // inflate the minimum: what must stay legible is a letter of the name.
-  const heights = significant
-    .map((piece) => piece.bottom - piece.top)
-    .filter((pixels) => pixels >= pixelsHigh * MIN_SHARE)
-    .sort((a, b) => a - b);
-  const detail = heights[Math.floor((heights.length - 1) / 2)] ?? pixelsHigh;
-  const ratio = pixelsHigh / detail;
-  const heightPx = Math.max(FLOOR_PX, Math.ceil(DETAIL_PX * ratio));
-  const heightMm = Math.max(FLOOR_MM, halfUp(DETAIL_MM * ratio));
   const aspect = bbox.width / bbox.height;
+  const minimum = minimumOf(significant, aspect, { px: FLOOR_PX, mm: FLOOR_MM });
   const symbol = symbolOf(significant, pixelsHigh);
+  const symbolBox = symbol === undefined ? undefined : span(symbol);
   return ok({
     bbox,
-    ...(symbol === undefined ? {} : { symbol: span(symbol) }),
+    ...(symbol === undefined || symbolBox === undefined
+      ? {}
+      : {
+          symbol: symbolBox,
+          symbolMinimum: minimumOf(symbol, symbolBox.width / symbolBox.height, {
+            px: SYMBOL_FLOOR_PX,
+            mm: SYMBOL_FLOOR_MM,
+          }),
+        }),
     clearSpace,
-    minimum: {
-      heightPx,
-      widthPx: Math.ceil(heightPx * aspect),
-      heightMm,
-      widthMm: halfUp(heightMm * aspect),
-    },
+    minimum,
   });
 }

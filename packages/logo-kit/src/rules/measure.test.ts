@@ -93,6 +93,39 @@ describe('measureLogo (R6, R7)', () => {
     expect(symbol?.height).toBeCloseTo(80, 0);
   });
 
+  it('gives the symbol its own minimum: 16 px (favicon) and 3 mm when it is one solid shape', async () => {
+    const measured = await measureLogo(lockup, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    const minimum = measured.value.symbolMinimum;
+    expect(minimum).toMatchObject({ heightPx: 16, heightMm: 3, widthMm: 2.5 });
+    expect([12, 13]).toContain(minimum?.widthPx);
+  });
+
+  it('raises the symbol minimum when the symbol is made of small parts', async () => {
+    // A symbol 80 high made of two bars 10 high: each bar keeps 6 px, so the symbol needs 48 px.
+    const bars = svgOf(
+      [10, 80]
+        .map((y) => `<rect x="10" y="${String(y)}" width="60" height="10" fill="#1F4BFF"/>`)
+        .join('') +
+        [90, 115, 140, 165]
+          .map((x) => `<rect x="${String(x)}" y="40" width="20" height="30" fill="#12161F"/>`)
+          .join(''),
+    );
+    const measured = await measureLogo(bars, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.symbol?.height).toBeCloseTo(80, 0);
+    expect(measured.value.symbolMinimum?.heightPx).toBeGreaterThanOrEqual(47);
+    expect(measured.value.symbolMinimum?.heightPx).toBeLessThanOrEqual(49);
+    expect([12, 12.5]).toContain(measured.value.symbolMinimum?.heightMm);
+  });
+
+  it('has no symbol minimum without a symbol', async () => {
+    const mark = svgOf('<circle cx="100" cy="50" r="40" fill="#1F4BFF"/>');
+    const measured = await measureLogo(mark, rasterizer);
+    if (!measured.ok) throw new Error(measured.error);
+    expect(measured.value.symbolMinimum).toBeUndefined();
+  });
+
   it('finds a symbol stacked above its name', async () => {
     const stacked = svgOf(
       '<circle cx="100" cy="35" r="30" fill="#EB001B"/>' +
