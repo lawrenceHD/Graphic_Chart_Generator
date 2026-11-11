@@ -18,7 +18,7 @@
 ## À faire ensuite
 1. Fait le 2026-11-11 : mur de logos retiré ; les quatre marques d'exemple restent avec la mention « sans affiliation » (décision du propriétaire), à remplacer avant un lancement commercial.
 2. Fait le 2026-11-11 : cinq branches fusionnées (mockups modifiables, refonte des pages, variantes des logos, `purpose`). Reste `comp/pdf-manifest` : non branchée, ajoute `unpdf`, ADR requis avant fusion.
-3. Fait le 2026-11-11 : titres dans la langue du projet, chemins de la recherche lus depuis la racine. Restent : SVG avec texte (dépendance à décider), navigation entre les pages, deux défauts mineurs des mockups (audit §8).
+3. Fait le 2026-11-11 : titres dans la langue du projet, chemins de la recherche lus depuis la racine, navigation entre les pages (`workspace/page-navigator.tsx`), deux défauts mineurs des mockups (audit §8). Reste : SVG avec texte (dépendance à décider, essai `vectorcraft-cli` en attente de l'accord du propriétaire). Rendu de la navigation non vérifié au navigateur (pas de navigateur installé) : à contrôler à 360 px et sous zoom.
 4. **Prochain pas, côté propriétaire** : sept essais réels selon `docs/proposals/P-003_ESSAIS_PRODUIT.md`. Le plugin Figma et le PDF serveur attendent leurs résultats.
 
 ## Décisions ouvertes (trancher avec les agents, sans attendre le propriétaire)

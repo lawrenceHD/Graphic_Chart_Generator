@@ -361,6 +361,14 @@
     },
     "oneColumn": "One page per row",
     "twoColumns": "Two pages per row",
+    "pageNav": {
+      "previous": "Previous page",
+      "next": "Next page",
+      "contents": "Contents",
+      "contentsLabel": "Guideline contents",
+      "position": "Page {n} of {total}",
+      "mockups": "Mockups"
+    },
     "working": "Applying…",
     "mockupFailed": "This mockup could not be loaded.",
     "loadFailedTitle": "The guideline could not be loaded",

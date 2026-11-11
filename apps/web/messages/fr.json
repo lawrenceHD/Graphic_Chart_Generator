@@ -361,6 +361,14 @@
     },
     "oneColumn": "Une page par ligne",
     "twoColumns": "Deux pages par ligne",
+    "pageNav": {
+      "previous": "Page précédente",
+      "next": "Page suivante",
+      "contents": "Sommaire",
+      "contentsLabel": "Sommaire de la charte",
+      "position": "Page {n} sur {total}",
+      "mockups": "Mises en situation"
+    },
     "working": "J’applique…",
     "mockupFailed": "Cette mise en situation n’a pas pu être chargée.",
     "loadFailedTitle": "La charte n’a pas pu être chargée",

@@ -17,6 +17,7 @@ import type { Timeline } from '../timeline';
 import type { Notice } from '../upload-batch';
 import { PAGE_STEP, brandView, orderedPages, type BrandView } from './brand-view';
 import type { ProjectSummary } from './document-client';
+import { PageNavigator } from './page-navigator';
 import { IconButton } from './top-bar';
 import type { Phase } from './use-studio';
 
@@ -137,7 +138,7 @@ function SheetSlot({
   const style: CSSProperties & Record<'--d', string> = { '--d': `${String(index * 0.07)}s` };
   const Renderer = RENDERERS[type];
   return (
-    <div className="sheet-in min-w-0" style={style}>
+    <div className="sheet-in min-w-0 scroll-mt-14" style={style} data-sheet={page.id}>
       <SheetLabel
         number={index + 1}
         title={page.title}
@@ -244,6 +245,22 @@ export function PageCanvas({
   const occurrences = occurrencesOf(pages);
   const empty = phase === 'empty' || (phase === 'sending' && document === null);
 
+  // A jump from the navigator brings the sheet to the top of the table; a page is selected only once it
+  // is really on the table (while the analysis runs, the sheets shown are placeholders).
+  const bring = (node: Element | null | undefined): boolean => {
+    if (node === null || node === undefined) return false;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    node.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+    return true;
+  };
+  const goTo = (id: string): void => {
+    if (bring(area.current?.querySelector(`[data-sheet="${CSS.escape(id)}"]`)))
+      onSelect({ kind: 'page', id });
+  };
+  const goToMockups = (): void => {
+    bring(area.current?.querySelector('[data-mockups]'));
+  };
+
   return (
     <div className="relative flex min-w-0 flex-1 flex-col bg-canvas">
       <div
@@ -343,7 +360,7 @@ export function PageCanvas({
                   ))}
             </div>
             {view !== null ? (
-              <section aria-labelledby="mockups-title" className="mt-20">
+              <section aria-labelledby="mockups-title" className="mt-20 scroll-mt-14" data-mockups>
                 <h2
                   id="mockups-title"
                   className="m-0 mb-1 font-display text-3xl font-bold tracking-tight"
@@ -397,8 +414,7 @@ export function PageCanvas({
                                     : { kind: 'mockup', id: scene, object },
                                 );
                               },
-                              labelOf: (kind, position) =>
-                                t(`mockup.object.${kind}`, { n: position + 1 }),
+                              labelOf: (kind, number) => t(`mockup.object.${kind}`, { n: number }),
                             }}
                             failedLabel={t('mockupFailed')}
                             retryLabel={t('retry')}
@@ -421,6 +437,17 @@ export function PageCanvas({
       </div>
       {empty ? null : (
         <div className="glass absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-line bg-surface/85 p-1 shadow-[0_8px_24px_-8px_oklch(0.2_0.01_60/0.2)] backdrop-blur-md">
+          {view === null || pages.length === 0 ? null : (
+            <>
+              <PageNavigator
+                entries={pages.map((page) => ({ id: page.id, title: page.title }))}
+                current={selection?.kind === 'page' ? selection.id : null}
+                onGo={goTo}
+                onMockups={goToMockups}
+              />
+              <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-line" />
+            </>
+          )}
           <IconButton
             label={t('zoomOut')}
             onClick={() => {
@@ -442,15 +469,17 @@ export function PageCanvas({
           </IconButton>
           <IconButton
             label={t('fit')}
+            className="max-sm:hidden"
             onClick={() => {
               fitTo(cols);
             }}
           >
             <Maximize2 aria-hidden="true" className="size-4" />
           </IconButton>
-          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-line" />
+          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-line max-sm:hidden" />
           <IconButton
             label={cols === 2 ? t('oneColumn') : t('twoColumns')}
+            className="max-sm:hidden"
             onClick={() => {
               const next = cols === 2 ? 1 : 2;
               setColumns(next);
