@@ -85,14 +85,14 @@ describe('SurfaceGeometry (ADR-034)', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('refuses an empty or reversed band and an arc beyond half a turn', () => {
+  it('refuses an empty or reversed band and an arc beyond a full turn', () => {
     expect(
       SurfaceGeometry.safeParse({ ...revolution(), band: { from: 0.5, to: 0.5 } }).success,
     ).toBe(false);
     expect(
       SurfaceGeometry.safeParse({ ...revolution(), band: { from: 0.9, to: 0.2 } }).success,
     ).toBe(false);
-    expect(SurfaceGeometry.safeParse({ ...revolution(), arcDegrees: 200 }).success).toBe(false);
+    expect(SurfaceGeometry.safeParse({ ...revolution(), arcDegrees: 400 }).success).toBe(false);
     expect(SurfaceGeometry.safeParse({ ...revolution(), centreDegrees: 120 }).success).toBe(false);
   });
 

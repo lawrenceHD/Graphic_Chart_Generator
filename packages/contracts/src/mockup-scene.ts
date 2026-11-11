@@ -79,8 +79,8 @@ export const SurfaceGeometry = z.discriminatedUnion('kind', [
     band: z
       .strictObject({ from: Unit, to: Unit })
       .refine((band) => band.from < band.to, { message: 'band.from must be above band.to' }),
-    /** Angle the logo box spans around the axis. */
-    arcDegrees: z.number().positive().max(180),
+    /** Angle the logo box spans around the axis; past the visible half, a wrap-around print is cut. */
+    arcDegrees: z.number().positive().max(360),
     /** Centre of the logo box, 0 facing the viewer. */
     centreDegrees: z.number().min(-90).max(90).default(0),
   }),
