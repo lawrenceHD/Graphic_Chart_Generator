@@ -6,6 +6,11 @@ Modifications notables du projet, par ticket. Format inspiré de
 
 ## [Unreleased]
 
+### Modifié
+- **Accueil** (2026-11-11) : mur de logos de marques tierces retiré ; marques d'exemple signalées « sans affiliation », plus jamais « fictives ».
+- **Studio** (2026-11-11) : mockups modifiables (version du logo, finition, couleur par objet, annuler et rétablir, export PNG et ZIP), refonte des pages couverture, logo et zone d'exclusion, variantes des logos d'exemple ; trois défauts de revue corrigés (sélection d'un objet au clic, export de la scène dirigée, Ctrl+Z dans un champ).
+- **ai / worker** (2026-11-11) : titres du plan dans la langue du projet ; chemins de la recherche lus depuis la racine du dépôt.
+
 ### Corrigé
 - **Dépôt** (2026-11-11) : l'analyse échouait pour tout logo (`RASTER_FAILED`), les liens de `node_modules` passant par une copie de travail d'agent ; copies de travail supprimées, liens refaits. `pnpm verify` de nouveau vert : `robots.ts` et `sitemap.ts` rendus à la requête (plus de lecture d'`APP_URL` au build), balise bornée par `[^<>]` dans `sanitizeManifestText`, 19 fichiers reformatés. Analyse et détail : `docs/team/audit/2026-11-11-analyse-et-nettoyage.md`.
 

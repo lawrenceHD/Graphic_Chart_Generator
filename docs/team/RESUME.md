@@ -16,10 +16,10 @@
 - Lancer le worker avec `RESEARCH_CORPUS_DIR` en chemin absolu, sinon la recherche de références se replie (dossier courant `apps/worker`).
 
 ## À faire ensuite
-1. Retirer les logos de marques tierces de `apps/web/public/demo/logos/` et du mur de logos de l'accueil.
-2. Trancher les six branches non fusionnées : `worktree-agent-a166610504f843003` (mockups modifiables), `comp/r4-front-charte`, `comp/r4-charte-pages`, `comp/pdf-manifest`, `comp/noe-scenes2`, `worktree-agent-a1cbae240c377493f`. Les trois premières, sauf `comp/r4-front-charte`, finissent par un commit `wip` non vérifié.
-3. Constats 5 à 8 de l'audit : SVG avec texte, titres anglais en charte française, défilement de la toile, chemin du corpus.
-4. Essais avec de vrais utilisateurs, puis plugin Figma et PDF serveur.
+1. Fait le 2026-11-11 : mur de logos retiré ; les quatre marques d'exemple restent avec la mention « sans affiliation » (décision du propriétaire), à remplacer avant un lancement commercial.
+2. Fait le 2026-11-11 : cinq branches fusionnées (mockups modifiables, refonte des pages, variantes des logos, `purpose`). Reste `comp/pdf-manifest` : non branchée, ajoute `unpdf`, ADR requis avant fusion.
+3. Fait le 2026-11-11 : titres dans la langue du projet, chemins de la recherche lus depuis la racine. Restent : SVG avec texte (dépendance à décider), navigation entre les pages, deux défauts mineurs des mockups (audit §8).
+4. **Prochain pas, côté propriétaire** : sept essais réels selon `docs/proposals/P-003_ESSAIS_PRODUIT.md`. Le plugin Figma et le PDF serveur attendent leurs résultats.
 
 ## Décisions ouvertes (trancher avec les agents, sans attendre le propriétaire)
 - Indexation anglaise : segments `/fr` et `/en` (ADR).

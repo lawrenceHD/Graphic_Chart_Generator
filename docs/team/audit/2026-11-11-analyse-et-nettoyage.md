@@ -82,6 +82,29 @@
   contredit « le logo est sacré ». Le besoin réel côté Illustrator est l'échange de fichiers : accepter `.ai`, `.pdf`,
   `.eps` en entrée et vectoriser le texte d'un SVG automatiquement (constat 5).
 
+## 8. Suite du même jour (ordre du §7, étapes 1 à 3)
+
+- **Étape 1, décision du propriétaire** : seul le mur de logos est retiré ; les quatre marques d'exemple restent
+  (exception du 2026-11-09), avec une mention visible « sans affiliation ». Les textes qui les disaient « fictives »
+  sont corrigés en français et en anglais. L'arc de l'appel final porte les couleurs de la marque d'exemple.
+- **Étape 2** : fusionnées après `pnpm verify` : `comp/noe-scenes2`, `worktree-agent-a1cbae240c377493f`,
+  `worktree-agent-a166610504f843003` (mockups modifiables, qui contient `comp/r4-front-charte`),
+  `comp/r4-charte-pages` (refonte des pages). La route de test `app/zz-harness` n'est pas reprise.
+  **Non fusionnée** : `comp/pdf-manifest`, module isolé, branché nulle part, qui ajoute la dépendance `unpdf` (ADR requis).
+- **Revue** (`code-reviewer`) du travail fusionné, trois défauts confirmés et corrigés : un clic sur un objet de
+  mockup ne le sélectionnait pas (le cadre autour reprenait la sélection) ; l'export PNG et ZIP pouvait livrer
+  l'image sans les choix de la personne, ou échouer, quand la même scène était aussi dessinée sur une page de
+  charte ; Ctrl+Z dans un champ de texte annulait un choix de mockup au lieu du texte. Restent ouverts : la liste des
+  objets lue hors de l'état React (`scene-hits.ts`), les numéros d'objet décalés quand un masque ne se charge pas.
+- **Étape 3** : constat 6 corrigé (titres dans la langue du projet), constat 7 corrigé (chemins de la recherche lus
+  depuis la racine du dépôt : la recherche de références fonctionne, 18 pages dont six de secteur).
+  **Constat 8 retiré** : c'était une erreur de ma part, il n'existe pas de liste de pages ; ce qui manque est une
+  navigation entre les pages d'une charte de 30 pages. **Constat 5 laissé** : la conversion en image est proposée
+  en un clic ; vectoriser le texte demande une bibliothèque de polices, donc une dépendance.
+- Test `sanitizeSvg` instable corrigé (le mot « onload » dans une valeur conservée est du texte inerte).
+- `pnpm verify` vert : 1 295 tests. Une charte complète prend environ 75 s avec la recherche.
+- **Étape 4** : protocole prêt, `docs/proposals/P-003_ESSAIS_PRODUIT.md`. Les étapes 5 et 6 attendent ses résultats.
+
 ## 7. Ordre proposé
 
 1. Retirer les logos de marques tierces (constat 3).
