@@ -24,7 +24,7 @@ export function Metrics() {
     { key: 'exports', to: EXPORT_FORMATS },
   ] as const;
   return (
-    <section aria-label={t('label')} className="mx-auto max-w-6xl px-4">
+    <section aria-label={t('label')} className="mx-auto mt-28 max-w-6xl px-4 sm:mt-44">
       <ul className="m-0 grid list-none grid-cols-2 gap-px overflow-hidden rounded-[36px] border border-line bg-line p-0 md:grid-cols-4">
         {items.map((item, index) => (
           <li key={item.key} className="bg-surface">
