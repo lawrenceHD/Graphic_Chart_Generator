@@ -11,7 +11,6 @@ import { Hero } from './home/hero';
 import { HomeFooter } from './home/home-footer';
 import { Inside } from './home/inside';
 import { Journey } from './home/journey';
-import { LogoWallStrip } from './home/logo-wall-strip';
 import { MotionToggle } from './home/motion-toggle';
 import { Manifesto } from './home/manifesto';
 import { Metrics } from './home/metrics';
@@ -28,7 +27,6 @@ export function Landing() {
         <MotionToggle />
         <BrandProvider examples={listExamples()}>
           <Hero />
-          <LogoWallStrip />
           <Metrics />
           <Manifesto />
           <Deferred>

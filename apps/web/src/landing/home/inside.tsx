@@ -59,6 +59,7 @@ export function Inside() {
       </h2>
       <div className="mt-8">
         <BrandChips group="inside" />
+        <p className="mt-3 mb-0 text-xs text-ink-3">{t('pickNote')}</p>
       </div>
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         <Tile className="md:col-span-2 md:row-span-2" title={t('palette')} note={t('paletteNote')}>

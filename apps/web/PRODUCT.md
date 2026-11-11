@@ -50,9 +50,11 @@ The AI works like a senior art director that shows its evidence, on top of deter
 - Demo on a laptop in front of a jury, possibly with weak network: a replayable demo mode must keep the flow working.
 - **Charta is a generic SaaS, not a one-brand product.** No brand name appears in product code or interface text.
   The landing and the demo show example brands, each a validated record (`DemoExample`) in
-  `apps/web/src/landing/examples/data/`: at least three, from different sectors and in both languages (hospitality,
-  bakery and coffee house, technology consulting). Logos are either owned by the project owner and cleared for public
-  display, or fictional marks drawn for the project; never a third-party mark. `check-brand-names.ts` (run by the
+  `apps/web/src/landing/examples/data/`: at least three, from different sectors. Logos are either owned by the
+  project owner, or one of the sixteen existing marks the owner allowed as examples on 2026-11-09
+  (`tools/logo-library/README.md`): shown with a visible "example, no affiliation" notice, never as customers, withdrawn
+  on request, and to be replaced before a commercial launch. No other third-party mark, and no wall of marks
+  (removed on 2026-11-11). `check-brand-names.ts` (run by the
   unit tests, so by `pnpm verify`) fails when an example brand is named outside tests, fixtures and that data folder.
 
 ## Capabilities and Constraints

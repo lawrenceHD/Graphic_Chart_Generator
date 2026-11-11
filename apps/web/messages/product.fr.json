@@ -27,7 +27,7 @@
       "note": "Sans carte bancaire. Votre logo n’est jamais redessiné.",
       "demo": "Voir une charte d’exemple",
       "pick": "Choisissez une marque d’exemple : toute la page change avec elle",
-      "fiction": "Marques fictives créées pour la démonstration, pas des clients.",
+      "fiction": "Marques existantes citées en exemple : ni clientes ni partenaires de Charta.",
       "proof": {
         "palette": "Palette mesurée",
         "level": {
@@ -131,7 +131,7 @@
       "alt": "{scene} avec le logo de {brand}",
       "failed": "Cette scène n’a pas pu être chargée.",
       "retry": "Réessayer",
-      "note": "Objets photographiés ; marques d’exemple fictives. Rendu calculé dans votre navigateur.",
+      "note": "Objets photographiés ; marques citées en exemple, sans affiliation. Rendu calculé dans votre navigateur.",
       "scene": {
         "poster-hanging": "Affiche accrochée",
         "cards-floating": "Cartes de visite",
@@ -164,7 +164,7 @@
     },
     "brands": {
       "title": "Marques d’exemple",
-      "note": "Marques fictives dessinées pour la démonstration : aucun client, aucun logo existant."
+      "note": "Marques existantes citées en exemple : elles appartiennent à leurs propriétaires et ne sont ni clientes ni partenaires de Charta."
     },
     "problem": {
       "title": "Le jugement, c’est votre <em>métier</em>. Le reste est répétitif.",
@@ -273,7 +273,8 @@
       "variantsNote": "Couleur, noir, blanc : fournies telles quelles ou calculées.",
       "tokens": "Tokens exportés",
       "tokensNote": "Variables CSS, thème Tailwind, tokens DTCG.",
-      "pick": "Marque d’exemple"
+      "pick": "Marque d’exemple",
+      "pickNote": "Marques citées à titre d’exemple. Elles appartiennent à leurs propriétaires, sans lien avec Charta."
     },
     "showcase": {
       "photo": "photo"
@@ -282,7 +283,7 @@
       "tagline": "Des chartes graphiques composées à partir d’un logo, mesurées par des moteurs et ajustables page par page.",
       "product": "Produit",
       "account": "Compte",
-      "demo": "Démonstration : marques d’exemple fictives",
+      "demo": "Démonstration : marques d’exemple citées sans affiliation",
       "toTop": "Revenir en haut de la page"
     },
     "nav": {

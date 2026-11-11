@@ -27,7 +27,7 @@
       "note": "No credit card. Your logo is never redrawn.",
       "demo": "See an example guideline",
       "pick": "Pick an example brand: the whole page changes with it",
-      "fiction": "Fictional brands made for the demonstration, not clients.",
+      "fiction": "Existing brands shown as examples: neither customers nor partners of Charta.",
       "proof": {
         "palette": "Measured palette",
         "level": {
@@ -131,7 +131,7 @@
       "alt": "{scene} with the {brand} logo",
       "failed": "This scene could not be loaded.",
       "retry": "Retry",
-      "note": "Photographed objects; fictional example brands. Rendered in your browser.",
+      "note": "Photographed objects; brands shown as examples, without affiliation. Rendered in your browser.",
       "scene": {
         "poster-hanging": "Hanging poster",
         "cards-floating": "Business cards",
@@ -164,7 +164,7 @@
     },
     "brands": {
       "title": "Example brands",
-      "note": "Fictional brands drawn for the demonstration: no customers, no existing logos."
+      "note": "Existing brands shown as examples: they belong to their owners and are neither customers nor partners of Charta."
     },
     "problem": {
       "title": "Judgement is your <em>craft</em>. The rest is repetition.",
@@ -273,7 +273,8 @@
       "variantsNote": "Colour, black, white: supplied as is or computed.",
       "tokens": "Exported tokens",
       "tokensNote": "CSS variables, Tailwind theme, DTCG tokens.",
-      "pick": "Example brand"
+      "pick": "Example brand",
+      "pickNote": "Brands shown as examples only. They belong to their owners and have no link with Charta."
     },
     "showcase": {
       "photo": "photo"
@@ -282,7 +283,7 @@
       "tagline": "Brand guidelines composed from a logo, measured by engines and adjustable page by page.",
       "product": "Product",
       "account": "Account",
-      "demo": "Demonstration: fictional example brands",
+      "demo": "Demonstration: example brands shown without affiliation",
       "toTop": "Back to the top of the page"
     },
     "nav": {
