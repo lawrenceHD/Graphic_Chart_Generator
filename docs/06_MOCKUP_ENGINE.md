@@ -1,7 +1,7 @@
 # 06 — Moteur de mockups
 
 > Statut : **validé** — Version 4.1 — 2026-10-17
-> Package : `mockup-engine` (**navigateur uniquement**, ADR-016 : aucun module Node). Décisions : ADR-008, ADR-016, ADR-023.
+> Package : `mockup-engine` (**navigateur uniquement**, ADR-016 : aucun module Node). Décisions : ADR-008, ADR-016, ADR-023, ADR-034.
 > Remplace : `ARCHITECTURE.md` §3.
 
 ## 1. Principe
@@ -20,7 +20,9 @@ Un logo n'est pas « vectoriel » dans un mockup : le rendu final est un **raste
 | Écran d'ordinateur | 1 plan | plate |
 | Affiche / cadre mural | 1 plan | plate, embossage |
 
-Hors MVP : surfaces courbes (flacons, tissus), verre dépoli, rétro-éclairage, scènes multi-surfaces.
+Hors MVP : verre dépoli, rétro-éclairage, objets transparents vus à travers.
+
+Surfaces courbes (ADR-034, 2026-11-11) : les objets de révolution (mug, gobelet, bouteille) et les surfaces déformées par une grille de Bézier sont **calculés** par le moteur (§3.1, §4.5). Première scène : `mug-white` en vrai cylindre.
 
 ## 3. Format d'une scène
 
@@ -57,6 +59,27 @@ LICENSE.md         # origine et droits de chaque élément
 - `logoBox.aspect` : rapport largeur/hauteur de la zone imprimable ; le logo y est placé en `contain` avec `paddingRatio` de marge.
 - `light.direction` : vecteur unitaire (x vers la droite, y vers le bas, z vers l'observateur).
 - Validation Zod du `scene.json` ; une scène invalide est refusée au chargement.
+
+### 3.1 Géométrie d'une surface courbe (ADR-034)
+
+`geometry` est facultatif sur une surface photo (le `quad` reste la zone cliquable et le repli) et remplace `uv`/`vv` sur un `slot` de scène PSD :
+
+```json
+{
+  "kind": "revolution",
+  "top": { "left": [783, 603], "right": [1504, 603], "front": [1144, 654] },
+  "bottom": { "left": [791, 1180], "right": [1501, 1180], "front": [1146, 1242] },
+  "band": { "from": 0.25, "to": 0.92 },
+  "arcDegrees": 120,
+  "centreDegrees": 0
+}
+```
+
+- `top`, `bottom` : chaque ellipse par trois points, silhouette gauche, silhouette droite et point le plus proche de l'observateur (arc avant). Le point avant doit tomber sur l'axe de l'ellipse à 10 % du demi-axe près, sinon la scène est refusée.
+- `band` : hauteur imprimable, 0 = ellipse du haut, 1 = ellipse du bas. `arcDegrees` : angle couvert par la boîte du logo autour de l'axe ; `centreDegrees` : son centre (0 = face à l'observateur).
+- `radiusRatio` (facultatif) : rapport physique rayon du haut / rayon du bas. Absent, l'objet est un cylindre ; un cône doit le déclarer. `profile` (facultatif) : silhouette gauche en polyligne, pour une bouteille.
+- `{ "kind": "mesh", "cols", "rows", "points" }` : grille de Bézier bicubique (3k+1) × (3m+1) points, ligne par ligne, comme le `customEnvelopeWarp` de Photoshop.
+- Le rapport largeur/hauteur de la boîte du logo se **calcule** à partir de la géométrie : `r·Δθ / (H·(to − from))` (§4.5).
 
 Catalogue : `assets/scenes/index.json` liste les scènes par `category` (voir `07_AI_COPILOT.md` pour la classification). Catégorie de repli : `generic`.
 
@@ -130,6 +153,16 @@ Les constantes ci-dessus sont des **valeurs de départ** ; elles sont ajustées 
 - Aperçu : 1280 px de large, rendu à chaque changement (cible < 100 ms).
 - Export : 3840 × 2160, rendu sur un `OffscreenCanvas` ; si la texture maximale du GPU est inférieure, **rendu par tuiles** de 2048 px assemblées. Format PNG (sRGB).
 - Le **hash de rendu** = SHA-256 de `sceneId + schemaVersion + finish + sha256(logoVariant) + couleurs d'encre + version du moteur`. Le résultat est téléversé comme asset `mockup_render` **par le flux d'upload normal** (ADR-023, SEC-26) : URL présignée, statut `quarantined`, job `asset.scan` (octets magiques PNG, dimensions attendues 3840 × 2160 ou 1280 de large, normalisation raster). Il n'est utilisé (PDF, ZIP, aperçu) qu'une fois `clean`, puis réutilisé tant que le hash ne change pas. Un rendu venant du navigateur est une **entrée utilisateur** comme une autre.
+
+### 4.5 Surfaces de révolution et maillages (ADR-034)
+
+Détail et démonstrations : `docs/research/2026-11-11-mockups-objets-courbes.md` §5.
+
+- **Ellipse** depuis trois points : `c = (L+R)/2`, `a = |R−L|/2`, `e = (R−L)/|R−L|`, `n = (−e.y, e.x)`, `b = (F−c)·n`. Un point de l'ellipse à l'angle θ (0 devant, ±90° aux silhouettes) : `p(θ) = c + a·sin θ·e + b·cos θ·n`.
+- **Cylindre** : `P(θ, s) = ((1−s)·w_h·p_h(θ) + s·w_b·p_b(θ)) / ((1−s)·w_h + s·w_b)`, avec `w_h/w_b = (a_h/a_b) / radiusRatio` (interpolation homogène le long de la génératrice).
+- **Logo** : `θ = centre + (u − ½)·arc`, `s = from + v·(to − from)`. La densité du logo à l'écran vaut `cos θ` du centre vers les bords ; rien n'est dessiné pour |θ| > 90°, et la couverture s'adoucit sur environ un pixel avant la silhouette (`smoothstep(0, √(2/a), cos θ)`).
+- **Maillage** : patchs de Bézier bicubiques sur les polynômes de Bernstein ; une grille régulière redonne l'interpolation bilinéaire.
+- **Carte UV** : la surface est découpée en triangles (64 colonnes sur l'arc visible, 16 rangées), dessinés sur GPU dans deux textures RGBA8 qui suivent exactement le format des `uv-*.png` cuits (u et v sur 16 bits, octet fort en R, faible en G, couverture en B ; cos θ en alpha de la texture `v`). Le shader de slot les lit sans changement. Le même découpage est rastérisé sur CPU dans les tests.
 
 ## 5. API du package
 
