@@ -179,10 +179,20 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
     const stored = await documentRow();
     expect(stored?.seq).toBe(0);
     const document = BrandDocumentSchema.parse(stored?.body);
-    expect(document.tokens.colors.primary).toEqual({ hex: '#1F4BFF', source: 'extracted' });
+    // ADR-035: the share of the logo in the colour, measured at extraction.
+    expect(document.tokens.colors.primary).toMatchObject({ hex: '#1F4BFF', source: 'extracted' });
+    expect(document.tokens.colors.primary.share).toBeGreaterThan(0.5);
+    expect(document.tokens.colors.primary.share).toBeLessThanOrEqual(1);
     expect(document.brand.name).toBe('Logo');
     // R6, R7: measured on the logo (one piece: x by convention; minimum on the floors), not the defaults.
-    expect(document.tokens.logo).toEqual({ clearSpaceRatio: 0.25, minSizePx: 24, minSizeMm: 5 });
+    expect(document.tokens.logo).toMatchObject({
+      clearSpaceRatio: 0.25,
+      minSizePx: 24,
+      minSizeMm: 5,
+      origin: 'measured',
+      clearSpaceSource: 'convention',
+    });
+    expect(document.tokens.logo.versions?.full.heightPx).toBe(24);
     const byVariant = new Map(
       made.map((row) => [Reflect.get(Object(row.meta), 'variant'), row.id] as const),
     );

@@ -46,7 +46,7 @@ describe('research port', () => {
     const fr = await defaultResearch.plan(input);
     expect(fr).toEqual({ ok: true, value: result(standardChartPlan('fr')) });
     const en = await defaultResearch.plan({ ...input, language: 'en' });
-    expect(en.ok && en.value.plan.sections).toHaveLength(16);
+    expect(en.ok && en.value.plan.sections).toHaveLength(15);
     expect(en.ok && en.value.plan.sections[0]?.title).toBe('Cover');
   });
 
@@ -157,11 +157,11 @@ describe('aiResearch with a simulated Gemini (no network, no spend)', () => {
   it('asks for page titles in the language of the project', async () => {
     const outcome = await port({}).plan({ ...input, language: 'fr' });
     expect(outcome.ok && outcome.value.plan.sections.map((section) => section.title)).toContain(
-      'Palette de couleurs',
+      'Couleurs : valeurs et rôles',
     );
     const english = await port({}).plan({ ...input, language: 'en' });
     expect(english.ok && english.value.plan.sections.map((section) => section.title)).toContain(
-      'Colour palette',
+      'Colours: values and roles',
     );
   });
 
