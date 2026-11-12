@@ -1,6 +1,6 @@
 import { PsdSceneSchema } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
-import { BLEND_CODES, PSD_LAYER_SHADER, blendChannel, decodeUv, guardGradient } from './psd.js';
+import { BLEND_CODES, PSD_LAYER_SHADER, blendChannel, decodeUv, mapStep } from './psd.js';
 
 describe('PSD scenes — Photoshop layers replayed', () => {
   it('blends like Photoshop on gamma-encoded values', () => {
@@ -45,27 +45,20 @@ describe('PSD scenes — Photoshop layers replayed', () => {
     expect(PsdSceneSchema.safeParse(escaping).success).toBe(false);
   });
 
-  it('drops the derivative only towards a neighbour outside the map, read on the coverage', () => {
-    // Inside the map one pixel moves a fraction of the artwork: the derivatives choose the mip level.
-    expect(guardGradient([0.001, 0.0005], [0, 0.002], 1, [0, 0])).toEqual([
-      [0.001, 0.0005],
-      [0, 0.002],
-    ]);
-    // Near the silhouette of a squashed cylinder the step is large but real: it is kept.
-    expect(guardGradient([0.3, 0], [0, 0.002], 0.4, [-0.1, 0])).toEqual([
-      [0.3, 0],
-      [0, 0.002],
-    ]);
-    // Across the edge of the map the neighbour has no coverage and reads (0, 0): that axis only drops.
-    expect(guardGradient([0.6, 0], [0, 0.002], 1, [-1, 0])).toEqual([
-      [0, 0],
-      [0, 0.002],
-    ]);
-    expect(guardGradient([0.001, 0], [0.5, 0.4], 0.7, [0, 0.7])).toEqual([
-      [0.001, 0],
-      [0, 0],
-    ]);
+  it('steps to a covered neighbour only, never to the (0, 0) outside the map', () => {
+    const at = (coverage: number, u: number, v: number) => ({ coverage, uv: [u, v] as const });
+    // Both neighbours on the map: the forward step, a true footprint even where it is large.
+    const forward = mapStep(at(1, 0.5, 0.5), at(1, 0.49, 0.5), at(1, 0.53, 0.5));
+    expect(forward[0]).toBeCloseTo(0.03, 9);
+    expect(forward[1]).toBe(0);
+    // The next pixel is off the map (it reads 0, 0): the step is taken backwards.
+    const back = mapStep(at(0.9, 0.856, 0.04), at(1, 0.847, 0.035), at(0, 0, 0));
+    expect(back[0]).toBeCloseTo(0.009, 9);
+    expect(back[1]).toBeCloseTo(0.005, 9);
+    // A lone pixel: no neighbour on the map, the finest level.
+    expect(mapStep(at(0.4, 0.8, 0.2), at(0, 0, 0), at(0, 0, 0))).toEqual([0, 0]);
     expect(PSD_LAYER_SHADER).toContain('textureGrad(uSource, uv');
-    expect(PSD_LAYER_SHADER).toContain('abs(dFdx(eu.b))');
+    expect(PSD_LAYER_SHADER).toContain('texelFetch(uU');
+    expect(PSD_LAYER_SHADER).not.toContain('dFdx');
   });
 });

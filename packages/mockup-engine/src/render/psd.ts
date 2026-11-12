@@ -41,28 +41,25 @@ export function decodeUv(red: number, green: number): number {
 }
 
 /**
- * Where the map ends, a neighbouring pixel outside it reads (0, 0): the step towards it is not a footprint,
- * and the coarsest mip level it picks (an average of the whole artwork) would draw a grey line along the
- * box. That neighbour is told by its coverage, zero, not by the size of the step: near the silhouette of a
- * squashed cylinder large steps are real and keep their mip level. Only the axis towards it drops.
+ * The footprint of a pixel on the artwork, for its mip level. Screen derivatives (dFdx) mix a pixel with
+ * its 2 x 2 neighbours, which outside the map read (0, 0): the coarsest level they pick, an average of the
+ * whole artwork, leaves grey dots along the box and the silhouette. The step is instead read on the map
+ * itself, towards a neighbour that is on it (forward, else backward), and is zero for a lone pixel.
  */
-type Gradient = readonly [number, number];
-const EDGE = 0.5 / 255;
+interface MapTexel {
+  readonly coverage: number;
+  readonly uv: readonly [number, number];
+}
 
-const outside = (coverage: number, step: number) =>
-  coverage > 0 && Math.abs(step) >= coverage - EDGE;
-
-/** The derivatives the slot samples its artwork with, from the coverage and its derivatives (mirrors the shader). */
-export function guardGradient(
-  dx: Gradient,
-  dy: Gradient,
-  coverage: number,
-  coverageStep: Gradient,
-): readonly [Gradient, Gradient] {
-  return [
-    outside(coverage, coverageStep[0]) ? [0, 0] : dx,
-    outside(coverage, coverageStep[1]) ? [0, 0] : dy,
-  ];
+/** Step of uv along one axis between `here` and a covered neighbour (mirrors the shader). */
+export function mapStep(
+  here: MapTexel,
+  previous: MapTexel,
+  next: MapTexel,
+): readonly [number, number] {
+  if (next.coverage > 0) return [next.uv[0] - here.uv[0], next.uv[1] - here.uv[1]];
+  if (previous.coverage > 0) return [here.uv[0] - previous.uv[0], here.uv[1] - previous.uv[1]];
+  return [0, 0];
 }
 
 export const PSD_LAYER_SHADER = `#version 300 es
@@ -92,6 +89,25 @@ vec3 blend(int mode, vec3 a, vec3 b) {
   return vec3(blendOne(mode, a.r, b.r), blendOne(mode, a.g, b.g), blendOne(mode, a.b, b.b));
 }
 
+// One texel of the slot map: uv, and its coverage in z.
+vec3 mapTexel(ivec2 at) {
+  ivec2 size = textureSize(uU, 0);
+  if (any(lessThan(at, ivec2(0))) || any(greaterThanEqual(at, size))) return vec3(0.0);
+  vec4 eu = texelFetch(uU, at, 0);
+  vec4 ev = texelFetch(uV, at, 0);
+  return vec3((eu.r * 255.0 * 256.0 + eu.g * 255.0) / 65535.0,
+              (ev.r * 255.0 * 256.0 + ev.g * 255.0) / 65535.0, eu.b);
+}
+// Step of uv towards a neighbour on the map (forward, else backward): see mapStep.
+vec2 mapStep(ivec2 at, ivec2 axis) {
+  vec3 here = mapTexel(at);
+  vec3 next = mapTexel(at + axis);
+  vec3 previous = mapTexel(at - axis);
+  if (next.z > 0.0) return next.xy - here.xy;
+  if (previous.z > 0.0) return here.xy - previous.xy;
+  return vec2(0.0);
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uSize;
   vec3 backdrop = texelFetch(uPrev, ivec2(gl_FragCoord.xy), 0).rgb;
@@ -105,14 +121,9 @@ void main() {
     vec4 ev = texture(uV, p);
     vec2 uv = vec2((eu.r * 255.0 * 256.0 + eu.g * 255.0) / 65535.0,
                    (ev.r * 255.0 * 256.0 + ev.g * 255.0) / 65535.0);
-    vec2 dx = dFdx(uv);
-    vec2 dy = dFdy(uv);
-    float edge = ${EDGE.toFixed(6)};
-    // Derivatives taken outside any condition: they need the whole 2 x 2 quad.
-    float cx = abs(dFdx(eu.b));
-    float cy = abs(dFdy(eu.b));
-    if (eu.b > 0.0 && cx >= eu.b - edge) dx = vec2(0.0);
-    if (eu.b > 0.0 && cy >= eu.b - edge) dy = vec2(0.0);
+    ivec2 texel = ivec2(int(gl_FragCoord.x), int(uSize.y) - 1 - int(gl_FragCoord.y));
+    vec2 dx = mapStep(texel, ivec2(1, 0));
+    vec2 dy = mapStep(texel, ivec2(0, 1));
     vec4 art = textureGrad(uSource, uv, dx, dy);
     // Coverage of the smart object (antialiased edge stored in blue) times the artwork's own alpha.
     layer = vec4(art.rgb, art.a * eu.b);
