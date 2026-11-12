@@ -6,11 +6,14 @@ import { SECTION_WORDS } from './section-words';
 import { PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
 import { BeyondPage } from './beyond';
-import { paletteView } from './variant';
+import { paletteView, type PaletteView } from './variant';
+import { sectionOf } from './section';
 
 // A field's width is its measured share of the logo (BBC p14: the size of each block is its presence),
 // with a floor so a colour absent from the logo still shows. Unmeasured colours share the width equally.
 const FLOOR = 0.06;
+/** Narrowest colour field, in sheet units: room for « Neutre sombre » and a CMYK line. */
+const FIELD_MIN = 13;
 
 function presence(
   view: BrandView,
@@ -58,7 +61,11 @@ function ColourField({
   const [c, m, y, k] = cmykOf(hex);
   const { flex, note } = presence(view, role);
   return (
-    <div className="flex min-h-0 min-w-0 flex-col" style={{ flex: scale ? 1 : flex, gap: u(0.8) }}>
+    // A floor width keeps the name and the values legible; the real share is printed in figures.
+    <div
+      className="flex min-h-0 flex-col"
+      style={{ flex: scale ? 1 : flex, minWidth: u(FIELD_MIN), gap: u(0.8) }}
+    >
       <div
         className="flex min-h-0 flex-1 flex-col justify-between overflow-hidden border"
         style={{
@@ -180,7 +187,11 @@ function Detail({
 export function Palette({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
-  const shown = paletteView(occurrenceOf(context));
+  // The dense palette page shows every role in its proportion, whatever the other palette pages are.
+  const shown: PaletteView =
+    sectionOf(context, 'palette') === 'palette'
+      ? { kind: 'overview' }
+      : paletteView(occurrenceOf(context));
   if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
   if (shown.kind === 'detail')
     return <Detail context={context} role={shown.role} half={shown.half} />;

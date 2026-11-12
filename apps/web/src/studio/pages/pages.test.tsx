@@ -255,3 +255,15 @@ describe('content stays inside the A4 sheet', () => {
     expect(html).not.toContain('mt-auto grid grid-cols-3');
   });
 });
+
+describe('palette fields stay legible', () => {
+  it('gives every colour field a floor width, whatever its share of the logo', () => {
+    const view: BrandView = {
+      ...DEMO_VIEW,
+      shares: { primary: 0.62, accent: 0.3, neutralLight: 0.04, neutralDark: 0.04 },
+    };
+    const html = renderSection('palette', 'palette', view);
+    expect(html.match(/min-width:calc\(var\(--u\) \* 13\)/gu)).toHaveLength(4);
+    expect(html).toContain(SECTION_WORDS.fr.palette.share(4));
+  });
+});
