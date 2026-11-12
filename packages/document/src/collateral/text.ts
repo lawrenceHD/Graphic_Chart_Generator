@@ -133,8 +133,13 @@ export function headlineCandidates(brand: BrandDocument['brand'], series: number
   if (brand.tagline !== undefined) list.push({ origin: 'tagline', text: brand.tagline });
   const example = brand.tone.examples[series % brand.tone.examples.length] ?? '';
   if (example.trim() !== '') list.push({ origin: 'tone-example', text: example });
+  // compose.ts fills unwritten values with « Valeur 1 » and an empty description: never a headline. The
+  // brand is written when its mission or vision is (same rule as `written` in the studio's brand view).
+  const written = brand.mission.trim() !== '' || brand.vision.trim() !== '';
   const value = brand.values[series % brand.values.length];
-  if (value) list.push({ origin: 'value', text: value.label });
+  if (written && value !== undefined && value.description.trim() !== '') {
+    list.push({ origin: 'value', text: value.label });
+  }
   list.push({ origin: 'name', text: brand.name });
   return list.slice(Math.min(series, list.length - 1));
 }

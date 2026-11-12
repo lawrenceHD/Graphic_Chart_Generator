@@ -241,6 +241,32 @@ describe('headline origin (§0.2)', () => {
     expect(headline(layout)?.lines.join(' ')).toBe('Soin');
   });
 
+  it('never titles a poster with a placeholder value of compose.ts', () => {
+    const base = makeDocument();
+    const placeholder = (index: number) => ({ label: `Valeur ${String(index)}`, description: '' });
+    const unwritten: BrandDocument = {
+      ...base,
+      brand: {
+        ...base.brand,
+        mission: '',
+        vision: '',
+        values: [placeholder(1), placeholder(2), placeholder(3), placeholder(4)],
+        tone: { ...base.brand.tone, examples: ['', '', ''] },
+      },
+    };
+    for (const series of [0, 1]) {
+      const layout = expectOk(poster({ series }, unwritten));
+      expect(layout.headline).toBe('name');
+      expect(headline(layout)?.lines.join(' ')).toBe('Atelier Demo');
+    }
+    // A value with an empty description is not a written value, even when the mission is written.
+    const halfWritten: BrandDocument = {
+      ...unwritten,
+      brand: { ...unwritten.brand, mission: 'Créer avec soin' },
+    };
+    expect(expectOk(poster({}, halfWritten)).headline).toBe('name');
+  });
+
   it('cuts a long sentence at its punctuation, else takes the next level', () => {
     const base = makeDocument();
     const withComma = {
