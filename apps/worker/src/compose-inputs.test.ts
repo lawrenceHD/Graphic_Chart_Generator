@@ -18,14 +18,44 @@ describe('withShares', () => {
       { hex: '#00AA55', share: 0.05 },
     ]);
     expect(shared.primary).toEqual({ hex: '#1F4BFF', source: 'extracted', share: 0.5 });
-    expect(shared.neutralLight.share).toBe(0.3);
-    expect(shared.extra[0]?.share).toBe(0.05);
+    expect(shared.neutralLight.share).toBeCloseTo(0.3, 10);
+    expect(shared.extra[0]?.share).toBeCloseTo(0.05, 10);
   });
 
   it('gives no share to a derived colour, nor to one the clusters do not hold', () => {
     const shared = withShares(roles, [{ hex: '#FF6B35', share: 0.2 }]);
     expect(shared.accent).toEqual({ hex: '#FF6B35', source: 'derived' });
     expect(shared.primary).toEqual({ hex: '#1F4BFF', source: 'extracted' });
+  });
+});
+
+describe('withShares, counted once and normalised', () => {
+  it('gives a hex held by two roles to the first one only', () => {
+    const twice = { ...roles, neutralDark: { hex: '#1f4bff', source: 'extracted' as const } };
+    const shared = withShares(twice, [
+      { hex: '#1F4BFF', share: 0.6 },
+      { hex: '#FFFFFF', share: 0.4 },
+    ]);
+    expect(shared.primary.share).toBe(0.6);
+    expect(shared.neutralDark.share).toBeUndefined();
+  });
+
+  it('scales the shares of the roles so that they sum to 1', () => {
+    const shared = withShares(roles, [
+      { hex: '#1F4BFF', share: 0.3 },
+      { hex: '#FFFFFF', share: 0.1 },
+      { hex: '#12161F', share: 0.1 },
+      { hex: '#ABCDEF', share: 0.5 },
+    ]);
+    expect(shared.primary.share).toBeCloseTo(0.6, 10);
+    const all = [
+      shared.primary,
+      shared.accent,
+      shared.neutralLight,
+      shared.neutralDark,
+      ...shared.extra,
+    ];
+    expect(all.reduce((sum, color) => sum + (color.share ?? 0), 0)).toBeCloseTo(1, 10);
   });
 });
 

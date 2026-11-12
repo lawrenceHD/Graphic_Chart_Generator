@@ -145,7 +145,7 @@ const FR: SectionWords = {
     size: (width, height) => `${width} de large · ${height} de haut`,
   },
   palette: {
-    share: (percent) => `${String(percent)} % du logo`,
+    share: (percent) => `${String(percent)} % des couleurs du logo`,
     derived: 'Dérivée, absente du logo',
     unmeasured: 'Part non mesurée',
     pantone: 'Pantone : à faire vérifier par l’imprimeur.',
@@ -232,7 +232,7 @@ const EN: SectionWords = {
     size: (width, height) => `${width} wide · ${height} high`,
   },
   palette: {
-    share: (percent) => `${String(percent)}% of the logo`,
+    share: (percent) => `${String(percent)}% of the logo’s colours`,
     derived: 'Derived, not in the logo',
     unmeasured: 'Share not measured',
     pantone: 'Pantone: to be checked by the printer.',

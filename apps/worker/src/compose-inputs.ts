@@ -17,15 +17,35 @@ interface Roles<Color> {
   readonly extra: readonly Color[];
 }
 
-/** Each extracted colour with its measured share of the logo; a derived colour is not in the logo. */
+/**
+ * Each extracted colour with its share of the role colours measured on the logo: a hex held by two roles is
+ * counted once (first role), the shares are scaled to sum to 1, a derived colour is not in the logo.
+ */
 export function withShares(
   roles: Roles<RoleColor>,
   clusters: readonly { readonly hex: string; readonly share: number }[],
 ): Roles<ComposeColor> {
   const shares = new Map(clusters.map(({ hex, share }) => [hex.toUpperCase(), share]));
+  const ordered = [
+    roles.primary,
+    roles.accent,
+    roles.neutralLight,
+    roles.neutralDark,
+    ...roles.extra,
+  ];
+  const counted = new Map<RoleColor, number>();
+  const seen = new Set<string>();
+  for (const color of ordered) {
+    const hex = color.hex.toUpperCase();
+    const share = color.source === 'extracted' ? shares.get(hex) : undefined;
+    if (share === undefined || seen.has(hex)) continue;
+    seen.add(hex);
+    counted.set(color, share);
+  }
+  const total = [...counted.values()].reduce((sum, share) => sum + share, 0);
   const shared = (color: RoleColor): ComposeColor => {
-    const share = color.source === 'extracted' ? shares.get(color.hex.toUpperCase()) : undefined;
-    return share === undefined ? color : { ...color, share };
+    const share = counted.get(color);
+    return share === undefined || total <= 0 ? color : { ...color, share: share / total };
   };
   return {
     primary: shared(roles.primary),
