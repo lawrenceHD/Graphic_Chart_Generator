@@ -185,6 +185,31 @@ describe('rasterizeUv', () => {
     }
   });
 
+  it('meshes a flat quad slot along its homography (a slot without baked maps)', () => {
+    const h = computeHomography([
+      [100, 50],
+      [420, 80],
+      [400, 300],
+      [120, 260],
+    ]);
+    if (!h.ok) throw new Error('homography');
+    const inverse = invertHomography(h.value);
+    if (!inverse.ok) throw new Error('inverse');
+    const flat = rasterizeUv(tessellate({ kind: 'homography', h: h.value }), 600, 400);
+    const pixels = covered(flat);
+    expect(pixels.length).toBeGreaterThan(50_000);
+    for (let k = 0; k < pixels.length; k += 53) {
+      const index = pixels[k] ?? 0;
+      const back = applyHomography(inverse.value, [
+        (index % 600) + 0.5,
+        Math.floor(index / 600) + 0.5,
+      ]);
+      if (!back.ok) throw new Error('projection');
+      expect(Math.abs(back.value[0] - (flat.u[index] ?? 0))).toBeLessThan(2e-3);
+      expect(Math.abs(back.value[1] - (flat.v[index] ?? 0))).toBeLessThan(2e-3);
+    }
+  });
+
   it('rasterises a Bezier mesh as its bilinear identity', () => {
     const grid: BezierGrid = {
       ...regular(4, 4, 200, 100),

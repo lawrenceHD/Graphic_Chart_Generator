@@ -1,3 +1,4 @@
+import { applyHomography, type Homography } from '../homography.js';
 import { bezierMeshPoint, type BezierGrid } from './mesh.js';
 import { logoAngle, revolutionPoint, type RevolutionFrame } from './revolution.js';
 
@@ -9,6 +10,12 @@ import { logoAngle, revolutionPoint, type RevolutionFrame } from './revolution.j
 export type CurvedMapping =
   | { readonly kind: 'revolution'; readonly frame: RevolutionFrame }
   | { readonly kind: 'mesh'; readonly grid: BezierGrid };
+
+/** What tessellate cuts: a computed surface, or a flat quad slot that has no baked map. */
+export type MeshedMapping = CurvedMapping | { readonly kind: 'homography'; readonly h: Homography };
+
+/** Cells of a flat quad: fine enough that screen-linear uv stays within 1e-3 of the homography. */
+const FLAT_CELLS = 32;
 
 export interface UvMesh {
   /** x, y in scene pixels, per vertex. */
@@ -43,9 +50,9 @@ function visibleColumns(frame: RevolutionFrame): readonly [number, number] | nul
 
 /** Triangles of the surface: `columns` x `rows` cells, hidden and folded triangles left out. */
 export function tessellate(
-  mapping: CurvedMapping,
-  columns: number = UV_COLUMNS,
-  rows: number = UV_ROWS,
+  mapping: MeshedMapping,
+  columns: number = mapping.kind === 'homography' ? FLAT_CELLS : UV_COLUMNS,
+  rows: number = mapping.kind === 'homography' ? FLAT_CELLS : UV_ROWS,
 ): UvMesh {
   const range = mapping.kind === 'revolution' ? visibleColumns(mapping.frame) : [0, 1];
   const edge = mapping.kind === 'revolution' ? mapping.frame.edge : 0;
@@ -75,8 +82,13 @@ export function tessellate(
         x = point.x;
         y = point.y;
         facing = point.facing;
-      } else {
+      } else if (mapping.kind === 'mesh') {
         [x, y] = bezierMeshPoint(mapping.grid, u, v);
+      } else {
+        const point = applyHomography(mapping.h, [u, v]);
+        [x, y] = point.ok ? point.value : [Number.NaN, Number.NaN];
+        // A vertex at infinity cannot be drawn: its triangles are left out with the folded ones.
+        if (!point.ok) facing = 0;
       }
       positions.set([x, y], vertex * 2);
       attributes.set([u, v, facing], vertex * 3);

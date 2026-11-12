@@ -42,6 +42,23 @@ describe('computedSlots', () => {
     expect(slot?.aspect).toBeCloseTo((200 * (Math.PI / 2)) / (400 / Math.sqrt(1 - 0.04)), 6);
   });
 
+  it('meshes a flat quad slot too, at its declared aspect', () => {
+    const quad = {
+      kind: 'quad',
+      quad: [
+        [100, 100],
+        [500, 120],
+        [480, 400],
+        [120, 380],
+      ],
+    };
+    const slots = computedSlots(scene({ geometry: quad }));
+    expect(slots.ok).toBe(true);
+    if (!slots.ok) return;
+    expect(slots.value.get('slot-1')?.mesh.indices.length).toBeGreaterThan(0);
+    expect(slots.value.get('slot-1')?.aspect).toBe(1);
+  });
+
   it('leaves baked slots to their maps', () => {
     const slots = computedSlots(scene({ uv: 'uv-slot-1.png', vv: 'vv-slot-1.png' }));
     expect(slots.ok && slots.value.size).toBe(0);

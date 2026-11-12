@@ -80,21 +80,35 @@ type AnyScene =
       readonly slots: ReadonlyMap<string, ComputedSlot>;
     };
 const cache = new Map<SceneId, Promise<AnyScene | null>>();
+/** Why the last load of a scene failed, for the error the stage reports. */
+const failures = new Map<SceneId, string>();
 function loadScene(id: SceneId): Promise<AnyScene | null> {
   const known = cache.get(id);
   if (known !== undefined) return known;
   const loading = fetch(`/scenes/${id}/scene.json`)
-    .then((response) => (response.ok ? response.json() : null))
+    .then((response) => {
+      if (response.ok) return response.json();
+      failures.set(id, `scene ${id}: scene.json answered ${String(response.status)}`);
+      return null;
+    })
     .then((json: unknown): AnyScene | null => {
+      if (json === null) return null;
       const psd = PsdSceneSchema.safeParse(json);
       if (psd.success) {
         const slots = computedSlots(psd.data);
-        return slots.ok ? { kind: 'psd', scene: psd.data, slots: slots.value } : null;
+        if (slots.ok) return { kind: 'psd', scene: psd.data, slots: slots.value };
+        failures.set(id, `scene ${id}: slot geometry refused, ${slots.error}`);
+        return null;
       }
       const parsed = parseScene(json);
-      return parsed.ok ? { kind: 'photo', loaded: parsed.value } : null;
+      if (parsed.ok) return { kind: 'photo', loaded: parsed.value };
+      failures.set(id, `scene ${id}: ${parsed.error.issues.join('; ')}`);
+      return null;
     })
-    .catch(() => null)
+    .catch((error: unknown) => {
+      failures.set(id, `scene ${id}: ${error instanceof Error ? error.message : 'load failed'}`);
+      return null;
+    })
     .then((loaded) => {
       // A failure is not remembered: the next stage asks again (a network blip must not hide a scene).
       if (loaded === null) cache.delete(id);
@@ -155,7 +169,9 @@ async function renderPsd(
         });
         continue;
       }
-      if (layer.uv === undefined || layer.vv === undefined) throw new Error('scene');
+      if (layer.uv === undefined || layer.vv === undefined) {
+        throw new Error(`scene ${id}: slot ${layer.id} has neither baked maps nor a geometry`);
+      }
       const [u, v, drawn] = await Promise.all([file(layer.uv), file(layer.vv), artwork]);
       layers.push({
         kind: 'slot',
@@ -189,7 +205,7 @@ async function renderScene(
   choices: SurfaceChoices,
 ): Promise<readonly SurfaceDirection[] | null> {
   const any = await loadScene(id);
-  if (any === null) throw new Error('scene');
+  if (any === null) throw new Error(failures.get(id) ?? `scene ${id} could not be loaded`);
   if (any.kind === 'psd')
     return renderPsd(id, any.scene, any.slots, view, words, node, alive, choices);
   const { scene, homographies } = any.loaded;
@@ -333,6 +349,7 @@ export function MockupStage({
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(view);
   const [stage, setStage] = useState<Stage>('loading');
+  const [failure, setFailure] = useState<string | null>(null);
   const [sceneHits, setSceneHits] = useState<SceneHits | null>(null);
   const [attempt, setAttempt] = useState(0);
   const key = `${renderKey(view)}#${JSON.stringify(choices)}`;
@@ -371,8 +388,11 @@ export function MockupStage({
           setStage('ready');
         }
       })
-      .catch(() => {
-        if (alive) setStage('failed');
+      .catch((error: unknown) => {
+        if (!alive) return;
+        // The reason stays readable on the figure (data-failure) for QA; the person sees the retry.
+        setFailure(error instanceof Error ? error.message : 'render failed');
+        setStage('failed');
       });
     return () => {
       alive = false;
@@ -392,7 +412,10 @@ export function MockupStage({
   }, [id, stage, interactive]);
 
   return (
-    <figure className={`m-0 ${className}`}>
+    <figure
+      className={`m-0 ${className}`}
+      data-failure={stage === 'failed' ? (failure ?? undefined) : undefined}
+    >
       <div
         className="relative w-full overflow-hidden bg-preview"
         style={{ aspectRatio: `${String(size.width)} / ${String(size.height)}` }}
