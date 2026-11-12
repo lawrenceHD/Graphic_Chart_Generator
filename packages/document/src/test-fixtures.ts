@@ -1,8 +1,8 @@
-import type { BrandDocument } from './schema.js';
+import { CURRENT_SCHEMA_VERSION, type BrandDocument } from './schema.js';
 
 export function makeDocument(): BrandDocument {
   return {
-    schemaVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     brand: {
       name: 'Atelier Demo',
       mission: 'Créer avec soin',

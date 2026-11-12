@@ -1,13 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import { migrate } from './migrate.js';
+import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION } from './schema.js';
 import { deepFreeze, makeDocument } from './test-fixtures.js';
 
 describe('migrate', () => {
   it('reports a future schema version without inspecting its body', () => {
-    expect(migrate({ schemaVersion: 2, value: 'private' })).toEqual({
+    expect(migrate({ schemaVersion: 3, value: 'private' })).toEqual({
       ok: false,
-      error: { code: 'UNKNOWN_SCHEMA_VERSION', version: 2 },
+      error: { code: 'UNKNOWN_SCHEMA_VERSION', version: 3 },
     });
+  });
+
+  it('is at version 2 since ADR-036 (brand.tagline and brand.contact)', () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe(2);
+    expect(makeDocument().schemaVersion).toBe(2);
+  });
+
+  it('migrates a version 1 document to version 2, changing only the number', () => {
+    const current = makeDocument();
+    const version1 = deepFreeze({ ...current, schemaVersion: 1 });
+
+    const result = migrate(version1);
+
+    expect(result).toEqual({ ok: true, value: current });
+    expect(version1.schemaVersion).toBe(1);
+  });
+
+  it('refuses a version 1 document that carries fields version 1 never had', () => {
+    const current = makeDocument();
+    const version1 = {
+      ...current,
+      schemaVersion: 1,
+      brand: { ...current.brand, tagline: 'Le goût du marché' },
+    };
+
+    const result = migrate(version1);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_DOCUMENT');
+  });
+
+  it('no longer reads a version 1 document as current without migrate', () => {
+    expect(BrandDocumentSchema.safeParse({ ...makeDocument(), schemaVersion: 1 }).success).toBe(
+      false,
+    );
   });
 
   it.each([0, '1'])('rejects unsupported schema version %s', (version) => {
@@ -43,7 +79,7 @@ describe('migrate', () => {
     }
   });
 
-  it('returns the exact valid version 1 instance without mutating it', () => {
+  it('returns the exact valid current instance without mutating it', () => {
     const document = deepFreeze(makeDocument());
 
     const result = migrate(document);

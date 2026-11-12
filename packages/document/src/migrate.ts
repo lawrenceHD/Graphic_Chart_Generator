@@ -8,6 +8,20 @@ export type MigrationError =
 
 const VersionHeaderSchema = z.object({ schemaVersion: z.unknown() }).loose();
 
+// 1 → 2 (ADR-036): brand.tagline and brand.contact appear, both optional; only the number changes. Version 1
+// never had them, so a version 1 body that carries them is refused rather than promoted.
+function from1(input: object): Result<object, MigrationError> {
+  const brand: unknown = Reflect.get(input, 'brand');
+  if (
+    typeof brand === 'object' &&
+    brand !== null &&
+    (Object.hasOwn(brand, 'tagline') || Object.hasOwn(brand, 'contact'))
+  ) {
+    return err({ code: 'INVALID_DOCUMENT', issues: ['brand : champ absent de la version 1'] });
+  }
+  return ok({ ...input, schemaVersion: 2 });
+}
+
 function isBrandDocument(input: unknown): input is BrandDocument {
   return BrandDocumentSchema.safeParse(input).success;
 }
@@ -32,11 +46,20 @@ export function migrate(input: unknown): Result<BrandDocument, MigrationError> {
       return err({ code: 'UNKNOWN_SCHEMA_VERSION', version });
     }
 
-    if (isBrandDocument(input)) {
-      return ok(input);
+    let body: object = input;
+    if (version === 1) {
+      const step = from1(input);
+      if (!step.ok) {
+        return step;
+      }
+      body = step.value;
     }
 
-    const document = BrandDocumentSchema.safeParse(input);
+    if (isBrandDocument(body)) {
+      return ok(body);
+    }
+
+    const document = BrandDocumentSchema.safeParse(body);
     if (!document.success) {
       const issues = document.error.issues.map((issue) => {
         const path = issue.path.map(String).join('.');

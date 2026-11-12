@@ -10,7 +10,8 @@ import {
 } from '@app/contracts';
 import { z } from 'zod';
 
-export const CURRENT_SCHEMA_VERSION = 1;
+// 2 since ADR-036 (brand.tagline, brand.contact): a reader of version 1 must refuse them, not drop them.
+export const CURRENT_SCHEMA_VERSION = 2;
 export const MAX_DOCUMENT_BYTES = 512 * 1024;
 
 export const DocumentTextSchema = z
