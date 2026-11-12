@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ChartPlanSchema, DENSE_PAGES, type ChartPlan, type PageType } from '@app/contracts';
 import { composeInitialDocument, type ComposeInput } from './compose.js';
-import { standardChartPlan } from './plans.js';
+import { STANDARD_PAGE_COUNT, standardChartPlan } from './plans.js';
 import { BrandDocumentSchema } from './schema.js';
 
 const input: ComposeInput = {
@@ -301,8 +301,11 @@ describe('composeInitialDocument with a ChartPlan', () => {
     ]);
   });
 
-  it('makes the standard plan the 14 dense pages of the content study, then the tokens', () => {
+  it('makes the standard plan 15 pages: the 14 dense pages of the content study, then the tokens', () => {
+    expect(DENSE_PAGES).toHaveLength(14);
+    expect(STANDARD_PAGE_COUNT).toBe(15);
     const standard = standardChartPlan('fr');
+    expect(standard.sections).toHaveLength(STANDARD_PAGE_COUNT);
     expect(standard.sections.map((section) => section.section)).toEqual([
       ...DENSE_PAGES.map((page) => page.section),
       undefined,

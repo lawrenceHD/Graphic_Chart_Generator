@@ -5,7 +5,7 @@ import {
   type RunResearchDeps,
 } from '@app/ai';
 import type { ChartPlan } from '@app/contracts';
-import { standardChartPlan } from '@app/document';
+import { STANDARD_PAGE_COUNT, standardChartPlan } from '@app/document';
 import { err, ok } from '@app/kernel';
 import { describe, expect, it } from 'vitest';
 import {
@@ -46,7 +46,7 @@ describe('research port', () => {
     const fr = await defaultResearch.plan(input);
     expect(fr).toEqual({ ok: true, value: result(standardChartPlan('fr')) });
     const en = await defaultResearch.plan({ ...input, language: 'en' });
-    expect(en.ok && en.value.plan.sections).toHaveLength(15);
+    expect(en.ok && en.value.plan.sections).toHaveLength(STANDARD_PAGE_COUNT);
     expect(en.ok && en.value.plan.sections[0]?.title).toBe('Cover');
   });
 

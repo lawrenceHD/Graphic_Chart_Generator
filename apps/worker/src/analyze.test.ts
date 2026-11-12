@@ -15,7 +15,12 @@ import {
   type ResearchRecording,
   type RunResearchDeps,
 } from '@app/ai';
-import { BrandDocumentSchema, CURRENT_SCHEMA_VERSION, standardChartPlan } from '@app/document';
+import {
+  BrandDocumentSchema,
+  CURRENT_SCHEMA_VERSION,
+  STANDARD_PAGE_COUNT,
+  standardChartPlan,
+} from '@app/document';
 import { createTestDatabase, integrationDatabaseUrl, type TestDatabase } from '@app/db/testing';
 import { err, ok, uuidV7 } from '@app/kernel';
 import { sanitizeSvg } from '@app/svg-engine';
@@ -344,7 +349,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
       .values({ id: projectId, guestSessionId: guestId, title: 'Standard' });
     await run(await start(LOGO, 'image/svg+xml'));
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
-    expect(document.pages).toHaveLength(15);
+    expect(document.pages).toHaveLength(STANDARD_PAGE_COUNT);
   });
 
   it('degrades to the standard plan and reports RESEARCH_FAILED when research fails', async () => {
@@ -363,7 +368,7 @@ describe.runIf(adminUrl !== '')('project.analyze, steps 1–4 (02_ARCHITECTURE.m
       data: { step: 4, state: 'done', code: 'RESEARCH_FAILED' },
     });
     const document = BrandDocumentSchema.parse((await documentRow())?.body);
-    expect(document.pages).toHaveLength(15);
+    expect(document.pages).toHaveLength(STANDARD_PAGE_COUNT);
   });
 
   describe('research warnings are never lost', () => {

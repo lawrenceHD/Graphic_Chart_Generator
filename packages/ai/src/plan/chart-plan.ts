@@ -3,6 +3,7 @@ import {
   DENSE_PAGES,
   homeOf,
   MAX_SECTION_EVIDENCE,
+  SECTOR_SECTIONS,
   PAGE_CAPACITY,
   type ChartPlan,
   type GuidelineSection,
@@ -175,6 +176,8 @@ export function planFromSections(
   return { plan: { sections: [...capped.sections, tokens] }, capped: capped.dropped };
 }
 
+const SECTOR_LIST: readonly GuidelineSection[] = SECTOR_SECTIONS;
+
 // The 14 dense pages of the content study always (ADR-035), each gathering the evidence of the sections
 // it shows (packages/contracts charter-sections.ts); then a page per sector section of the direction.
 function buildPlan(
@@ -189,7 +192,8 @@ function buildPlan(
     const gathered = evidence.get(home);
     if (gathered === undefined) {
       evidence.set(home, [...planned.evidence]);
-      if (!DENSE_PAGES.some((page) => page.section === home)) sector.push(home);
+      // Anything that is neither a dense page nor a sector page has no page of its own: it is left out.
+      if (SECTOR_LIST.includes(home)) sector.push(home);
     } else gathered.push(...planned.evidence.filter((id) => !gathered.includes(id)));
   }
   const sections: PlanSection[] = [

@@ -54,7 +54,7 @@ describe('directionToChartPlan', () => {
     });
   });
 
-  it('holds the 14 dense pages, then the sector pages, then the tokens', () => {
+  it('holds the 14 dense pages, then only sector pages (SECTOR_SECTIONS), then the tokens', () => {
     const plan = directionToChartPlan(art);
     expect(plan.sections.map((section) => section.section)).toEqual([
       ...DENSE_PAGES.map((page) => page.section),
@@ -63,6 +63,8 @@ describe('directionToChartPlan', () => {
       undefined,
     ]);
     expect(plan.sections.at(-1)?.type).toBe('tokens');
+    const extra = plan.sections.slice(DENSE_PAGES.length, -1).map((section) => section.section);
+    for (const section of extra) expect(SECTOR_SECTIONS).toContain(section);
   });
 
   it('gathers the evidence of a grouped section on its dense page', () => {

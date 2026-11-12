@@ -6,7 +6,7 @@ export {
   type ComposeError,
   type ComposeInput,
 } from './compose.js';
-export { standardChartPlan } from './plans.js';
+export { STANDARD_PAGE_COUNT, standardChartPlan } from './plans.js';
 export { migrate, type MigrationError } from './migrate.js';
 export {
   BrandDocumentSchema,
