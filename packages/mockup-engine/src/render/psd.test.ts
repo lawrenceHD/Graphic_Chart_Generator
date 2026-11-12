@@ -2,7 +2,6 @@ import { PsdSceneSchema } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
 import {
   BLEND_CODES,
-  MAX_ARTWORK_STEP,
   PSD_LAYER_SHADER,
   blendChannel,
   decodeUv,
@@ -52,18 +51,27 @@ describe('PSD scenes — Photoshop layers replayed', () => {
     expect(PsdSceneSchema.safeParse(escaping).success).toBe(false);
   });
 
-  it('samples the artwork at the finest level where the map ends (no grey line at the box edge)', () => {
+  it('drops the derivative only towards a neighbour outside the map, read on the coverage', () => {
     // Inside the map one pixel moves a fraction of the artwork: the derivatives choose the mip level.
-    expect(guardGradient([0.001, 0.0005], [0, 0.002])).toEqual([
+    expect(guardGradient([0.001, 0.0005], [0, 0.002], 1, [0, 0])).toEqual([
       [0.001, 0.0005],
       [0, 0.002],
     ]);
-    // Across the edge of the map the neighbour reads (0, 0): the step is not a footprint.
-    expect(guardGradient([0.6, 0], [0, 0.001])).toEqual([
+    // Near the silhouette of a squashed cylinder the step is large but real: it is kept.
+    expect(guardGradient([0.3, 0], [0, 0.002], 0.4, [-0.1, 0])).toEqual([
+      [0.3, 0],
+      [0, 0.002],
+    ]);
+    // Across the edge of the map the neighbour has no coverage and reads (0, 0): that axis only drops.
+    expect(guardGradient([0.6, 0], [0, 0.002], 1, [-1, 0])).toEqual([
       [0, 0],
+      [0, 0.002],
+    ]);
+    expect(guardGradient([0.001, 0], [0.5, 0.4], 0.7, [0, 0.7])).toEqual([
+      [0.001, 0],
       [0, 0],
     ]);
     expect(PSD_LAYER_SHADER).toContain('textureGrad(uSource, uv');
-    expect(PSD_LAYER_SHADER).toContain(String(MAX_ARTWORK_STEP));
+    expect(PSD_LAYER_SHADER).toContain('abs(dFdx(eu.b))');
   });
 });

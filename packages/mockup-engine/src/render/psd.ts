@@ -41,23 +41,28 @@ export function decodeUv(red: number, green: number): number {
 }
 
 /**
- * Largest step of the artwork between two neighbouring pixels that is still a footprint. Where the map
- * ends, a neighbour outside reads (0, 0) and the step jumps: the coarsest mip level, an average of the
- * whole artwork, would draw a grey line along the box. There the finest level is used.
+ * Where the map ends, a neighbouring pixel outside it reads (0, 0): the step towards it is not a footprint,
+ * and the coarsest mip level it picks (an average of the whole artwork) would draw a grey line along the
+ * box. That neighbour is told by its coverage, zero, not by the size of the step: near the silhouette of a
+ * squashed cylinder large steps are real and keep their mip level. Only the axis towards it drops.
  */
-export const MAX_ARTWORK_STEP = 0.05;
-
 type Gradient = readonly [number, number];
+const EDGE = 0.5 / 255;
 
-/** The derivatives the slot samples its artwork with (mirrors the shader). */
-export function guardGradient(dx: Gradient, dy: Gradient): readonly [Gradient, Gradient] {
-  const step = Math.max(Math.hypot(...dx), Math.hypot(...dy));
-  return step > MAX_ARTWORK_STEP
-    ? [
-        [0, 0],
-        [0, 0],
-      ]
-    : [dx, dy];
+const outside = (coverage: number, step: number) =>
+  coverage > 0 && Math.abs(step) >= coverage - EDGE;
+
+/** The derivatives the slot samples its artwork with, from the coverage and its derivatives (mirrors the shader). */
+export function guardGradient(
+  dx: Gradient,
+  dy: Gradient,
+  coverage: number,
+  coverageStep: Gradient,
+): readonly [Gradient, Gradient] {
+  return [
+    outside(coverage, coverageStep[0]) ? [0, 0] : dx,
+    outside(coverage, coverageStep[1]) ? [0, 0] : dy,
+  ];
 }
 
 export const PSD_LAYER_SHADER = `#version 300 es
@@ -102,10 +107,12 @@ void main() {
                    (ev.r * 255.0 * 256.0 + ev.g * 255.0) / 65535.0);
     vec2 dx = dFdx(uv);
     vec2 dy = dFdy(uv);
-    if (max(length(dx), length(dy)) > ${MAX_ARTWORK_STEP.toFixed(2)}) {
-      dx = vec2(0.0);
-      dy = vec2(0.0);
-    }
+    float edge = ${EDGE.toFixed(6)};
+    // Derivatives taken outside any condition: they need the whole 2 x 2 quad.
+    float cx = abs(dFdx(eu.b));
+    float cy = abs(dFdy(eu.b));
+    if (eu.b > 0.0 && cx >= eu.b - edge) dx = vec2(0.0);
+    if (eu.b > 0.0 && cy >= eu.b - edge) dy = vec2(0.0);
     vec4 art = textureGrad(uSource, uv, dx, dy);
     // Coverage of the smart object (antialiased edge stored in blue) times the artwork's own alpha.
     layer = vec4(art.rgb, art.a * eu.b);

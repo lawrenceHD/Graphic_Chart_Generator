@@ -88,7 +88,14 @@ function upload(
     gl.TEXTURE_MIN_FILTER,
     filter === 'mipmap' ? gl.LINEAR_MIPMAP_LINEAR : mag,
   );
-  if (filter === 'mipmap' && source !== null) gl.generateMipmap(gl.TEXTURE_2D);
+  if (filter === 'mipmap' && source !== null) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+    // Near the silhouette of a curved slot a pixel spans a long, thin strip of the artwork: anisotropic
+    // filtering keeps it thin instead of blurring the ink above and below into a grey seam.
+    const anisotropy = gl.getExtension('EXT_texture_filter_anisotropic');
+    if (anisotropy !== null)
+      gl.texParameterf(gl.TEXTURE_2D, anisotropy.TEXTURE_MAX_ANISOTROPY_EXT, 16);
+  }
   return tex;
 }
 
