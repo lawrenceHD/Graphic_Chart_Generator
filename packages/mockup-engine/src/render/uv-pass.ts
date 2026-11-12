@@ -1,4 +1,5 @@
 import type { UvMesh } from '../geometry/uv-map.js';
+import { createMapCache, type MapCache } from './map-cache.js';
 
 // UV_PASS (ADR-034): draws the triangles of a computed surface into two RGBA8 targets at once (MRT) that
 // hold exactly the baked uv-*.png / vv-*.png format, so the slot shader of render/psd.ts reads them with
@@ -78,13 +79,31 @@ function target(gl: GL, width: number, height: number): WebGLTexture {
   return tex;
 }
 
-// The map depends on the geometry only, not on the brand: drawn once per mesh and context.
+// The map depends on the geometry and the size only, not on the brand: drawn once per mesh, size and
+// context. A lost context takes its textures and program with it: the cache is dropped then.
 const programs = new WeakMap<GL, WebGLProgram>();
-const drawn = new WeakMap<GL, WeakMap<UvMesh, UvTextures>>();
+const drawn = new WeakMap<GL, MapCache<UvTextures>>();
 
-/** The u and v maps of `mesh` at the scene size, drawn on the GPU (cached per context and mesh). */
+function cacheOf(gl: GL): MapCache<UvTextures> {
+  const known = drawn.get(gl);
+  if (known !== undefined) return known;
+  const made = createMapCache<UvTextures>();
+  drawn.set(gl, made);
+  gl.canvas.addEventListener('webglcontextlost', () => {
+    made.clear();
+    programs.delete(gl);
+  });
+  return made;
+}
+
+/** The u and v maps of `mesh` at the scene size, drawn on the GPU (cached per context, mesh and size). */
 export function uvPass(gl: GL, mesh: UvMesh, width: number, height: number): UvTextures {
-  const known = drawn.get(gl)?.get(mesh);
+  const cache = cacheOf(gl);
+  if (gl.isContextLost()) {
+    cache.clear();
+    programs.delete(gl);
+  }
+  const known = cache.get(mesh, width, height);
   if (known !== undefined) return known;
   const program = programs.get(gl) ?? compile(gl);
   programs.set(gl, program);
@@ -124,8 +143,10 @@ export function uvPass(gl: GL, mesh: UvMesh, width: number, height: number): UvT
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.deleteFramebuffer(fbo);
 
-  const forContext = drawn.get(gl) ?? new WeakMap<UvMesh, UvTextures>();
-  forContext.set(mesh, textures);
-  drawn.set(gl, forContext);
+  const replaced = cache.set(mesh, width, height, textures);
+  if (replaced !== undefined) {
+    gl.deleteTexture(replaced.u);
+    gl.deleteTexture(replaced.v);
+  }
   return textures;
 }
