@@ -1,4 +1,4 @@
-import { BrandDocumentSchema, type BrandDocument, type Command } from '@app/document';
+import { migrate, type BrandDocument, type Command } from '@app/document';
 import { err, ok, type Result } from '@app/kernel';
 import { z } from 'zod';
 import type { Fetcher } from '../upload';
@@ -72,9 +72,10 @@ async function call(
   }
 }
 
+// A guideline saved by an earlier version (an older schema) is read through the migration, as the server does.
 function revisionOf(seq: number, body: unknown): Result<Revision, DocumentFailure> {
-  const document = BrandDocumentSchema.safeParse(body);
-  return document.success ? ok({ seq, document: document.data }) : err({ kind: 'invalid' });
+  const document = migrate(body);
+  return document.ok ? ok({ seq, document: document.value }) : err({ kind: 'invalid' });
 }
 
 export async function loadProject(

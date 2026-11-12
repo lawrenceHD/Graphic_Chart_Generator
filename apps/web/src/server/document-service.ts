@@ -94,7 +94,7 @@ async function commit(
   });
   await tx
     .update(documents)
-    .set({ body: result.doc, seq, updatedAt: new Date() })
+    .set({ body: result.doc, schemaVersion: result.doc.schemaVersion, seq, updatedAt: new Date() })
     .where(eq(documents.projectId, projectId));
   return { seq, document: result.doc };
 }
