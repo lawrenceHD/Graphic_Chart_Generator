@@ -1,6 +1,7 @@
 import type { PageType, VariantKind } from '@app/contracts';
 import type { BrandDocument, Page } from '@app/document';
 import { PAIRINGS, type Pairing } from '../../brand/pairings';
+import { outlineOf, type OutlineEntry } from '../pages/section';
 import { assetUrl, type ProjectSummary } from './document-client';
 
 // What every page renderer reads: the document, flattened into the values a guideline prints. Pure, so the
@@ -38,6 +39,10 @@ export interface BrandView {
   readonly archetype: BrandDocument['brand']['archetype'];
   /** True once the AI (or the user) wrote the brand texts; until then the pages say so. */
   readonly written: boolean;
+  /** Pages in reading order with their section (ADR-035); absent for views built without a document. */
+  readonly outline?: readonly OutlineEntry[];
+  /** Share of the logo in each role colour, when measured at extraction (absent: not measured). */
+  readonly shares?: Readonly<Partial<Record<ColorRole, number>>>;
 }
 
 export function brandView(document: BrandDocument, project: ProjectSummary): BrandView {
@@ -86,6 +91,13 @@ export function brandView(document: BrandDocument, project: ProjectSummary): Bra
     tone: brand.tone,
     archetype: brand.archetype,
     written: brand.mission.trim() !== '' || brand.vision.trim() !== '',
+    outline: outlineOf(orderedPages(document)),
+    shares: Object.fromEntries(
+      COLOR_ROLES.flatMap((role) => {
+        const share = colors[role].share;
+        return share === undefined ? [] : [[role, share]];
+      }),
+    ),
   };
 }
 

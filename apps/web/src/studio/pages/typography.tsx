@@ -5,6 +5,8 @@ import { Measure, PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from '
 import { hairline } from './common';
 import { BeyondPage } from './beyond';
 import { typeView, type GlyphSet } from './variant';
+import { sectionOf, typeBySection } from './section';
+import { Families, Hierarchy } from './type-sections';
 
 interface Row {
   readonly label: string;
@@ -194,6 +196,9 @@ function Glyphs({
 }
 
 export function Typography({ context }: { readonly context: SheetContext }) {
+  const bySection = typeBySection(sectionOf(context, 'typography'));
+  if (bySection === 'families') return <Families context={context} />;
+  if (bySection === 'hierarchy') return <Hierarchy context={context} />;
   const shown = typeView(occurrenceOf(context));
   if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
   if (shown.kind === 'glyphs')

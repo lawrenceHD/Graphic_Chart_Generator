@@ -5,12 +5,17 @@ import { briefLead } from '../workspace/brand-view';
 import { PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
 import { BeyondPage } from './beyond';
-import { manifestoView } from './variant';
+import { manifestoView, type ManifestoView } from './variant';
+import { Contents } from './contents';
+import { manifestoBySection, sectionOf } from './section';
 
 export function Manifesto({ context }: { readonly context: SheetContext }) {
   const { view, words } = context;
   const ink = inkOn(context.background ?? PAPER);
-  const shown = manifestoView(occurrenceOf(context));
+  const bySection = manifestoBySection(sectionOf(context, 'manifesto'));
+  if (bySection === 'contents') return <Contents context={context} />;
+  const shown: ManifestoView =
+    bySection === 'overview' ? { kind: 'overview' } : manifestoView(occurrenceOf(context));
   if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
   if (shown.kind !== 'overview') return <Focus context={context} kind={shown.kind} />;
   if (!view.written) {

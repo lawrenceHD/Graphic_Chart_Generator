@@ -17,7 +17,8 @@ import { FullPage, M, T, caps } from './art/chrome';
 import { markOn } from './art/mark';
 import { moodOf, variantFor } from './art/mood';
 import { BeyondPage } from './beyond';
-import { logoView } from './variant';
+import { logoView, type LogoView } from './variant';
+import { logoBySection, sectionOf } from './section';
 
 interface Version {
   readonly key: string;
@@ -293,7 +294,8 @@ const OVERVIEWS = ['hero', 'bands', 'crop'] as const;
 
 export function LogoPage({ context }: { readonly context: SheetContext }) {
   const occurrence = occurrenceOf(context);
-  const shown = logoView(occurrence);
+  const bySection = logoBySection(sectionOf(context, 'logo'));
+  const shown: LogoView = bySection === null ? logoView(occurrence) : { kind: bySection };
   if (shown.kind === 'beyond') return <BeyondPage context={context} rank={shown.rank} />;
   if (shown.kind === 'construction') return <Construction context={context} />;
   if (shown.kind === 'usages') return <Usages context={context} />;

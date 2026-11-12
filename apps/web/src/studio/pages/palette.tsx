@@ -1,18 +1,28 @@
 'use client';
 
 import { buildScale, cmykOf, formatOklch, inkOn, rgbOf } from '../../brand/color';
-import { COLOR_ROLES, type ColorRole } from '../workspace/brand-view';
+import { COLOR_ROLES, type BrandView, type ColorRole } from '../workspace/brand-view';
+import { SECTION_WORDS } from './section-words';
 import { PAPER, SheetFrame, occurrenceOf, u, type SheetContext } from './sheet';
 import { hairline } from './common';
 import { BeyondPage } from './beyond';
 import { paletteView } from './variant';
 
-const SHARE: Readonly<Record<ColorRole, number>> = {
-  primary: 34,
-  accent: 24,
-  neutralLight: 22,
-  neutralDark: 20,
-};
+// A field's width is its measured share of the logo (BBC p14: the size of each block is its presence),
+// with a floor so a colour absent from the logo still shows. Unmeasured colours share the width equally.
+const FLOOR = 0.06;
+
+function presence(
+  view: BrandView,
+  role: ColorRole,
+): { readonly flex: number; readonly note: string } {
+  const words = SECTION_WORDS[view.language].palette;
+  const share = view.shares?.[role];
+  if (share !== undefined)
+    return { flex: Math.max(share, FLOOR), note: words.share(Math.round(share * 100)) };
+  if (view.sources[role] === 'derived') return { flex: FLOOR, note: words.derived };
+  return { flex: 0.25, note: words.unmeasured };
+}
 
 const CAPTION = { fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 } as const;
 
@@ -46,11 +56,9 @@ function ColourField({
   const { view, words } = context;
   const hex = view.colors[role];
   const [c, m, y, k] = cmykOf(hex);
+  const { flex, note } = presence(view, role);
   return (
-    <div
-      className="flex min-h-0 min-w-0 flex-col"
-      style={{ flex: scale ? 1 : SHARE[role], gap: u(0.8) }}
-    >
+    <div className="flex min-h-0 min-w-0 flex-col" style={{ flex: scale ? 1 : flex, gap: u(0.8) }}>
       <div
         className="flex min-h-0 flex-1 flex-col justify-between overflow-hidden border"
         style={{
@@ -70,6 +78,12 @@ function ColourField({
           </p>
           <p className="m-0" style={{ fontSize: u(0.95), opacity: 0.8, marginTop: u(0.4) }}>
             {words.usage[role]}
+          </p>
+          <p
+            className="tabular m-0"
+            style={{ fontSize: u(0.85), opacity: 0.75, marginTop: u(0.4) }}
+          >
+            {note}
           </p>
         </div>
         <dl
@@ -189,7 +203,7 @@ export function Palette({ context }: { readonly context: SheetContext }) {
             </>
           )}
           <p className="m-0" style={{ fontSize: u(0.85), opacity: 0.6, marginTop: u(0.8) }}>
-            {words.palette.cmykNote}
+            {words.palette.cmykNote} {SECTION_WORDS[view.language].palette.pantone}
           </p>
         </div>
       }

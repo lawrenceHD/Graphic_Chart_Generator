@@ -15,6 +15,58 @@ import {
 } from './sheet';
 import { BeyondPage } from './beyond';
 import { clearSpaceView } from './variant';
+import { SECTION_WORDS } from './section-words';
+import type { BrandView } from '../workspace/brand-view';
+
+// What x is, said on the page: measured on an element, the 0.25 × H convention, or Charta's defaults.
+function originOf(view: BrandView): string | null {
+  const words = SECTION_WORDS[view.language].clearSpace;
+  if (view.rules.origin === 'default') return words.defaults;
+  if (view.rules.clearSpaceSource === 'element') return words.element;
+  return view.rules.clearSpaceSource === 'convention' ? words.convention : null;
+}
+
+// The minimum of each version (BBC p10, UNV p22, POR): the full logo, then its symbol alone.
+function Versions({ view }: { readonly view: BrandView }) {
+  const versions = view.rules.versions;
+  if (versions === undefined) return null;
+  const words = SECTION_WORDS[view.language].clearSpace;
+  const mm = (value: number) =>
+    `${new Intl.NumberFormat(view.language === 'fr' ? 'fr-FR' : 'en-GB').format(value)} mm`;
+  const rows = [
+    { key: 'full', label: words.full, size: versions.full, src: view.logo.color },
+    ...(versions.symbol === undefined
+      ? []
+      : [{ key: 'symbol', label: words.symbol, size: versions.symbol, src: view.logo.favicon }]),
+  ];
+  return (
+    <div className="grid" style={{ gap: u(1), marginTop: u(1.2) }}>
+      {rows.map((row) => (
+        <div key={row.key} className="grid grid-cols-[auto_1fr] items-end" style={{ gap: u(1.4) }}>
+          <div style={{ width: u(9), height: u(2.6) }} className="flex items-end">
+            {row.src === null ? null : (
+              <LogoImage src={row.src} style={{ height: u(2.4), width: 'auto', maxWidth: u(9) }} />
+            )}
+          </div>
+          <div className="grid" style={{ gap: u(0.15) }}>
+            <Measure style={{ fontWeight: 600 }}>{row.label}</Measure>
+            <Measure style={{ opacity: 0.75 }}>
+              {words.size(`${String(row.size.widthPx)} px`, `${String(row.size.heightPx)} px`)}
+            </Measure>
+            <Measure style={{ opacity: 0.75 }}>
+              {words.size(mm(row.size.widthMm), mm(row.size.heightMm))}
+            </Measure>
+          </div>
+        </div>
+      ))}
+      {versions.symbol === undefined ? (
+        <p className="m-0" style={{ fontSize: u(0.85), opacity: 0.65, maxWidth: '40ch' }}>
+          {words.symbolNone}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 function Drawing({
   context,
@@ -119,6 +171,14 @@ function Drawing({
         >
           {words.clearSpace.zone(Math.round(ratio * 100))}
         </p>
+        {originOf(view) === null ? null : (
+          <p
+            className="m-0"
+            style={{ fontSize: u(0.9), opacity: 0.65, marginTop: u(0.8), maxWidth: '38ch' }}
+          >
+            {originOf(view)}
+          </p>
+        )}
       </div>
       {withMinimum ? (
         <div className="absolute" style={{ left: u(M.side), bottom: u(8), width: u(32) }}>
@@ -132,20 +192,24 @@ function Drawing({
           >
             {words.clearSpace.minimum}
           </p>
-          <div className="flex items-end" style={{ gap: u(3), marginTop: u(1.2) }}>
-            <MinSize
-              label={words.clearSpace.screen}
-              value={`${String(view.rules.minSizePx)} px`}
-              src={view.logo.color}
-              height={2.8}
-            />
-            <MinSize
-              label={words.clearSpace.print}
-              value={`${String(view.rules.minSizeMm)} mm`}
-              src={view.logo.color}
-              height={1.8}
-            />
-          </div>
+          {view.rules.versions === undefined ? (
+            <div className="flex items-end" style={{ gap: u(3), marginTop: u(1.2) }}>
+              <MinSize
+                label={words.clearSpace.screen}
+                value={`${String(view.rules.minSizePx)} px`}
+                src={view.logo.color}
+                height={2.8}
+              />
+              <MinSize
+                label={words.clearSpace.print}
+                value={`${String(view.rules.minSizeMm)} mm`}
+                src={view.logo.color}
+                height={1.8}
+              />
+            </div>
+          ) : (
+            <Versions view={view} />
+          )}
         </div>
       ) : null}
     </FullPage>
