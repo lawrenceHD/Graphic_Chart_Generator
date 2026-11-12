@@ -154,6 +154,17 @@ describe('composeInitialDocument (T-019 step 4, 07_AI_COPILOT.md §3.3)', () => 
     });
   });
 
+  it('brings a measured version back within the schema bounds instead of refusing the document', () => {
+    const huge = { heightPx: 900.2, widthPx: 5000.4, heightMm: 0.1, widthMm: 4000 };
+    const result = composeInitialDocument({
+      ...input,
+      logoRules: { clearSpaceRatio: 0.3, minSizePx: 68, minSizeMm: 14, versions: { full: huge } },
+    });
+    expect(result.ok && result.value.tokens.logo.versions).toEqual({
+      full: { heightPx: 901, widthPx: 4096, heightMm: 0.5, widthMm: 1000 },
+    });
+  });
+
   it('keeps the share of each colour measured on the logo, and none for a derived colour', () => {
     const result = composeInitialDocument({
       ...input,

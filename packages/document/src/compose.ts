@@ -66,6 +66,21 @@ export interface ComposeInput {
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
+// Bounds of MinimumSizeSchema: a measured size outside them is brought back, never refused.
+const boundedSize = (size: MinimumSize): MinimumSize => ({
+  heightPx: clamp(Math.ceil(size.heightPx), 1, 4096),
+  widthPx: clamp(Math.ceil(size.widthPx), 1, 4096),
+  heightMm: clamp(size.heightMm, 0.5, 1000),
+  widthMm: clamp(size.widthMm, 0.5, 1000),
+});
+
+function boundedVersions(versions: { readonly full: MinimumSize; readonly symbol?: MinimumSize }) {
+  return {
+    full: boundedSize(versions.full),
+    ...(versions.symbol === undefined ? {} : { symbol: boundedSize(versions.symbol) }),
+  };
+}
+
 export interface ComposeError {
   readonly code: 'INVALID_DOCUMENT';
 }
@@ -227,7 +242,7 @@ export function composeInitialDocument(
                 : { clearSpaceSource: input.logoRules.clearSpaceSource }),
               ...(input.logoRules.versions === undefined
                 ? {}
-                : { versions: input.logoRules.versions }),
+                : { versions: boundedVersions(input.logoRules.versions) }),
             },
     },
     assets: { logoSanitizedId: input.logoSanitizedId, variants: [...input.variants] },
