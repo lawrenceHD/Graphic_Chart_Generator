@@ -1,8 +1,10 @@
 import {
   ArchetypeSchema,
+  BrandContactSchema,
   BrandValueSchema,
   PageTypeSchema,
   PairingIdSchema,
+  TaglineSchema,
   ToneSchema,
   VariantRefSchema,
 } from '@app/contracts';
@@ -217,6 +219,9 @@ export const BrandDocumentSchema = z
         values: z.tuple([BrandValueSchema, BrandValueSchema, BrandValueSchema, BrandValueSchema]),
         archetype: ArchetypeSchema,
         tone: ToneSchema,
+        // ADR-036: typed by the user, never invented; optional so that older documents still read.
+        tagline: TaglineSchema.optional(),
+        contact: BrandContactSchema.optional(),
       })
       .strict(),
     tokens: z

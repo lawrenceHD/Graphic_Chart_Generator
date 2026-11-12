@@ -109,6 +109,23 @@ function applyBrandField(
           expect: command.value,
         },
       );
+    case 'tagline': {
+      // null removes the field, so that an empty tagline never stands for a real one.
+      const { tagline: previous, ...rest } = document.brand;
+      const brand = command.value === null ? rest : { ...rest, tagline: command.value };
+      return success(
+        { ...document, brand },
+        { type: 'SetBrandField', field: 'tagline', value: previous ?? null, expect: command.value },
+      );
+    }
+    case 'contact': {
+      const { contact: previous, ...rest } = document.brand;
+      const brand = command.value === null ? rest : { ...rest, contact: command.value };
+      return success(
+        { ...document, brand },
+        { type: 'SetBrandField', field: 'contact', value: previous ?? null, expect: command.value },
+      );
+    }
   }
 }
 

@@ -482,5 +482,42 @@
     "removeShort": "Remove",
     "documentTitle": "Brand document",
     "tooMany": "Six logos at most: remove one before adding another."
+  },
+  "collateral": {
+    "legend": "Example layout. The contact details and the headline are examples.",
+    "headlineOrigin": {
+      "tagline": "Headline typed by the brand",
+      "tone-example": "Headline: example taken from the tone of voice (Tone page)",
+      "value": "Headline: brand value",
+      "name": "Headline: brand name"
+    },
+    "placeholders": {
+      "name": "First Last",
+      "role": "Job title",
+      "phone": "+00 0 00 00 00 00",
+      "email": "name@domain",
+      "website": "www.domain"
+    },
+    "fields": {
+      "tagline": "Tagline",
+      "taglineHint": "Your tagline, as you use it. Left empty, the posters show an example marked as such.",
+      "contact": "Contact details",
+      "contactHint": "Used on the back of the cards. Left empty, generic fields marked as examples stand in for them.",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "social": "Social network"
+    },
+    "errors": {
+      "INVALID_INPUT": "Invalid layout settings.",
+      "KIND_NOT_BUILT": "This medium is not built yet.",
+      "COMPOSITION_NOT_IN_KIND": "This composition does not exist for this medium.",
+      "PHOTO_REQUIRED": "This composition needs a photo.",
+      "INVALID_MEASURE": "Measuring the text failed.",
+      "TEXT_DOES_NOT_FIT": "The text does not fit its zone without going under the minimum size.",
+      "LOGO_BELOW_MINIMUM": "The logo would be smaller than its minimum size: add the symbol on its own.",
+      "ZONES_OVERLAP": "Two zones overlap."
+    }
   }
 }

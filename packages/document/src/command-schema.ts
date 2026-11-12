@@ -1,9 +1,11 @@
 import {
   ARCHETYPES,
+  BrandContactSchema,
   BrandValueSchema,
   HexColor,
   PageTypeSchema,
   PAIRING_IDS,
+  TaglineSchema,
 } from '@app/contracts';
 import { z } from 'zod';
 import {
@@ -29,6 +31,12 @@ const BrandValuesSchema = z.preprocess(
   (value) => normalizeNfcDeep(value),
   z.tuple([BrandValueSchema, BrandValueSchema, BrandValueSchema, BrandValueSchema]),
 );
+
+// ADR-036: null removes the field; the schema of the document checks the bounds again after apply().
+const TaglineValueSchema = CommandTextSchema.pipe(TaglineSchema).nullable();
+const ContactValueSchema = z
+  .preprocess((value) => normalizeNfcDeep(value), BrandContactSchema)
+  .nullable();
 
 // ADR-018: `expect` is the value the command expects to find; `null` stands for "absent".
 const SetColorTokenSchema = z
@@ -66,6 +74,8 @@ const SetBrandFieldSchema = z.discriminatedUnion('field', [
   brandField('vision', CommandTextSchema),
   brandField('values', BrandValuesSchema),
   brandField('archetype', z.enum(ARCHETYPES)),
+  brandField('tagline', TaglineValueSchema),
+  brandField('contact', ContactValueSchema),
 ]);
 
 const SetPageFieldSchema = z

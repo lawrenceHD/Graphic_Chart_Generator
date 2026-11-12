@@ -29,3 +29,10 @@ export {
   type RevisionRef,
   type TargetedUndoCheck,
 } from './history.js';
+export {
+  CollateralInputSchema,
+  layoutCollateral,
+  type CollateralInput,
+  type MeasureText,
+} from './collateral/layout.js';
+export { contrast as wcagContrast } from './collateral/ink.js';

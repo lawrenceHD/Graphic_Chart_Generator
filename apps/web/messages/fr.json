@@ -482,5 +482,42 @@
     "removeShort": "Retirer",
     "documentTitle": "Document de marque",
     "tooMany": "Six logos au maximum : retirez-en un avant d'en ajouter."
+  },
+  "collateral": {
+    "legend": "Exemple de composition. Les coordonnées et l'accroche sont des exemples.",
+    "headlineOrigin": {
+      "tagline": "Accroche saisie par la marque",
+      "tone-example": "Accroche : exemple tiré du ton de voix (page Ton)",
+      "value": "Accroche : valeur de la marque",
+      "name": "Accroche : nom de la marque"
+    },
+    "placeholders": {
+      "name": "Prénom Nom",
+      "role": "Fonction",
+      "phone": "+00 0 00 00 00 00",
+      "email": "nom@domaine",
+      "website": "www.domaine"
+    },
+    "fields": {
+      "tagline": "Accroche",
+      "taglineHint": "Votre accroche, telle que vous l'utilisez. Vide, les affiches montrent un exemple signalé comme tel.",
+      "contact": "Coordonnées",
+      "contactHint": "Utilisées au verso des cartes. Vides, des champs génériques signalés comme exemples les remplacent.",
+      "address": "Adresse",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "website": "Site",
+      "social": "Réseau social"
+    },
+    "errors": {
+      "INVALID_INPUT": "Paramètres de mise en page invalides.",
+      "KIND_NOT_BUILT": "Ce support n'est pas encore construit.",
+      "COMPOSITION_NOT_IN_KIND": "Cette composition n'existe pas pour ce support.",
+      "PHOTO_REQUIRED": "Cette composition demande une photo.",
+      "INVALID_MEASURE": "La mesure du texte a échoué.",
+      "TEXT_DOES_NOT_FIT": "Le texte ne tient pas dans sa zone sans descendre sous la taille minimale.",
+      "LOGO_BELOW_MINIMUM": "Le logo serait plus petit que sa taille minimale : ajoutez le symbole seul.",
+      "ZONES_OVERLAP": "Deux zones se chevauchent."
+    }
   }
 }
