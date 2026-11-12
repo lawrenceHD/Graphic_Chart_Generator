@@ -6,8 +6,8 @@ export type SheetLanguage = 'fr' | 'en';
 
 export interface SheetWords {
   readonly guideline: string;
-  /** Label of the proof references a page rests on (foot of the page). */
-  readonly evidence: string;
+  /** Foot line of a page resting on reference guidelines: how many, never their identifiers. */
+  readonly evidence: (count: number) => string;
   /** A page of a type the guideline has no further content for (the plan should group those sections). */
   readonly beyond: (rank: number) => string;
   readonly edition: (year: number) => string;
@@ -109,7 +109,10 @@ export interface SheetWords {
 
 const FR: SheetWords = {
   guideline: 'Charte graphique',
-  evidence: 'Preuve',
+  evidence: (count) =>
+    count === 1
+      ? 'Fondé sur 1 charte de référence'
+      : `Fondé sur ${String(count)} chartes de référence`,
   beyond: (rank) =>
     `Page ${String(rank + 1)} de ce type : la charte n’a pas d’autre contenu à y montrer. Regroupez ces pages dans le plan.`,
   edition: (year) => `Édition ${String(year)}`,
@@ -233,7 +236,10 @@ const FR: SheetWords = {
 
 const EN: SheetWords = {
   guideline: 'Brand guidelines',
-  evidence: 'Evidence',
+  evidence: (count) =>
+    count === 1
+      ? 'Based on 1 reference guideline'
+      : `Based on ${String(count)} reference guidelines`,
   beyond: (rank) =>
     `Page ${String(rank + 1)} of this type: the guideline has no further content to show here. Group these pages in the plan.`,
   edition: (year) => `${String(year)} edition`,

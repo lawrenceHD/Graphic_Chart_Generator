@@ -152,9 +152,7 @@ function Folio({ context }: { readonly context: SheetContext }) {
         {context.view.name} · {context.words.guideline}
       </span>
       {proof === null ? null : (
-        <span className="min-w-0 flex-1 truncate text-right normal-case" title={proof}>
-          {proof}
-        </span>
+        <span className="min-w-0 flex-1 truncate text-right normal-case">{proof}</span>
       )}
       <span className="tabular shrink-0">{pad(context.number)}</span>
     </footer>

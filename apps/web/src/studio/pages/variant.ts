@@ -206,12 +206,14 @@ export function evidenceOf(data: unknown): readonly string[] {
   return parsed.data.evidence.map((entry) => entry.trim()).filter((entry) => entry !== '');
 }
 
-const EVIDENCE_SHOWN = 3;
-
-/** One discreet line for the foot of a page, or null when the page carries no proof. */
-export function evidenceLine(label: string, evidence: readonly string[]): string | null {
-  if (evidence.length === 0) return null;
-  const shown = evidence.slice(0, EVIDENCE_SHOWN).join(', ');
-  const more = evidence.length - EVIDENCE_SHOWN;
-  return `${label} : ${shown}${more > 0 ? `, +${String(more)}` : ''}`;
+/**
+ * One discreet line for the foot of a page, or null when the page carries no proof. The references are
+ * counted, never listed: their identifiers mean nothing to the client reading the guideline.
+ */
+export function evidenceLine(
+  label: (count: number) => string,
+  evidence: readonly string[],
+): string | null {
+  const count = new Set(evidence).size;
+  return count === 0 ? null : label(count);
 }

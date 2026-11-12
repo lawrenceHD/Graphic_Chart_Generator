@@ -139,12 +139,12 @@ describe('evidenceOf', () => {
 });
 
 describe('evidenceLine', () => {
+  const words = (count: number) => `Fondé sur ${String(count)} chartes`;
   it('is null without evidence', () => {
-    expect(evidenceLine('Preuve', [])).toBeNull();
+    expect(evidenceLine(words, [])).toBeNull();
   });
 
-  it('lists up to three references and counts the rest', () => {
-    expect(evidenceLine('Preuve', ['a', 'b'])).toBe('Preuve : a, b');
-    expect(evidenceLine('Preuve', ['a', 'b', 'c', 'd', 'e'])).toBe('Preuve : a, b, c, +2');
+  it('counts the references, never prints their opaque identifiers', () => {
+    expect(evidenceLine(words, ['e1_AfqPShw0bW7auWG', 'e1_b', 'e1_b'])).toBe('Fondé sur 2 chartes');
   });
 });

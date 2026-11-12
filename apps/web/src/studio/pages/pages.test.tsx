@@ -91,11 +91,12 @@ describe('palette pages', () => {
 describe('evidence', () => {
   it('shows the references at the foot of the page', () => {
     const html = render('palette', 0, 1, ['logo.svg', 'site: couleurs']);
-    expect(html).toContain('Preuve : logo.svg, site: couleurs');
+    expect(html).toContain(SHEET_WORDS.fr.evidence(2));
+    expect(html).not.toContain('logo.svg');
   });
 
   it('shows nothing without evidence', () => {
-    expect(render('palette', 0, 1)).not.toContain('Preuve');
+    expect(render('palette', 0, 1)).not.toContain(SHEET_WORDS.fr.evidence(1).slice(0, 8));
   });
 });
 

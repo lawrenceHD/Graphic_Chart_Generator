@@ -83,7 +83,6 @@ export function Chrome({
           <span
             className="min-w-0 flex-1 truncate text-right normal-case"
             style={{ letterSpacing: '0.02em', fontWeight: 400 }}
-            title={proof}
           >
             {proof}
           </span>
