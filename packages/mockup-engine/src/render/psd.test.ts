@@ -1,12 +1,6 @@
 import { PsdSceneSchema } from '@app/contracts';
 import { describe, expect, it } from 'vitest';
-import {
-  BLEND_CODES,
-  PSD_LAYER_SHADER,
-  blendChannel,
-  decodeUv,
-  guardGradient,
-} from './psd.js';
+import { BLEND_CODES, PSD_LAYER_SHADER, blendChannel, decodeUv, guardGradient } from './psd.js';
 
 describe('PSD scenes — Photoshop layers replayed', () => {
   it('blends like Photoshop on gamma-encoded values', () => {
