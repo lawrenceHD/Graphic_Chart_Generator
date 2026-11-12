@@ -14,3 +14,4 @@ export * from './project-events.js';
 export * from './mockup-scene.js';
 export * from './reference.js';
 export * from './brand-inputs.js';
+export * from './collateral.js';
