@@ -151,8 +151,11 @@ export function sectionOf(
     readonly view: { readonly outline?: readonly OutlineEntry[] };
     readonly number: number;
     readonly title: string;
+    /** `page.data.section`, given by the canvas and the print view: survives a renamed page. */
+    readonly section?: GuidelineSection | null;
   },
   type: PageType,
 ): GuidelineSection | null {
+  if (context.section !== undefined) return context.section;
   return sectionAt(context.view.outline, context.number, type, context.title);
 }

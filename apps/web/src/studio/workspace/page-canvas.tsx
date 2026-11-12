@@ -11,6 +11,7 @@ import { BrandInputsPanel } from '../brand-inputs-panel';
 import { MockupStage, SCENES, type SceneId } from '../mockups/mockup-stage';
 import type { Directing } from './mockup-inspector';
 import { RENDERERS } from '../pages/pages';
+import { sectionOfData } from '../pages/section';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf, type Occurrence } from '../pages/variant';
 import type { Timeline } from '../timeline';
@@ -165,6 +166,7 @@ function SheetSlot({
             year,
             occurrence,
             evidence: evidenceOf(page.data),
+            section: sectionOfData(page.data),
           }}
         />
       </div>

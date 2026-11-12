@@ -212,3 +212,22 @@ describe('measured values', () => {
     expect(renderSection('clear-space', 'clear-space', view)).toContain(words.clearSpace.defaults);
   });
 });
+
+describe('section passed with the page', () => {
+  it('keeps the page drawn by its section after the user renames it', () => {
+    const context: SheetContext = {
+      view: DEMO_VIEW,
+      words: SHEET_WORDS.fr,
+      number: 5,
+      total: 15,
+      portrait: false,
+      title: 'Titre renommé',
+      background: undefined,
+      year: 2026,
+      occurrence: { index: 0, count: 2 },
+      section: 'contents',
+    };
+    const html = renderToStaticMarkup(<RENDERERS.manifesto context={context} />);
+    expect(html).toContain(SECTION_WORDS.fr.contents.list);
+  });
+});

@@ -1,5 +1,6 @@
 'use client';
 
+import type { GuidelineSection } from '@app/contracts';
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { contrastRatio, inkOn, isDark } from '../../brand/color';
 import { svgDataUrl, tintSvg } from '../../brand/logo-tint';
@@ -27,6 +28,8 @@ export interface SheetContext {
   readonly occurrence?: Occurrence;
   /** Proof references the plan attached to the page. */
   readonly evidence?: readonly string[];
+  /** Guideline section of the page (`page.data.section`, ADR-035); null for an older page. */
+  readonly section?: GuidelineSection | null;
 }
 
 export const occurrenceOf = (context: SheetContext): Occurrence => context.occurrence ?? SINGLE;

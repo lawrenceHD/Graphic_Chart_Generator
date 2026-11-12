@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MAIN_ID } from '../../components/skip-link-id';
 import { useDirecting } from '../mockups/use-directing';
 import { RENDERERS } from '../pages/pages';
+import { sectionOfData } from '../pages/section';
 import { SHEET_WORDS } from '../pages/sheet-words';
 import { evidenceOf, occurrencesOf } from '../pages/variant';
 import { brandView, orderedPages } from './brand-view';
@@ -280,6 +281,7 @@ export function StudioWorkspace({ projectId }: { readonly projectId: string }) {
                     year,
                     occurrence: occurrences[index] ?? { index: 0, count: 1 },
                     evidence: evidenceOf(page.data),
+                    section: sectionOfData(page.data),
                   }}
                 />
               </div>
