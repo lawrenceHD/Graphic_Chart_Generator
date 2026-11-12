@@ -7,6 +7,7 @@ export {
   getEventHandlers,
   getGuestHandlers,
   getInspirationHandlers,
+  getPhotoHandlers,
   getProjectHandlers,
 } from './context';
 export type { RouteParams } from './route-guard';

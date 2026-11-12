@@ -28,8 +28,9 @@ export function buildContentSecurityPolicy(nonce: string, options: SecurityOptio
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${developmentEval} https://challenges.cloudflare.com`,
     `style-src-elem 'self' 'nonce-${nonce}'`,
     "style-src-attr 'unsafe-inline'",
-    // Inspiration thumbnails, shown from their source and never copied (inspiration-service.ts).
-    `img-src 'self' data: blob: ${r2Origin} https://images.are.na`,
+    // Inspiration thumbnails and free photos, shown from their source and never copied (inspiration-service.ts,
+    // photos/providers.ts).
+    `img-src 'self' data: blob: ${r2Origin} https://images.are.na https://images.pexels.com https://images.unsplash.com`,
     "font-src 'self'",
     `connect-src 'self' ${r2Origin}`,
     'frame-src https://challenges.cloudflare.com',

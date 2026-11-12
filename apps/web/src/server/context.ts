@@ -22,6 +22,15 @@ import { createTurnstileVerifier } from './turnstile';
 import { projectHandlers } from './project-routes';
 import { searchArena } from './inspiration/arena';
 import { inspirationHandlers } from './inspiration-routes';
+import { photoHandlers } from './photo-routes';
+import { createPhotoService } from './photos/photo-service';
+import {
+  photoKeysOf,
+  searchPexels,
+  searchUnsplash,
+  type PhotoFetch,
+  type PhotoSearch,
+} from './photos/providers';
 import { createInspirationCollector } from './inspiration-service';
 import { createRateLimiter, type RateLimiter } from './rate-limiter';
 
@@ -229,4 +238,50 @@ export function getInspirationHandlers(): ReturnType<typeof inspirationHandlers>
     }),
   });
   return inspirationRoutes;
+}
+
+let photoRoutes: ReturnType<typeof photoHandlers> | undefined;
+
+/** Free photos (Pexels, Unsplash) with the owner's keys from the environment; none set, the studio says so. */
+export function getPhotoHandlers(): ReturnType<typeof photoHandlers> {
+  if (photoRoutes !== undefined) return photoRoutes;
+  const keys = photoKeysOf(process.env);
+  const fetcher: PhotoFetch = (url, init) => fetch(url, init);
+  const providers = [
+    ...(keys.pexels === null
+      ? []
+      : [
+          (search: PhotoSearch) => searchPexels({ fetch: fetcher, key: keys.pexels ?? '' }, search),
+        ]),
+    ...(keys.unsplash === null
+      ? []
+      : [
+          (search: PhotoSearch) =>
+            searchUnsplash({ fetch: fetcher, key: keys.unsplash ?? '' }, search),
+        ]),
+  ];
+  photoRoutes = photoHandlers({
+    orm: getDatabase().orm,
+    appUrl: getRuntimeEnv().APP_URL,
+    resolveActor,
+    trustedProxyHops: getTrustedProxyHops(),
+    limiter: getRateLimiter(),
+    photos: createPhotoService({
+      providers,
+      now: () => Date.now(),
+      reportDownload: async (location) => {
+        await fetcher(location, {
+          headers: { Authorization: `Client-ID ${keys.unsplash ?? ''}` },
+          signal: AbortSignal.timeout(8_000),
+          redirect: 'error',
+        }).catch((error: unknown) => {
+          appLogger().warn({
+            event: 'unsplash_download_report_failed',
+            error: errorSummary(error),
+          });
+        });
+      },
+    }),
+  });
+  return photoRoutes;
 }
