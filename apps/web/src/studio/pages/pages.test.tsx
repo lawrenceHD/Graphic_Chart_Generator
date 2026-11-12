@@ -239,3 +239,19 @@ describe('the logo is never turned, flipped or distorted', () => {
     expect(renderSection('mockup', 'pattern')).not.toMatch(/rotate\(|scale[XY]?\(-/u);
   });
 });
+
+describe('content stays inside the A4 sheet', () => {
+  it('bounds the content row to the space between head and folio, in landscape', () => {
+    expect(render('palette', 0, 1)).toContain('grid-rows-[minmax(0,1fr)]');
+  });
+
+  it('sets the tone examples right under the axes, under their label', () => {
+    const view: BrandView = {
+      ...DEMO_VIEW,
+      tone: { ...DEMO_VIEW.tone, examples: ['Une phrase.', 'Une autre.', 'La dernière.'] },
+    };
+    const html = renderSection('tone-of-voice', 'tone-of-voice', view);
+    expect(html).toContain(SHEET_WORDS.fr.tone.examples);
+    expect(html).not.toContain('mt-auto grid grid-cols-3');
+  });
+});

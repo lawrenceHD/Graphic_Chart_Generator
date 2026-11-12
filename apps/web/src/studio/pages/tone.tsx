@@ -45,25 +45,35 @@ export function Tone({ context }: { readonly context: SheetContext }) {
           })}
         </ul>
         {examples.length > 0 ? (
-          <div className="mt-auto grid grid-cols-3" style={{ gap: u(1.4) }}>
-            {examples.map((example) => (
-              <blockquote
-                key={example}
-                className="m-0 border-t"
-                style={{
-                  ...hairline(ink),
-                  paddingTop: u(1),
-                  fontSize: u(1.2),
-                  fontFamily: view.pairing.display.css,
-                }}
-              >
-                {example}
-              </blockquote>
-            ))}
-          </div>
+          // Under the axes, not pushed to the foot: long sentences grow into the page, never past it.
+          <section className="min-h-0" style={{ marginTop: u(1.2) }}>
+            <p
+              className="m-0 uppercase"
+              style={{ fontSize: u(0.9), letterSpacing: '0.14em', opacity: 0.6 }}
+            >
+              {words.tone.examples}
+            </p>
+            <div className="grid grid-cols-3" style={{ gap: u(1.4), marginTop: u(1) }}>
+              {examples.map((example) => (
+                <blockquote
+                  key={example}
+                  className="m-0 border-t text-pretty"
+                  style={{
+                    ...hairline(ink),
+                    paddingTop: u(1),
+                    fontSize: u(1.5),
+                    lineHeight: 1.3,
+                    fontFamily: view.pairing.display.css,
+                  }}
+                >
+                  {example}
+                </blockquote>
+              ))}
+            </div>
+          </section>
         ) : (
           <p
-            className="m-0 mt-auto border-t"
+            className="m-0 border-t"
             style={{ ...hairline(ink), fontSize: u(1.1), opacity: 0.66, paddingTop: u(1.4) }}
           >
             {words.tone.pending}

@@ -86,7 +86,7 @@ export function SheetFrame({
         >
           <SectionHead context={context} ink={ink} />
           <div
-            className={`grid min-h-0 flex-1 ${portrait ? 'grid-rows-[auto_1fr]' : 'grid-cols-12'}`}
+            className={`grid min-h-0 flex-1 ${portrait ? 'grid-rows-[auto_minmax(0,1fr)]' : 'grid-cols-12 grid-rows-[minmax(0,1fr)]'}`}
             style={{ gap: u(portrait ? 2.4 : 2.6), paddingTop: u(portrait ? 2.6 : 3.2) }}
           >
             {lead === undefined && aside === undefined ? null : (
