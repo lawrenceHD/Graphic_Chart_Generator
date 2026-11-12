@@ -231,3 +231,11 @@ describe('section passed with the page', () => {
     expect(html).toContain(SECTION_WORDS.fr.contents.list);
   });
 });
+
+describe('the logo is never turned, flipped or distorted', () => {
+  it('on any cover or visual language page', () => {
+    for (let index = 0; index < 3; index += 1)
+      expect(render('cover', index, 3)).not.toMatch(/rotate\(|scale[XY]?\(-/u);
+    expect(renderSection('mockup', 'pattern')).not.toMatch(/rotate\(|scale[XY]?\(-/u);
+  });
+});

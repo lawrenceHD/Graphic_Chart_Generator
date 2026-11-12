@@ -129,7 +129,8 @@ const FR: SectionWords = {
     fixedText:
       'Le dessin du logo, sans retouche ; deux aplats de la palette ; des cellules sans espace.',
     free: 'Libre',
-    freeText: 'Le cadrage, le nombre de cellules et les quarts de tour.',
+    freeText:
+      'Le cadrage et le nombre de cellules. Le logo reste droit : jamais pivoté, retourné ni déformé.',
     imagery: 'Photographie et illustration',
     imageryText:
       'Non définies : le brief n’en dit rien. À rédiger avec la marque avant toute commande de visuels.',
@@ -215,7 +216,8 @@ const EN: SectionWords = {
     fixed: 'Fixed',
     fixedText: 'The logo drawing, untouched; two fields of the palette; cells without gaps.',
     free: 'Free',
-    freeText: 'The crop, the number of cells and the quarter turns.',
+    freeText:
+      'The crop and the number of cells. The logo stays upright: never turned, flipped or distorted.',
     imagery: 'Photography and illustration',
     imageryText:
       'Not defined: the brief says nothing about them. To be written with the brand before any image is commissioned.',

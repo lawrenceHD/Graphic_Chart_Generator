@@ -50,7 +50,7 @@ export function VisualLanguage({ context }: { readonly context: SheetContext }) 
             width: `min(100cqw, ${String((100 * COLS) / ROWS)}cqh)`,
           }}
         >
-          <MotifGrid view={context.view} kind="turn" cols={COLS} rows={ROWS} />
+          <MotifGrid view={context.view} kind="repeat" cols={COLS} rows={ROWS} />
         </div>
       </div>
     </SheetFrame>

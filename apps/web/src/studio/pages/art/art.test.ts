@@ -43,11 +43,13 @@ describe('variant choice', () => {
 describe('motif cells', () => {
   const base = { cols: 5, rows: 3, seed: 'khan' } as const;
   it('is deterministic for a seed', () => {
-    expect(motifCells({ ...base, kind: 'turn' })).toEqual(motifCells({ ...base, kind: 'turn' }));
+    expect(motifCells({ ...base, kind: 'repeat' })).toEqual(
+      motifCells({ ...base, kind: 'repeat' }),
+    );
   });
   it('differs with the seed', () => {
-    expect(motifCells({ ...base, kind: 'turn' })).not.toEqual(
-      motifCells({ ...base, kind: 'turn', seed: 'other' }),
+    expect(motifCells({ ...base, kind: 'scatter' })).not.toEqual(
+      motifCells({ ...base, kind: 'scatter', seed: 'other' }),
     );
   });
   it('fills the grid, one cell per place', () => {
@@ -60,12 +62,12 @@ describe('motif cells', () => {
       for (const a of cells)
         for (const b of cells)
           if (Math.abs(a.col - b.col) + Math.abs(a.row - b.row) === 1)
-            expect(a.field === b.field && a.mark === b.mark && a.turn === b.turn).toBe(false);
+            expect(a.field === b.field && a.mark === b.mark).toBe(false);
     }
   });
-  it('turns the mark only by quarter turns', () => {
+  it('never turns the mark: a cell holds no angle', () => {
     for (const kind of MOTIF_KINDS)
       for (const cell of motifCells({ ...base, kind }))
-        expect([0, 90, 180, 270]).toContain(cell.turn);
+        expect(Object.keys(cell)).not.toContain('turn');
   });
 });

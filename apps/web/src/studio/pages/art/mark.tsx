@@ -22,7 +22,7 @@ export const markOn = (view: BrandView, background: string): string =>
 
 /**
  * The mark as a pattern, edge to edge: a grid of flat cells, no gap, no frame, the logo set straight on
- * each flat (never in a plate), turned by quarter turns. Drawn from the logo, so every brand gets its own.
+ * each flat (never in a plate), always upright. Drawn from the logo, so every brand gets its own.
  */
 export function MotifGrid({
   view,
@@ -53,11 +53,7 @@ export function MotifGrid({
             style={{ background }}
           >
             {cell.mark ? (
-              <LogoImage
-                src={markOn(view, background)}
-                className="h-[56%] w-[56%]"
-                style={{ transform: `rotate(${String(cell.turn)}deg)` }}
-              />
+              <LogoImage src={markOn(view, background)} className="h-[56%] w-[56%]" />
             ) : null}
           </div>
         );

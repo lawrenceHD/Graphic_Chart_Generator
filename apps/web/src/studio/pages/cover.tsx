@@ -99,7 +99,7 @@ export function Cover({ context }: { readonly context: SheetContext }) {
     return (
       <FullPage context={context} field={field} chrome={false}>
         <div className="absolute inset-y-0 right-0" style={{ width: '58.3%' }}>
-          <MotifGrid view={view} kind="turn" cols={4} rows={5} />
+          <MotifGrid view={view} kind="repeat" cols={4} rows={5} />
         </div>
         <div
           className="absolute flex flex-col justify-between"

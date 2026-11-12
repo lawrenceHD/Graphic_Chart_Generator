@@ -1,7 +1,7 @@
-// A procedural pattern drawn from the logo itself: the mark repeated, turned by quarter turns, set on a
-// chequer of two brand fields or on its own. Deterministic (the seed is the brand name): no randomness at
+// A procedural pattern drawn from the logo itself: the mark repeated upright, set on a chequer of two
+// brand fields or on its own. The mark is never turned, flipped or distorted (the first rule of a charter). Deterministic (the seed is the brand name): no randomness at
 // render time, and never two touching cells that look alike (neighbours always change field).
-export const MOTIF_KINDS = ['repeat', 'turn', 'checker', 'scatter'] as const;
+export const MOTIF_KINDS = ['repeat', 'checker', 'scatter'] as const;
 export type MotifKind = (typeof MOTIF_KINDS)[number];
 
 export type MotifField = 'primary' | 'accent' | 'light' | 'dark';
@@ -12,7 +12,6 @@ export interface MotifCell {
   readonly field: MotifField;
   /** False: the cell is a plain flat of its field. */
   readonly mark: boolean;
-  readonly turn: 0 | 90 | 180 | 270;
 }
 
 const PAIRS: readonly (readonly [MotifField, MotifField])[] = [
@@ -42,8 +41,6 @@ function stream(seed: number): () => number {
   };
 }
 
-const TURNS = [0, 90, 180, 270] as const;
-
 export function motifCells(input: {
   readonly cols: number;
   readonly rows: number;
@@ -61,16 +58,10 @@ export function motifCells(input: {
       const parity = (col + row) % 2;
       const field = pair[parity] ?? pair[0];
       const draw = next();
-      const turn = TURNS[Math.floor(draw * 4) % 4] ?? 0;
       let mark = true;
-      let angle: MotifCell['turn'] = 0;
-      if (kind === 'turn') angle = TURNS[(col + 2 * row + (seed >>> 8)) % 4] ?? 0;
       if (kind === 'checker') mark = parity === 0;
-      if (kind === 'scatter') {
-        mark = parity === 0 || draw > 0.5;
-        angle = turn;
-      }
-      cells.push({ col, row, field, mark, turn: angle });
+      if (kind === 'scatter') mark = parity === 0 || draw > 0.5;
+      cells.push({ col, row, field, mark });
     }
   }
   return cells;
